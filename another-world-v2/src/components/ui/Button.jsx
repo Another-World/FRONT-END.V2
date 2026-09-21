@@ -1,16 +1,22 @@
-export default function Button({ children, variant = "outline", className = "", ...props }) {
+export default function Button({
+  children,
+  variant = "outline",
+  className = "",
+  as: Component = "button",
+  ...props
+}) {
   const variants = {
-    outline: "bg-bg-card-inner border border-purple text-purple",
+    outline: "border border-purple bg-bg-card-inner text-purple",
     white: "bg-white text-bg-dark",
     solid: "bg-purple text-white",
   };
 
   return (
-    <button
-      className={`inline-flex items-center justify-center px-6 py-3 rounded-full text-[11px] font-semibold uppercase tracking-wide whitespace-nowrap transition hover:opacity-90 ${variants[variant]} ${className}`}
+    <Component
+      className={`inline-flex items-center justify-center rounded-full px-6 py-3 text-[11px] font-semibold uppercase tracking-wide transition hover:opacity-90 ${variants[variant]} ${className}`}
       {...props}
     >
       {children}
-    </button>
+    </Component>
   );
 }
