@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", sans-serif;
+
+  --color-bg-dark: #160b20;
+  --color-bg-section: #21102e;
+  --color-bg-footer: #100817;
+  --color-bg-card: #1d1028;
+  --color-bg-card-inner: #241333;
+
+  --color-purple: #8b45d6;
+  --color-border: #43265b;
+
+  --color-text-muted: #a39aae;
+  --color-text-soft: #8f859a;
+  --color-text-faint: #706878;
+}
+
+body {
+  background-color: var(--color-bg-dark);
+  font-family: var(--font-sans);
+}
