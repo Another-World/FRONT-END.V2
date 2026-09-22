@@ -20,7 +20,11 @@ export default function Login() {
 
   // Se a pessoa já está logada e cair aqui de novo (ex: digitou /login na URL),
   // manda ela direto pra Área do Cliente em vez de mostrar o formulário.
-  if (user) {
+  //
+  // O "!welcomeName" é essencial: logo depois de entrar, o register/login já
+  // preencheu o user, então sem essa checagem este return dispararia primeiro
+  // e a tela de boas-vindas nunca chegaria a aparecer.
+  if (user && !welcomeName) {
     return <Navigate to="/area-cliente" replace />;
   }
 
@@ -64,13 +68,15 @@ export default function Login() {
           name: form.name,
           email: form.email,
           password: form.password,
-        }) ?? { name: form.name }; // "register" já chama setUser, isso é só pro nome aparecer já
+        });
       } else {
-        session = login({ email: form.email, password: form.password }) ?? { name: form.email };
+        session = login({ email: form.email, password: form.password });
       }
 
       // Mostra a mensagem de boas-vindas por um instante antes de redirecionar.
-      setWelcomeName(form.name || form.email);
+      // Usa o nome que veio da sessão, não do formulário: no modo login o campo
+      // "nome" nem aparece, então form.name está vazio e cairia no e-mail.
+      setWelcomeName(session.name || session.email);
       setTimeout(() => navigate("/area-cliente"), 1200);
     } catch (err) {
       setError(err.message);

@@ -15,6 +15,16 @@ function saveUsers(users) {
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
 }
 
+// Monta a sessão a partir do usuário salvo.
+// O "...resto" pega TODOS os campos menos a senha — assim, quando alguém
+// adicionar um campo novo no cadastro (CPF, cargo...), ele entra na sessão
+// sozinho. Escolher campo por campo aqui era o que fazia telefone e empresa
+// sumirem toda vez que a pessoa saía e entrava de novo.
+function criarSessao(user) {
+  const { password, ...resto } = user;
+  return resto;
+}
+
 export function registerUser({ name, email, password }) {
   const users = getUsers();
 
@@ -22,11 +32,11 @@ export function registerUser({ name, email, password }) {
     throw new Error("Já existe uma conta com esse e-mail.");
   }
 
-  const newUser = { name, email, password };
+  const newUser = { name, email, password, telefone: "", empresa: "" };
   saveUsers([...users, newUser]);
 
   // Já cadastra e loga automaticamente.
-  const session = { name, email };
+  const session = criarSessao(newUser);
   localStorage.setItem(SESSION_KEY, JSON.stringify(session));
   return session;
 }
@@ -39,9 +49,29 @@ export function loginUser({ email, password }) {
     throw new Error("E-mail ou senha inválidos.");
   }
 
-  const session = { name: found.name, email: found.email };
+  const session = criarSessao(found);
   localStorage.setItem(SESSION_KEY, JSON.stringify(session));
   return session;
+}
+
+// Atualiza os dados cadastrais de quem está logado.
+// Precisa salvar em DOIS lugares: na lista de usuários (pra não perder na
+// próxima vez que a pessoa logar) e na sessão atual (pra tela atualizar já).
+export function updateUser({ name, telefone, empresa }) {
+  const session = getCurrentUser();
+
+  if (!session) {
+    throw new Error("Ninguém está logado.");
+  }
+
+  const users = getUsers().map((u) =>
+    u.email === session.email ? { ...u, name, telefone, empresa } : u
+  );
+  saveUsers(users);
+
+  const newSession = { ...session, name, telefone, empresa };
+  localStorage.setItem(SESSION_KEY, JSON.stringify(newSession));
+  return newSession;
 }
 
 export function getCurrentUser() {
