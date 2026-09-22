@@ -1,10 +1,58 @@
-import { useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import logo from "../../assets/logo.png"
 
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  // useRef guarda uma referência ao elemento no DOM. Precisamos dela pra
+  // saber se o clique aconteceu DENTRO ou FORA do mini menu.
+  const userMenuRef = useRef(null);
+
+  // Fecha o mini menu ao clicar fora dele ou apertar Esc.
+  // Sem isso, o menu ficaria aberto pra sempre até clicar no botão de novo.
+  useEffect(() => {
+    // Se o menu está fechado, não precisa ficar escutando nada.
+    if (!userMenuOpen) return;
+
+    function handleClickFora(event) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setUserMenuOpen(false);
+      }
+    }
+
+    function handleEsc(event) {
+      if (event.key === "Escape") setUserMenuOpen(false);
+    }
+
+    document.addEventListener("mousedown", handleClickFora);
+    document.addEventListener("keydown", handleEsc);
+
+    // Esse return é a "limpeza": o React roda ele quando o menu fecha ou
+    // quando o Header sai da tela. Sem remover os listeners, eles iriam se
+    // acumulando a cada abertura e continuariam rodando à toa.
+    return () => {
+      document.removeEventListener("mousedown", handleClickFora);
+      document.removeEventListener("keydown", handleEsc);
+    };
+  }, [userMenuOpen]);
+
+  function handleLogout() {
+    logout();
+    setUserMenuOpen(false);
+    setMenuOpen(false);
+    navigate("/");
+  }
+
+  // Só o primeiro nome, pra saudação não estourar a largura do header.
+  // Se a pessoa não tiver nome salvo, cai no e-mail.
+  const nomeExibido = user ? user.name?.split(" ")[0] || user.email : "";
 
   const menuItems = [
     { label: "Home", to: "/" },
@@ -54,13 +102,60 @@ export default function Header() {
         {/* AÇÕES DESKTOP */}
         <div className="hidden items-center gap-3 lg:flex">
 
-          {/* ÁREA DO CLIENTE */}
-          <Link
-            to="/area-cliente"
-            className="rounded-full border border-purple/50 px-5 py-2.5 text-sm font-medium text-purple transition-all hover:border-purple hover:bg-purple/10"
-          >
-            Área do Cliente
-          </Link>
+          {/* Deslogado: convite pra entrar.
+              Logado: saudação que abre o mini menu. */}
+          {!user ? (
+            <Link
+              to="/login"
+              className="rounded-full border border-purple/50 px-5 py-2.5 text-sm font-medium text-purple transition-all hover:border-purple hover:bg-purple/10"
+            >
+              Faça seu login
+            </Link>
+          ) : (
+            <div className="relative" ref={userMenuRef}>
+              <button
+                type="button"
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                aria-expanded={userMenuOpen}
+                aria-haspopup="menu"
+                className="flex items-center gap-2 rounded-full border border-purple/50 px-5 py-2.5 text-sm font-medium text-purple transition-all hover:border-purple hover:bg-purple/10"
+              >
+                Seja Bem-Vindo, {nomeExibido}!
+                <span
+                  className={`text-[10px] transition-transform ${userMenuOpen ? "rotate-180" : ""}`}
+                  aria-hidden="true"
+                >
+                  ▼
+                </span>
+              </button>
+
+              {/* MINI MENU */}
+              {userMenuOpen && (
+                <div
+                  role="menu"
+                  className="absolute right-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-xl border border-border bg-bg-card shadow-xl"
+                >
+                  <Link
+                    to="/area-cliente"
+                    role="menuitem"
+                    onClick={() => setUserMenuOpen(false)}
+                    className="block px-5 py-3 text-sm text-text-muted transition hover:bg-bg-card-inner hover:text-white"
+                  >
+                    Área do Cliente
+                  </Link>
+
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={handleLogout}
+                    className="block w-full border-t border-border px-5 py-3 text-left text-sm text-text-muted transition hover:bg-bg-card-inner hover:text-white"
+                  >
+                    Encerrar sessão
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* FALAR CONOSCO */}
           <Link
@@ -121,14 +216,39 @@ export default function Header() {
 
             <div className="my-1 h-px bg-border" />
 
-            {/* ÁREA DO CLIENTE MOBILE */}
-            <Link
-              to="/area-cliente"
-              onClick={() => setMenuOpen(false)}
-              className="rounded-full border border-purple/50 px-5 py-3 text-center text-sm font-medium text-purple transition hover:bg-purple/10"
-            >
-              Área do Cliente
-            </Link>
+            {/* No mobile não faz sentido um menu dentro do menu:
+                a saudação vira um título e as opções ficam soltas. */}
+            {!user ? (
+              <Link
+                to="/login"
+                onClick={() => setMenuOpen(false)}
+                className="rounded-full border border-purple/50 px-5 py-3 text-center text-sm font-medium text-purple transition hover:bg-purple/10"
+              >
+                Faça seu login
+              </Link>
+            ) : (
+              <>
+                <p className="text-sm font-semibold text-purple">
+                  Seja Bem-Vindo, {nomeExibido}!
+                </p>
+
+                <Link
+                  to="/area-cliente"
+                  onClick={() => setMenuOpen(false)}
+                  className="rounded-full border border-purple/50 px-5 py-3 text-center text-sm font-medium text-purple transition hover:bg-purple/10"
+                >
+                  Área do Cliente
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="rounded-full border border-border px-5 py-3 text-center text-sm font-medium text-text-muted transition hover:border-purple hover:text-white"
+                >
+                  Encerrar sessão
+                </button>
+              </>
+            )}
 
             {/* FALAR CONOSCO MOBILE */}
             <Link
