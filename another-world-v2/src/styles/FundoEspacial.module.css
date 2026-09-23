@@ -1,0 +1,106 @@
+/* FUNDO ESPACIAL COMPARTILHADO
+   Mesmo fundo da Home, para outras páginas poderem usar sem copiar o CSS.
+
+   .fundo        -> cor base + nebulosas + estrelas (igual à Home)
+   .semEstrelas  -> modificador que tira os pontinhos brancos, mantendo
+                    a cor e as nebulosas
+
+   As duas camadas ficam atrás do conteúdo (z-index: -1) e o
+   pointer-events: none impede que bloqueiem cliques.
+*/
+
+.fundo {
+  position: relative;
+  isolation: isolate;
+  background: #101114;
+}
+
+.fundo::before,
+.fundo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Estrelas distribuídas em padrões de tamanhos diferentes.
+   Isso evita a aparência de uma grade regular. */
+.fundo::before {
+  background-image:
+    radial-gradient(1px 1px at 24px 38px, rgb(255 255 255 / 65%) 95%, transparent),
+    radial-gradient(1px 1px at 116px 154px, rgb(219 208 245 / 50%) 95%, transparent),
+    radial-gradient(1.5px 1.5px at 78px 92px, rgb(255 255 255 / 70%) 95%, transparent),
+    radial-gradient(1px 1px at 192px 67px, rgb(255 255 255 / 35%) 95%, transparent),
+    radial-gradient(2px 2px at 245px 218px, rgb(201 164 237 / 60%) 65%, transparent);
+
+  background-size:
+    211px 239px,
+    307px 313px,
+    433px 397px,
+    509px 467px,
+    683px 619px;
+
+  opacity: 0.55;
+}
+
+/* Nebulosas suaves e algumas estrelas que variam de brilho.
+   A animação altera somente a opacidade. */
+.fundo::after {
+  background-image:
+    radial-gradient(ellipse 65% 580px at 50% 0%, rgb(139 69 214 / 18%), transparent 75%),
+    radial-gradient(ellipse 45% 700px at 100% 38%, rgb(77 83 160 / 11%), transparent 75%),
+    radial-gradient(ellipse 55% 600px at 0% 85%, rgb(139 69 214 / 10%), transparent 75%),
+    radial-gradient(1.5px 1.5px at 63px 113px, rgb(255 255 255 / 70%) 80%, transparent),
+    radial-gradient(1px 1px at 211px 237px, rgb(219 208 245 / 65%) 80%, transparent);
+
+  background-size:
+    100% 100%,
+    100% 100%,
+    100% 100%,
+    457px 389px,
+    593px 541px;
+
+  animation: spaceGlow 9s ease-in-out infinite alternate;
+}
+
+/* SEM ESTRELAS
+   Precisa vir depois das regras de .fundo: as duas têm a mesma
+   especificidade, então quem ganha é a última declarada.
+*/
+
+/* Remove a camada de estrelas inteira. */
+.semEstrelas::before {
+  content: none;
+}
+
+/* Mantém só as três nebulosas, tirando as duas estrelas desta camada. */
+.semEstrelas::after {
+  background-image:
+    radial-gradient(ellipse 65% 580px at 50% 0%, rgb(139 69 214 / 18%), transparent 75%),
+    radial-gradient(ellipse 45% 700px at 100% 38%, rgb(77 83 160 / 11%), transparent 75%),
+    radial-gradient(ellipse 55% 600px at 0% 85%, rgb(139 69 214 / 10%), transparent 75%);
+
+  background-size:
+    100% 100%,
+    100% 100%,
+    100% 100%;
+}
+
+@keyframes spaceGlow {
+  from {
+    opacity: 0.45;
+  }
+
+  to {
+    opacity: 0.85;
+  }
+}
+
+/* Respeita a preferência por menos movimento. */
+@media (prefers-reduced-motion: reduce) {
+  .fundo::after {
+    animation: none;
+    opacity: 0.65;
+  }
+}

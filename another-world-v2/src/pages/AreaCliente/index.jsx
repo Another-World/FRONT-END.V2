@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { getSolicitacoesPorEmail, STATUS_INFO } from "../../services/solicitacoes";
 import Button from "../../components/ui/Button";
+import fundo from "../../styles/FundoEspacial.module.css";
 
 // Deixa a data no formato brasileiro (01/10/2026).
 function formatarData(iso) {
@@ -54,7 +55,8 @@ export default function AreaCliente() {
   }
 
   return (
-    <div className="mx-auto max-w-[1100px] px-6 py-16">
+    <div className={`${fundo.fundo} min-h-screen`}>
+      <div className="mx-auto max-w-[1100px] px-6 py-16">
 
       {/* SAUDAÇÃO */}
       <div className="mb-12 flex flex-wrap items-start justify-between gap-4">
@@ -182,7 +184,8 @@ export default function AreaCliente() {
             })}
           </ul>
         )}
-      </section>
+        </section>
+      </div>
     </div>
   );
 }
