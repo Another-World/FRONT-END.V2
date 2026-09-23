@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+
 import logo from "../../assets/logo.png";
 
 export default function Footer() {
@@ -58,13 +59,6 @@ export default function Footer() {
                 className="text-sm text-text-muted transition-colors hover:text-white"
               >
                 Serviços
-              </Link>
-
-              <Link
-                to="/projetos"
-                className="text-sm text-text-muted transition-colors hover:text-white"
-              >
-                Projetos
               </Link>
 
               <Link
