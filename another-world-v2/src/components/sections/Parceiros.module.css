@@ -1,0 +1,224 @@
+.section {
+  padding-block: 88px;
+  border-top: 1px solid var(--border, #303138);
+  color: var(--text, #f5f4f7);
+  background: var(--background, #101114);
+}
+
+.sponsorsSection {
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgb(139 69 214 / 10%),
+      transparent 60%
+    ),
+    #151319;
+}
+
+.container {
+  width: min(1160px, calc(100% - 64px));
+  margin-inline: auto;
+}
+
+.heading {
+  display: grid;
+  grid-template-columns: 1fr minmax(280px, 430px);
+  align-items: end;
+  gap: 64px;
+  margin-bottom: 40px;
+}
+
+.eyebrow {
+  margin: 0 0 16px;
+  color: var(--lavender, #c9a4ed);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.6;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.heading h2 {
+  max-width: 620px;
+  margin: 0;
+  font-size: clamp(30px, 3.6vw, 46px);
+  font-weight: 500;
+  line-height: 1.18;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.description {
+  margin: 0;
+  color: var(--muted, #b2b0bc);
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+/* Duas colunas no celular. */
+/* Duas colunas no celular. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  justify-content: center;
+  gap: 14px;
+}
+
+.logoCard {
+  display: flex;
+  min-width: 0;
+  min-height: 124px;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow: hidden;
+  border: 1px solid var(--border, #303138);
+  border-radius: 12px;
+  background: rgb(255 255 255 / 3%);
+}
+
+/*
+  Todas as imagens ocupam a mesma área visual.
+
+  width e height criam uma "caixa" padronizada.
+  object-fit: contain mantém a proporção original,
+  evitando que o logo fique esticado.
+*/
+.logoCard img {
+  display: block;
+  width: 150px;
+  height: 60px;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+
+
+/* Só os cards que realmente possuem link recebem interação. */
+.logoLink {
+  text-decoration: none;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    transform 160ms ease;
+}
+
+.logoLink:hover {
+  border-color: var(--purple, #8b45d6);
+  background: rgb(139 69 214 / 8%);
+  transform: translateY(-3px);
+}
+
+.logoLink:focus-visible {
+  outline: 3px solid var(--lavender, #c9a4ed);
+  outline-offset: 4px;
+}
+
+/* Placeholder temporário solicitado pela issue. */
+.placeholder {
+  display: flex;
+  min-height: 64px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #dedbe4;
+  text-align: center;
+}
+
+.placeholderLabel {
+  display: block;
+  margin-bottom: 8px;
+  color: #85818c;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.placeholder strong {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.logoCard img[alt*="Samtech" i] {
+  transform: scale(1.8);
+}
+/*
+  A partir de 620px, cada card terá no máximo 224px.
+
+  auto-fit cria somente a quantidade necessária de colunas.
+  Portanto:
+  - três logos ficam centralizadas;
+  - quatro logos também ficam centralizadas.
+*/
+@media (min-width: 620px) {
+  .grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 224px));
+    justify-content: center;
+  }
+}
+
+/* Desktop */
+@media (min-width: 920px) {
+  .grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 224px));
+  }
+}
+
+@media (max-width: 760px) {
+  .section {
+    padding-block: 56px;
+  }
+
+  .container {
+    width: calc(100% - 40px);
+  }
+
+  .heading {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    margin-bottom: 30px;
+  }
+
+  .description {
+    max-width: 520px;
+  }
+
+  .logoCard {
+    min-height: 105px;
+    padding: 16px;
+  }
+  .logoCard img {
+    width: 120px;
+    height: 52px;
+  }
+  .logoCard img[alt*="Samtech" i] {
+    transform: scale(1.15);
+  }
+}
+
+@media (max-width: 380px) {
+  .grid {
+    gap: 10px;
+  }
+
+  .logoCard {
+    padding: 12px;
+  }
+
+  .placeholder strong {
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logoLink {
+    transition: none;
+  }
+
+  .logoLink:hover {
+    transform: none;
+  }
+}

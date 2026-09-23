@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import Button from "../../components/ui/Button";
 import styles from "./Home.module.css";
+import Parceiros from "../../components/sections/Parceiros";
 
 // Conteúdo dos cartões de serviços.
 const services = [
@@ -164,8 +165,8 @@ export default function Home() {
             </h2>
 
             <p className={styles.sectionDescription}>
-              Do equipamento que começou a falhar ao site que você quer
-              colocar no ar. Encontre por onde começar.
+              Do equipamento que começou a falhar ao site que você quer colocar
+              no ar. Encontre por onde começar.
             </p>
           </div>
 
@@ -219,17 +220,15 @@ export default function Home() {
             </p>
 
             <p>
-              Antes de falar de ferramentas, queremos entender sua rotina:
-              o que está funcionando, o que atrapalha e o que você gostaria
-              de fazer melhor.
+              Antes de falar de ferramentas, queremos entender sua rotina: o que
+              está funcionando, o que atrapalha e o que você gostaria de fazer
+              melhor.
             </p>
 
             <div className={styles.principles}>
               <div>
                 <h3>Conversa clara</h3>
-                <p>
-                  Explicar as opções de um jeito que ajude você a decidir.
-                </p>
+                <p>Explicar as opções de um jeito que ajude você a decidir.</p>
               </div>
 
               <div>
@@ -243,6 +242,10 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Clientes e patrocinadores são apresentados separadamente. */}
+      <Parceiros tipo="cliente" />
+      <Parceiros tipo="patrocinador" />
+
       {/* Etapas simples ajudam o visitante a entender o atendimento. */}
       <section className={styles.process} aria-labelledby="process-title">
         <div className={styles.container}>
@@ -253,8 +256,8 @@ export default function Home() {
             </div>
 
             <p>
-              Você não precisa chegar com a solução pronta. Precisamos
-              entender o que você quer resolver.
+              Você não precisa chegar com a solução pronta. Precisamos entender
+              o que você quer resolver.
             </p>
           </div>
 
@@ -287,8 +290,8 @@ export default function Home() {
               </h2>
 
               <p>
-                Na página de contato, você pode explicar o que precisa,
-                informar seus dados e solicitar um orçamento.
+                Na página de contato, você pode explicar o que precisa, informar
+                seus dados e solicitar um orçamento.
               </p>
 
               <div className={styles.contactActions}>
@@ -298,7 +301,9 @@ export default function Home() {
 
             {/* Orientação útil, sem simular um atendimento ou conversa. */}
             <aside className={styles.contactAside}>
-              <span className={styles.asideLabel}>PODE CONTAR DO SEU JEITO</span>
+              <span className={styles.asideLabel}>
+                PODE CONTAR DO SEU JEITO
+              </span>
 
               <p>
                 “Preciso melhorar a rede.”
