@@ -50,36 +50,96 @@ const principles = [
   },
 ];
 
+/*
+  Classes repetidas guardadas em constantes.
+  Os valores (cores, tamanhos, espaçamentos) são os mesmos da Home,
+  assim as páginas parecem parte do mesmo site.
+*/
+const container = "mx-auto w-full max-w-[1224px] px-5 md:px-8";
+const eyebrow = "mb-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#c9a4ed]";
+const sectionTitle = "text-[length:clamp(30px,3.6vw,46px)] font-medium leading-[1.18] tracking-[-0.04em] text-balance";
+const card = "rounded-[14px] border border-[#303138] bg-[#18191e]";
+
+/*
+  Fundo espacial igual ao da Home: estrelas pequenas + nebulosas roxas.
+  Fica atrás do conteúdo (-z-10) e não bloqueia cliques (pointer-events-none).
+*/
+const starsBackground = {
+  backgroundImage: `
+    radial-gradient(1px 1px at 24px 38px, rgb(255 255 255 / 65%) 95%, transparent),
+    radial-gradient(1px 1px at 116px 154px, rgb(219 208 245 / 50%) 95%, transparent),
+    radial-gradient(1.5px 1.5px at 78px 92px, rgb(255 255 255 / 70%) 95%, transparent),
+    radial-gradient(1px 1px at 192px 67px, rgb(255 255 255 / 35%) 95%, transparent),
+    radial-gradient(2px 2px at 245px 218px, rgb(201 164 237 / 60%) 65%, transparent)
+  `,
+  backgroundSize: "211px 239px, 307px 313px, 433px 397px, 509px 467px, 683px 619px",
+};
+
+const nebulaBackground = {
+  backgroundImage: `
+    radial-gradient(ellipse 65% 580px at 50% 0%, rgb(139 69 214 / 18%), transparent 75%),
+    radial-gradient(ellipse 45% 700px at 100% 38%, rgb(77 83 160 / 11%), transparent 75%),
+    radial-gradient(ellipse 55% 600px at 0% 85%, rgb(139 69 214 / 10%), transparent 75%)
+  `,
+};
+
+// Seta usada no botão (mesmo SVG da Home).
+function Arrow() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M5 12h14M13 6l6 6-6 6"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export default function QuemSomos() {
   return (
-    <div className="overflow-hidden bg-bg-dark text-white">
-      <section className="relative border-b border-border bg-bg-section">
-        <div className="mx-auto max-w-6xl px-6 py-20 lg:py-24">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-purple">
-            Another World · Quem somos
+    <div className="relative isolate overflow-hidden bg-[#101114] font-sans text-[#f5f4f7]">
+      {/* Camadas do fundo espacial */}
+      <div className="pointer-events-none absolute inset-0 -z-10 opacity-55" style={starsBackground} />
+      <div className="pointer-events-none absolute inset-0 -z-10 opacity-70" style={nebulaBackground} />
+
+      {/* TOPO: título centralizado, como o hero da Home */}
+      <section className="pt-16 text-center md:pt-26" aria-labelledby="quem-somos-title">
+        <div className={container}>
+          <p className="inline-flex flex-wrap items-center justify-center gap-3 rounded-full border border-[#45404e] px-4 py-2.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#d9cce7]">
+            Another World
+            <span className="text-[#c9a4ed]" aria-hidden="true">/</span>
+            Quem somos
           </p>
 
-          <div className="mt-5 max-w-3xl">
-            <h1 className="text-4xl font-bold tracking-[-0.05em] sm:text-5xl lg:text-6xl">
-              Construindo soluções através da tecnologia.
-            </h1>
+          <h1
+            id="quem-somos-title"
+            className="mx-auto mt-7 max-w-235 text-[clamp(38px,5.5vw,72px)] font-semibold leading-[1.08] tracking-[-0.055em] text-balance"
+          >
+            Construindo soluções
+            <span className="mt-2 block text-[#c9a4ed]">através da tecnologia.</span>
+          </h1>
 
-          </div>
+          <p className="mx-auto mt-7 max-w-162.5 text-base leading-[1.8] text-[#b2b0bc] md:text-lg">
+            Conheça a história, os princípios e as pessoas que fazem a
+            Another World acontecer.
+          </p>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 py-16 lg:py-20">
-        <div className="grid gap-6 lg:grid-cols-2 lg:items-stretch">
-          <article className="rounded-lg border border-border bg-bg-card p-7 sm:p-9">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-purple">
-              Nossa história
-            </p>
+      {/* NOSSA HISTÓRIA: texto à esquerda, imagem à direita */}
+      <section className="py-14 md:py-22" aria-labelledby="historia-title">
+        <div className={`${container} grid gap-6 lg:grid-cols-2 lg:items-stretch`}>
+          <article className={`${card} p-7 sm:p-9`}>
+            <p className={eyebrow}>Nossa história</p>
 
-            <h2 className="mt-4 text-2xl font-bold tracking-[-0.03em] sm:text-3xl">
+            <h2 id="historia-title" className="text-[clamp(26px,2.6vw,34px)] font-medium leading-tight tracking-[-0.03em] text-balance">
               Uma empresa criada para aproximar pessoas e tecnologia.
             </h2>
 
-            <div className="mt-6 space-y-5 text-sm leading-7 text-text-muted">
+            <div className="mt-6 space-y-5 text-[15px] leading-[1.8] text-[#b2b0bc]">
               <p>
                 A Another World surgiu da união de pessoas interessadas em
                 tecnologia e na criação de soluções capazes de resolver
@@ -101,53 +161,57 @@ export default function QuemSomos() {
             </div>
           </article>
 
-          <div className="min-h-[320px] rounded-lg border border-border bg-bg-card p-4">
-            <div className="flex h-full min-h-[288px] items-center justify-center overflow-hidden rounded-md bg-bg-dark">
-              <div className="relative h-full w-full overflow-hidden">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_25%,rgba(139,92,246,0.28),transparent_35%),radial-gradient(circle_at_75%_70%,rgba(59,130,246,0.2),transparent_35%)]" />
-                <div className="absolute left-[12%] top-[18%] h-px w-[76%] rotate-[18deg] bg-border" />
-                <div className="absolute left-[12%] top-[52%] h-px w-[76%] -rotate-[12deg] bg-border" />
-                <div className="absolute left-[28%] top-[10%] h-[80%] w-px rotate-[24deg] bg-border" />
-                <div className="absolute right-[28%] top-[10%] h-[80%] w-px -rotate-[24deg] bg-border" />
-                <div className="absolute left-1/2 top-1/2 h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full border border-purple/50 bg-purple/10 shadow-[0_0_70px_rgba(139,92,246,0.25)]" />
-                <div className="absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-purple" />
-              </div>
+          {/* Imagem decorativa feita só com Tailwind: uma "rede" conectada */}
+          <div className={`${card} min-h-80 p-4`} aria-hidden="true">
+            <div className="relative h-full min-h-72 overflow-hidden rounded-[10px] bg-[#101114]">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_25%,rgb(139_69_214/28%),transparent_40%),radial-gradient(circle_at_75%_70%,rgb(77_83_160/22%),transparent_40%)]" />
+              <div className="absolute left-[12%] top-[18%] h-px w-[76%] rotate-18 bg-[#303138]" />
+              <div className="absolute left-[12%] top-[52%] h-px w-[76%] -rotate-12 bg-[#303138]" />
+              <div className="absolute left-[28%] top-[10%] h-[80%] w-px rotate-24 bg-[#303138]" />
+              <div className="absolute right-[28%] top-[10%] h-[80%] w-px -rotate-24 bg-[#303138]" />
+              <div className="absolute left-1/2 top-1/2 h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#c9a4ed]/40 bg-purple/10 shadow-[0_0_70px_rgb(139_69_214/25%)]" />
+              <div className="absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#c9a4ed]" />
             </div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 pb-16 lg:pb-20">
-        <div className="grid gap-6 lg:grid-cols-2">
-          <div className="min-h-[320px] rounded-lg border border-border bg-bg-card p-4">
-            <div className="flex h-full min-h-[288px] items-center justify-center overflow-hidden rounded-md bg-bg-dark">
-              <div className="grid w-full max-w-sm grid-cols-3 gap-3 p-8 opacity-80">
-                <div className="h-24 rounded border border-border bg-bg-section" />
-                <div className="mt-6 h-24 rounded border border-purple/40 bg-purple/10" />
-                <div className="h-24 rounded border border-border bg-bg-section" />
-                <div className="col-span-3 h-2 rounded-full bg-border" />
-                <div className="h-16 rounded border border-border bg-bg-section" />
-                <div className="h-16 rounded border border-border bg-bg-section" />
-                <div className="h-16 rounded border border-purple/40 bg-purple/10" />
+      {/* MISSÃO, VISÃO E VALORES: imagem à esquerda, texto à direita */}
+      <section className="pb-14 md:pb-22" aria-labelledby="identidade-title">
+        <div className={`${container} grid gap-6 lg:grid-cols-2`}>
+          {/* order-2 no celular: o texto aparece antes da imagem */}
+          <div className={`${card} order-2 min-h-80 p-4 lg:order-1`} aria-hidden="true">
+            <div className="flex h-full min-h-72 items-center justify-center overflow-hidden rounded-[10px] bg-[#101114]">
+              <div className="grid w-full max-w-sm grid-cols-3 gap-3 p-8 opacity-90">
+                <div className="h-24 rounded border border-[#303138] bg-[#18191e]" />
+                <div className="mt-6 h-24 rounded border border-[#c9a4ed]/40 bg-purple/10" />
+                <div className="h-24 rounded border border-[#303138] bg-[#18191e]" />
+                <div className="col-span-3 h-2 rounded-full bg-[#303138]" />
+                <div className="h-16 rounded border border-[#303138] bg-[#18191e]" />
+                <div className="h-16 rounded border border-[#303138] bg-[#18191e]" />
+                <div className="h-16 rounded border border-[#c9a4ed]/40 bg-purple/10" />
               </div>
             </div>
           </div>
 
-          <div className="rounded-lg border border-border bg-bg-card p-7 sm:p-9">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-purple">
-              Nossa identidade
-            </p>
+          <div className={`${card} order-1 p-7 sm:p-9 lg:order-2`}>
+            <p id="identidade-title" className={eyebrow}>Nossa identidade</p>
 
-            <div className="mt-6 space-y-7">
+            <div className="mt-2">
               {principles.map((item) => (
-                <article key={item.number}>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-semibold text-purple">
+                <article
+                  key={item.number}
+                  className="border-t border-[#303138] py-6 first:border-t-0 first:pt-2 last:pb-0"
+                >
+                  <div className="flex items-baseline gap-3">
+                    <span className="text-[13px] tabular-nums text-[#c9a4ed]">
                       {item.number}
                     </span>
-                    <h2 className="text-xl font-semibold">{item.title}</h2>
+                    <h2 className="text-xl font-medium tracking-[-0.02em]">
+                      {item.title}
+                    </h2>
                   </div>
-                  <p className="mt-3 text-sm leading-7 text-text-muted">
+                  <p className="mt-3 text-[15px] leading-[1.8] text-[#b2b0bc]">
                     {item.description}
                   </p>
                 </article>
@@ -157,24 +221,23 @@ export default function QuemSomos() {
         </div>
       </section>
 
-      <section className="border-y border-border bg-bg-section">
-        <div className="mx-auto max-w-6xl px-6 py-20 lg:py-24">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-purple">
-              Nossa equipe
-            </p>
-            <h2 className="mt-4 text-3xl font-bold tracking-[-0.04em] sm:text-4xl">
+      {/* EQUIPE: mesma estrutura de fotos, só com as cores da Home */}
+      <section className="border-y border-[#303138] py-14 md:py-22" aria-labelledby="equipe-title">
+        <div className={container}>
+          <div className="mx-auto mb-10 max-w-172.5 text-center">
+            <p className={eyebrow}>Nossa equipe</p>
+            <h2 id="equipe-title" className={sectionTitle}>
               As pessoas por trás da Another World.
             </h2>
           </div>
 
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {team.map((member) => (
               <article
                 key={member.name}
-                className="overflow-hidden rounded-2xl border border-border bg-bg-card transition hover:-translate-y-1 hover:border-purple"
+                className={`${card} overflow-hidden transition-colors hover:border-[#c9a4ed]/60`}
               >
-                <div className="aspect-[4/5] overflow-hidden bg-bg-dark">
+                <div className="aspect-4/5 overflow-hidden bg-[#101114]">
                   <img
                     src={member.image}
                     alt={`Foto de ${member.name}`}
@@ -183,8 +246,8 @@ export default function QuemSomos() {
                 </div>
 
                 <div className="p-6">
-                  <h3 className="text-xl font-semibold">{member.name}</h3>
-                  <p className="mt-2 text-sm text-purple">{member.role}</p>
+                  <h3 className="text-xl font-medium tracking-[-0.02em]">{member.name}</h3>
+                  <p className="mt-2 text-sm text-[#c9a4ed]">{member.role}</p>
                 </div>
               </article>
             ))}
@@ -192,20 +255,32 @@ export default function QuemSomos() {
         </div>
       </section>
 
-      <section className="border-b border-border bg-bg-section">
-        <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-6 py-16 sm:flex-row sm:items-center">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-purple">
-              Próximo passo
-            </p>
-            <h2 className="mt-3 text-3xl font-bold">
-              Quer conhecer nossas soluções?
-            </h2>
-          </div>
+      {/* PRÓXIMO PASSO: painel no mesmo estilo da seção de contato da Home */}
+      <section className="py-14 md:py-22" aria-labelledby="proximo-passo-title">
+        <div className={container}>
+          <div className="flex flex-col items-start justify-between gap-8 rounded-2xl border border-[#49404f] bg-[#211c27] px-6 py-8 md:flex-row md:items-center md:p-13.5">
+            <div>
+              <p className={eyebrow}>Próximo passo</p>
+              <h2 id="proximo-passo-title" className={sectionTitle}>
+                Quer conhecer nossas soluções?
+              </h2>
+            </div>
 
-          <Button as={Link} to="/servicos" variant="white">
-            Conhecer serviços
-          </Button>
+            {/*
+              Button é o componente do projeto. As classes com "!" no final
+              têm prioridade e deixam o botão com o visual da Home
+              (cantos menos arredondados, texto normal e seta).
+            */}
+            <Button
+              as={Link}
+              to="/servicos"
+              variant="solid"
+              className="shrink-0 gap-3.5 min-h-12.5 rounded-lg! px-5.5! py-3.5! text-sm! normal-case! tracking-normal! hover:bg-[#7735bd] hover:opacity-100!"
+            >
+              Conhecer serviços
+              <Arrow />
+            </Button>
+          </div>
         </div>
       </section>
     </div>
