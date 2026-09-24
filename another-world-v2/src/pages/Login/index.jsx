@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Button from "../../components/ui/Button";
+import fundo from "../../styles/FundoEspacial.module.css";
 
 export default function Login() {
   const { user, login, register } = useAuth();
@@ -86,7 +87,9 @@ export default function Login() {
   // Tela de sucesso — aparece por 1.2s antes do redirecionamento.
   if (welcomeName) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-6 text-center">
+      <div
+        className={`${fundo.fundo} ${fundo.semEstrelas} min-h-screen flex items-center justify-center px-6 text-center`}
+      >
         <div>
           <p className="text-purple text-xs font-semibold uppercase tracking-widest mb-4">
             Tudo certo
@@ -100,7 +103,9 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 py-16">
+    <div
+      className={`${fundo.fundo} ${fundo.semEstrelas} min-h-screen flex items-center justify-center px-6 py-16`}
+    >
       <div className="w-full max-w-md bg-bg-card border border-border rounded-2xl p-8">
 
         {/* Abas Login / Cadastro */}
