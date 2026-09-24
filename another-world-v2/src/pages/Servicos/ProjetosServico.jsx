@@ -152,33 +152,14 @@ export default function ProjetosServico({ service }) {
               <h2 className="text-2xl font-medium tracking-[-0.02em]">
                 Ainda não há projetos de {service.title} publicados.
               </h2>
-              <p className="mx-auto mt-4 max-w-120 text-[15px] leading-[1.8] text-[#b2b0bc]">
-                Enquanto isso, fale com a gente para entender como podemos
-                ajudar no seu caso.
-              </p>
+          
             </div>
           )}
         </div>
       </section>
 
       {/* PRÓXIMO PASSO */}
-      <section className="pb-14 md:pb-22" aria-labelledby="projetos-contato-title">
-        <div className={container}>
-          <div className="flex flex-col items-start justify-between gap-8 rounded-2xl border border-[#49404f] bg-[#211c27] px-6 py-8 md:flex-row md:items-center md:p-13.5">
-            <div>
-              <p className={eyebrow}>Próximo passo</p>
-              <h2 id="projetos-contato-title" className={sectionTitle}>
-                Precisa de algo parecido?
-              </h2>
-            </div>
-
-            <Button as={Link} to="/contato" variant="solid" className={buttonHome}>
-              Falar conosco
-              <Arrow />
-            </Button>
-          </div>
-        </div>
-      </section>
+    
     </>
   );
 }
