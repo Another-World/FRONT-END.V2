@@ -14,7 +14,7 @@ const team = [
   },
   {
     name: "Clarice Brasileiro",
-    role: "Diretoria",
+    role: "Desenvolvedora Front-end",
     image: clariceImage,
   },
   {
@@ -24,7 +24,7 @@ const team = [
   },
   {
     name: "Gabriel Barbosa",
-    role: "Desenvolvedor Front-end",
+    role: "Desenvolvedor Back-end",
     image: gabrielImage,
   },
 ];
