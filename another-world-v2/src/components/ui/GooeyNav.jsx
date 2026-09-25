@@ -1,7 +1,6 @@
 import {
   useEffect,
   useId,
-  useState,
 } from "react";
 
 import {
@@ -11,7 +10,7 @@ import {
   useTransform,
 } from "motion/react";
 
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 
 const SPRING = {
   type: "spring",
@@ -169,16 +168,14 @@ function NavLabel({
   isActive,
   size,
   activeLabelColor,
-  onSelect,
 }) {
   return (
     <NavLink
       to={to}
-      onClick={onSelect}
-      aria-current={
-        isActive ? "page" : undefined
-      }
-      className={`flex cursor-pointer items-center whitespace-nowrap font-medium ${SIZES[size].label} ${
+      aria-current={isActive ? "page" : undefined}
+      className={`flex cursor-pointer items-center whitespace-nowrap font-medium ${
+        SIZES[size].label
+      } ${
         isActive ? FADE_IN : FADE_OUT
       } ${
         isActive
@@ -207,17 +204,21 @@ export default function GooeyNav({
 }) {
   const reduced = useReducedMotion() ?? false;
 
-  const [active, setActive] = useState(0);
+  const location = useLocation();
+
+  /*
+   * Identifica automaticamente qual item corresponde
+   * à página atualmente aberta.
+   */
+  const active = items.findIndex(
+    (item) => item.to === location.pathname
+  );
 
   const span =
     separation ?? SIZES[size].separation;
 
   const corner =
     radius ?? SIZES[size].radius;
-
-  const handleSelect = (index) => {
-    setActive(index);
-  };
 
   const open = (seam) =>
     seam === 0 ||
@@ -285,9 +286,6 @@ export default function GooeyNav({
                 size={size}
                 activeLabelColor={
                   activeLabelColor
-                }
-                onSelect={() =>
-                  handleSelect(index)
                 }
               />
             </Segment>
