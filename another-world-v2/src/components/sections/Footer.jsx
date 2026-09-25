@@ -33,6 +33,7 @@ export default function Footer() {
             </p>
           </div>
 
+
           {/* Navegação */}
           <div>
             <h3 className="mb-5 text-sm font-semibold text-white">
@@ -40,6 +41,7 @@ export default function Footer() {
             </h3>
 
             <nav className="flex flex-col gap-3">
+
               <Link
                 to="/"
                 className="text-sm text-text-muted transition-colors hover:text-white"
@@ -67,8 +69,10 @@ export default function Footer() {
               >
                 Contato
               </Link>
+
             </nav>
           </div>
+
 
           {/* Serviços */}
           <div>
@@ -76,24 +80,39 @@ export default function Footer() {
               Serviços
             </h3>
 
-            <div className="flex flex-col gap-3">
-              <span className="text-sm text-text-muted">
+            <nav className="flex flex-col gap-3">
+
+              <Link
+                to="/servicos"
+                className="text-sm text-text-muted transition-colors hover:text-white"
+              >
                 Hardware
-              </span>
+              </Link>
 
-              <span className="text-sm text-text-muted">
+              <Link
+                to="/servicos"
+                className="text-sm text-text-muted transition-colors hover:text-white"
+              >
                 Redes
-              </span>
+              </Link>
 
-              <span className="text-sm text-text-muted">
+              <Link
+                to="/servicos"
+                className="text-sm text-text-muted transition-colors hover:text-white"
+              >
                 Desenvolvimento Web
-              </span>
+              </Link>
 
-              <span className="text-sm text-text-muted">
+              <Link
+                to="/contato"
+                className="text-sm text-text-muted transition-colors hover:text-white"
+              >
                 Manutenção
-              </span>
-            </div>
+              </Link>
+
+            </nav>
           </div>
+
 
           {/* Contato */}
           <div>
@@ -102,6 +121,7 @@ export default function Footer() {
             </h3>
 
             <div className="flex flex-col gap-3">
+
               <span className="text-sm text-text-muted">
                 São Paulo - SP
               </span>
@@ -116,10 +136,12 @@ export default function Footer() {
               >
                 Falar conosco
               </Link>
+
             </div>
           </div>
 
         </div>
+
 
         {/* Rodapé inferior */}
         <div className="flex flex-col gap-4 border-t border-border py-6 sm:flex-row sm:items-center sm:justify-between">

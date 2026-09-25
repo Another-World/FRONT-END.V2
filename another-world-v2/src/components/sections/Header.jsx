@@ -10,6 +10,7 @@ import GooeyNav from "../ui/GooeyNav";
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const { user, logout } = useAuth();
@@ -41,12 +42,26 @@ export default function Header() {
       }
     }
 
-    document.addEventListener("mousedown", handleClickFora);
-    document.addEventListener("keydown", handleEsc);
+    document.addEventListener(
+      "mousedown",
+      handleClickFora
+    );
+
+    document.addEventListener(
+      "keydown",
+      handleEsc
+    );
 
     return () => {
-      document.removeEventListener("mousedown", handleClickFora);
-      document.removeEventListener("keydown", handleEsc);
+      document.removeEventListener(
+        "mousedown",
+        handleClickFora
+      );
+
+      document.removeEventListener(
+        "keydown",
+        handleEsc
+      );
     };
   }, [userMenuOpen]);
 
@@ -118,7 +133,9 @@ export default function Header() {
 
                 <span
                   className={`text-[10px] transition-transform ${
-                    userMenuOpen ? "rotate-180" : ""
+                    userMenuOpen
+                      ? "rotate-180"
+                      : ""
                   }`}
                   aria-hidden="true"
                 >
@@ -201,7 +218,6 @@ export default function Header() {
       {menuOpen && (
         <div className="border-t border-border bg-bg-dark px-6 py-6 lg:hidden">
           <nav className="flex flex-col gap-5">
-
             {menuItems.map((item) => (
               <Link
                 key={item.to}
