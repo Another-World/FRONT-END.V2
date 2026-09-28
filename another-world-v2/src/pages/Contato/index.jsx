@@ -353,11 +353,25 @@ export default function Contato() {
   // =====================================================
 
   return (
-    <main className="min-h-screen bg-bg-dark">
-
-      {/* Cabeçalho */}
-      <section className="mx-auto max-w-[1200px] px-6 pb-12 pt-20">
-
+    <main className="relative isolate min-h-screen overflow-hidden bg-[#101114]">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-0"
+        style={{
+          backgroundImage: `radial-gradient(1px 1px at 24px 38px, rgb(255 255 255 / 65%) 95%, transparent), radial-gradient(1px 1px at 116px 154px, rgb(219 208 245 / 50%) 95%, transparent), radial-gradient(1.5px 1.5px at 78px 92px, rgb(255 255 255 / 70%) 95%, transparent), radial-gradient(1px 1px at 192px 67px, rgb(255 255 255 / 35%) 95%, transparent), radial-gradient(2px 2px at 245px 218px, rgb(201 164 237 / 60%) 65%, transparent)`,
+          backgroundSize: "211px 239px, 307px 313px, 433px 397px, 509px 467px, 683px 619px",
+          opacity: 0.55,
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-0"
+        style={{
+          backgroundImage: `radial-gradient(ellipse 65% 580px at 50% 0%, rgb(139 69 214 / 18%), transparent 75%), radial-gradient(ellipse 45% 700px at 100% 38%, rgb(77 83 160 / 11%), transparent 75%), radial-gradient(ellipse 55% 600px at 0% 85%, rgb(139 69 214 / 10%), transparent 75%)`,
+        }}
+      />
+      {/* Cabeçalho da página */}
+      <section className="relative z-10 mx-auto max-w-[1200px] px-6 pb-12 pt-20">
         <p className="mb-3 text-sm font-medium uppercase tracking-[0.2em] text-purple">
           Contato
         </p>
@@ -377,8 +391,7 @@ export default function Contato() {
 
 
       {/* Conteúdo */}
-      <section className="mx-auto max-w-[1200px] px-6 pb-20">
-
+      <section className="relative z-10 mx-auto max-w-[1200px] px-6 pb-20">
         <div className="grid gap-8 lg:grid-cols-[1.4fr_0.8fr]">
 
           {/* =================================================

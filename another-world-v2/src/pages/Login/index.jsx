@@ -2,7 +2,29 @@ import { useState } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Button from "../../components/ui/Button";
-import fundo from "../../styles/FundoEspacial.module.css";
+
+function SpaceBackground() {
+  return (
+    <>
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-0"
+        style={{
+          backgroundImage: `radial-gradient(1px 1px at 24px 38px, rgb(255 255 255 / 65%) 95%, transparent), radial-gradient(1px 1px at 116px 154px, rgb(219 208 245 / 50%) 95%, transparent), radial-gradient(1.5px 1.5px at 78px 92px, rgb(255 255 255 / 70%) 95%, transparent), radial-gradient(1px 1px at 192px 67px, rgb(255 255 255 / 35%) 95%, transparent), radial-gradient(2px 2px at 245px 218px, rgb(201 164 237 / 60%) 65%, transparent)`,
+          backgroundSize: "211px 239px, 307px 313px, 433px 397px, 509px 467px, 683px 619px",
+          opacity: 0.55,
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-0"
+        style={{
+          backgroundImage: `radial-gradient(ellipse 65% 580px at 50% 0%, rgb(139 69 214 / 18%), transparent 75%), radial-gradient(ellipse 45% 700px at 100% 38%, rgb(77 83 160 / 11%), transparent 75%), radial-gradient(ellipse 55% 600px at 0% 85%, rgb(139 69 214 / 10%), transparent 75%)`,
+        }}
+      />
+    </>
+  );
+}
 
 export default function Login() {
   const { user, login, register } = useAuth();
@@ -61,17 +83,22 @@ export default function Login() {
           setError("A senha precisa ter pelo menos 6 caracteres.");
           return;
         }
+
         if (form.password !== form.confirmPassword) {
           setError("As senhas não coincidem.");
           return;
         }
+
         session = register({
           name: form.name,
           email: form.email,
           password: form.password,
         });
       } else {
-        session = login({ email: form.email, password: form.password });
+        session = login({
+          email: form.email,
+          password: form.password,
+        });
       }
 
       // Mostra a mensagem de boas-vindas por um instante antes de redirecionar.
@@ -87,14 +114,15 @@ export default function Login() {
   // Tela de sucesso — aparece por 1.2s antes do redirecionamento.
   if (welcomeName) {
     return (
-      <div
-        className={`${fundo.fundo} ${fundo.semEstrelas} min-h-screen flex items-center justify-center px-6 text-center`}
-      >
-        <div>
-          <p className="text-purple text-xs font-semibold uppercase tracking-widest mb-4">
+      <div className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-[#101114] px-6 text-center">
+        <SpaceBackground />
+
+        <div className="relative z-10">
+          <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-purple">
             Tudo certo
           </p>
-          <h1 className="text-white text-3xl font-bold">
+
+          <h1 className="text-3xl font-bold text-white">
             Seja bem-vindo, {welcomeName}!
           </h1>
         </div>
@@ -103,27 +131,31 @@ export default function Login() {
   }
 
   return (
-    <div
-      className={`${fundo.fundo} ${fundo.semEstrelas} min-h-screen flex items-center justify-center px-6 py-16`}
-    >
-      <div className="w-full max-w-md bg-bg-card border border-border rounded-2xl p-8">
+    <div className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-[#101114] px-6 py-16">
+      <SpaceBackground />
 
+      <div className="relative z-10 w-full max-w-md rounded-2xl border border-border bg-bg-card/90 p-8 backdrop-blur-sm">
         {/* Abas Login / Cadastro */}
-        <div className="flex mb-8 border-b border-border">
+        <div className="mb-8 flex border-b border-border">
           <button
             type="button"
             onClick={() => switchMode("login")}
             className={`flex-1 pb-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
-              mode === "login" ? "text-white border-b-2 border-purple" : "text-text-muted"
+              mode === "login"
+                ? "border-b-2 border-purple text-white"
+                : "text-text-muted"
             }`}
           >
             Entrar
           </button>
+
           <button
             type="button"
             onClick={() => switchMode("cadastro")}
             className={`flex-1 pb-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
-              mode === "cadastro" ? "text-white border-b-2 border-purple" : "text-text-muted"
+              mode === "cadastro"
+                ? "border-b-2 border-purple text-white"
+                : "text-text-muted"
             }`}
           >
             Criar conta
@@ -136,13 +168,14 @@ export default function Login() {
               <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
                 Nome
               </span>
+
               <input
                 type="text"
                 name="name"
                 value={form.name}
                 onChange={handleChange}
                 required
-                className="bg-transparent border-b border-border py-2 text-white outline-none focus:border-purple"
+                className="border-b border-border bg-transparent py-2 text-white outline-none focus:border-purple"
               />
             </label>
           )}
@@ -151,13 +184,14 @@ export default function Login() {
             <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
               E-mail
             </span>
+
             <input
               type="email"
               name="email"
               value={form.email}
               onChange={handleChange}
               required
-              className="bg-transparent border-b border-border py-2 text-white outline-none focus:border-purple"
+              className="border-b border-border bg-transparent py-2 text-white outline-none focus:border-purple"
             />
           </label>
 
@@ -165,13 +199,14 @@ export default function Login() {
             <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
               Senha
             </span>
+
             <input
               type="password"
               name="password"
               value={form.password}
               onChange={handleChange}
               required
-              className="bg-transparent border-b border-border py-2 text-white outline-none focus:border-purple"
+              className="border-b border-border bg-transparent py-2 text-white outline-none focus:border-purple"
             />
           </label>
 
@@ -180,13 +215,14 @@ export default function Login() {
               <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
                 Confirmar senha
               </span>
+
               <input
                 type="password"
                 name="confirmPassword"
                 value={form.confirmPassword}
                 onChange={handleChange}
                 required
-                className="bg-transparent border-b border-border py-2 text-white outline-none focus:border-purple"
+                className="border-b border-border bg-transparent py-2 text-white outline-none focus:border-purple"
               />
             </label>
           )}
@@ -194,15 +230,17 @@ export default function Login() {
           {mode === "login" && (
             <button
               type="button"
-              className="text-xs text-purple text-right hover:underline"
-              onClick={() => alert("Recuperação de senha ainda não implementada.")}
+              className="text-right text-xs text-purple hover:underline"
+              onClick={() =>
+                alert("Recuperação de senha ainda não implementada.")
+              }
             >
               Esqueci minha senha
             </button>
           )}
 
           {error && (
-            <p className="text-red-400 text-sm" role="alert">
+            <p className="text-sm text-red-400" role="alert">
               {error}
             </p>
           )}
