@@ -1,23 +1,28 @@
-// ⚠️ SIMULAÇÃO: as solicitações ficam no localStorage, ou seja, só existem
-// NESTE navegador. Quando tivermos backend (Supabase), este arquivo vira o
-// único lugar a mudar — as telas continuam iguais, só trocam essas funções
-// por chamadas à API.
+export const SERVICOS_ORCAMENTO = [
+  { slug: "hardware", nome: "Hardware" },
+  { slug: "redes", nome: "Redes" },
+  { slug: "desenvolvimento-web", nome: "Desenvolvimento Web" },
+  { slug: "manutencao", nome: "Manutenção" },
+  { slug: "outro", nome: "Outro / Ainda não sei" },
+];
 
-const KEY = "aw_solicitacoes";
-
-// Os três estados possíveis de uma solicitação.
 export const STATUS = {
   EM_ANALISE: "em_analise",
+  EM_CONTATO: "em_contato",
   ACEITO: "aceito",
   NEGADO: "negado",
+  CONCLUIDA: "concluida",
+  CANCELADA: "cancelada",
 };
 
-// Texto e cor de cada status, num lugar só — assim a tela não precisa ter
-// um monte de if espalhado pra decidir como mostrar cada um.
 export const STATUS_INFO = {
   [STATUS.EM_ANALISE]: {
-    label: "Em Análise",
+    label: "Em análise",
     classe: "border-amber-500/30 bg-amber-500/10 text-amber-300",
+  },
+  [STATUS.EM_CONTATO]: {
+    label: "Em contato",
+    classe: "border-blue-500/30 bg-blue-500/10 text-blue-300",
   },
   [STATUS.ACEITO]: {
     label: "Aceito",
@@ -27,54 +32,99 @@ export const STATUS_INFO = {
     label: "Negado",
     classe: "border-red-500/30 bg-red-500/10 text-red-300",
   },
+  [STATUS.CONCLUIDA]: {
+    label: "Concluída",
+    classe: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
+  },
+  [STATUS.CANCELADA]: {
+    label: "Cancelada",
+    classe: "border-zinc-500/30 bg-zinc-500/10 text-zinc-300",
+  },
 };
 
-function lerTudo() {
-  const raw = localStorage.getItem(KEY);
-  return raw ? JSON.parse(raw) : [];
+function opcional(valor) {
+  const texto = String(valor ?? "").trim();
+  return texto || undefined;
 }
 
-function salvarTudo(lista) {
-  localStorage.setItem(KEY, JSON.stringify(lista));
-}
-
-// Todas as solicitações (é isso que o painel do admin vai usar depois).
-export function getSolicitacoes() {
-  return lerTudo().sort((a, b) => b.criadaEm.localeCompare(a.criadaEm));
-}
-
-// Só as de um cliente — é o que aparece na Área do Cliente.
-export function getSolicitacoesPorEmail(email) {
-  return getSolicitacoes().filter((s) => s.email === email);
-}
-
-// Chamada pelo formulário da página de Contato.
-// Toda solicitação nova nasce "Em Análise" — não existe estado inicial
-// diferente disso.
-export function criarSolicitacao({ nome, email, telefone, cep, endereco, frente, mensagem }) {
-  const nova = {
-    id: crypto.randomUUID(),
-    nome,
-    email,
-    telefone: telefone ?? "",
-    cep: cep ?? "",
-    endereco: endereco ?? "",
-    frente: frente ?? "Ainda não sei",
-    mensagem,
-    status: STATUS.EM_ANALISE,
-    resposta: "",
-    criadaEm: new Date().toISOString(),
+// Esta função agora é assíncrona: o formulário deve usar await.
+// Novas solicitações são gravadas exclusivamente pela API.
+export async function criarSolicitacao(dados) {
+  const payload = {
+    nome: dados.nome.trim(),
+    email: dados.email.trim().toLowerCase(),
+    telefone: dados.telefone.replace(/\D/g, ""),
+    servicoSlug: dados.servicoSlug,
+    cep: dados.cep.replace(/\D/g, ""),
+    logradouro: opcional(dados.rua),
+    bairro: opcional(dados.bairro),
+    cidade: opcional(dados.cidade),
+    uf: opcional(dados.uf)?.toUpperCase(),
+    numero: opcional(dados.numero),
+    complemento: opcional(dados.complemento),
+    mensagem: dados.mensagem.trim(),
+    canalPreferido: dados.canalPreferido ?? "email",
+    whatsappAutorizado: dados.whatsappAutorizado === true,
   };
 
-  salvarTudo([...lerTudo(), nova]);
-  return nova;
+  let response;
+  try {
+    response = await fetch("/api/solicitacoes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  } catch {
+    throw new Error(
+      "Não foi possível confirmar o envio. Confira sua conexão antes de tentar novamente.",
+    );
+  }
+
+  const resultado = await response.json().catch(() => null);
+  if (!response.ok) {
+    const error = new Error(
+      resultado?.erro ?? "Não foi possível enviar. Tente novamente em instantes.",
+    );
+    error.campos = Array.isArray(resultado?.campos) ? resultado.campos : [];
+    throw error;
+  }
+  if (!resultado?.id || resultado.status !== STATUS.EM_ANALISE) {
+    throw new Error("O servidor não confirmou o envio. Confira antes de reenviar.");
+  }
+  return resultado;
 }
 
-// Usada pelo painel do admin pra aceitar ou negar.
-// A "resposta" é a justificativa que o cliente vai ler.
-export function atualizarStatus(id, status, resposta = "") {
-  const lista = lerTudo().map((s) =>
-    s.id === id ? { ...s, status, resposta, respondidaEm: new Date().toISOString() } : s
+// Compatibilidade com as telas de demonstração atuais.
+// Estas funções ainda leem SOMENTE dados antigos deste navegador.
+// Elas não consultam nem alteram o PostgreSQL. A leitura real dependerá
+// da autenticação com Supabase e de novas rotas protegidas do backend.
+const KEY = "aw_solicitacoes";
+
+function lerTudo() {
+  try {
+    const dados = JSON.parse(localStorage.getItem(KEY) ?? "[]");
+    return Array.isArray(dados) ? dados : [];
+  } catch {
+    return [];
+  }
+}
+
+export function getSolicitacoes() {
+  return lerTudo().sort((a, b) =>
+    String(b.criadaEm ?? "").localeCompare(String(a.criadaEm ?? "")),
   );
-  salvarTudo(lista);
+}
+
+export function getSolicitacoesPorEmail(email) {
+  return getSolicitacoes().filter((solicitacao) => solicitacao.email === email);
+}
+
+// Apenas para registros antigos de demonstração, sem efeito no banco real.
+export function atualizarStatus(id, status, resposta = "") {
+  const lista = lerTudo().map((solicitacao) =>
+    solicitacao.id === id
+      ? { ...solicitacao, status, resposta, respondidaEm: new Date().toISOString() }
+      : solicitacao,
+  );
+  localStorage.setItem(KEY, JSON.stringify(lista));
 }
