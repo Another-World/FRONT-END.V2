@@ -1,9 +1,14 @@
 import { Link } from "react-router-dom";
+
 import Button from "../../components/ui/Button";
-import styles from "./Home.module.css";
 import Parceiros from "../../components/sections/Parceiros";
 
-// Conteúdo dos cartões de serviços.
+import styles from "./Home.module.css";
+
+/* =========================================================
+   SERVIÇOS
+   ========================================================= */
+
 const services = [
   {
     number: "01",
@@ -40,6 +45,10 @@ const services = [
   },
 ];
 
+/* =========================================================
+   ETAPAS
+   ========================================================= */
+
 const steps = [
   {
     number: "01",
@@ -61,7 +70,10 @@ const steps = [
   },
 ];
 
-// SVG decorativo: não exige instalação de uma biblioteca de ícones.
+/* =========================================================
+   SETA
+   ========================================================= */
+
 function Arrow() {
   return (
     <svg
@@ -82,7 +94,10 @@ function Arrow() {
   );
 }
 
-// Reaproveita o Button existente, renderizando um Link do React Router.
+/* =========================================================
+   LINK DE AÇÃO
+   ========================================================= */
+
 function ActionLink({ to, children, secondary = false }) {
   return (
     <Button
@@ -99,7 +114,10 @@ function ActionLink({ to, children, secondary = false }) {
   );
 }
 
-// Os três blocos principais possuem seu próprio "Saber mais".
+/* =========================================================
+   SABER MAIS
+   ========================================================= */
+
 function MoreLink({ to, subject }) {
   return (
     <Link
@@ -113,12 +131,21 @@ function MoreLink({ to, subject }) {
   );
 }
 
+/* =========================================================
+   HOME
+   ========================================================= */
+
 export default function Home() {
   return (
-    // O layout principal já deve fornecer Header, main e Footer.
     <div className={styles.home}>
-      {/* HERO: composição centralizada inspirada na referência. */}
-      <section className={styles.hero} aria-labelledby="home-title">
+      {/* =====================================================
+          HERO
+          ===================================================== */}
+
+      <section
+        className={styles.hero}
+        aria-labelledby="home-title"
+      >
         <div className={styles.container}>
           <p className={styles.badge}>
             ANOTHER WORLD
@@ -137,9 +164,14 @@ export default function Home() {
           </p>
 
           <div className={styles.actions}>
-            <ActionLink to="/contato">Conversar sobre meu projeto</ActionLink>
+            <ActionLink to="/contato">
+              Conversar sobre meu projeto
+            </ActionLink>
 
-            <ActionLink to="/servicos" secondary>
+            <ActionLink
+              to="/servicos"
+              secondary
+            >
               Conhecer os serviços
             </ActionLink>
           </div>
@@ -152,11 +184,19 @@ export default function Home() {
         </div>
       </section>
 
-      {/* SERVIÇOS: resumo da página /servicos. */}
-      <section className={styles.services} aria-labelledby="services-title">
+      {/* =====================================================
+          SERVIÇOS
+          ===================================================== */}
+
+      <section
+        className={styles.services}
+        aria-labelledby="services-title"
+      >
         <div className={styles.container}>
           <div className={styles.sectionHeading}>
-            <p className={styles.eyebrow}>O QUE FAZEMOS</p>
+            <p className={styles.eyebrow}>
+              O QUE FAZEMOS
+            </p>
 
             <h2 id="services-title">
               O que está precisando
@@ -172,12 +212,19 @@ export default function Home() {
 
           <div className={styles.serviceGrid}>
             {services.map((service) => (
-              <article key={service.number} className={styles.serviceCard}>
-                <span className={styles.cardNumber} aria-hidden="true">
+              <article
+                key={service.number}
+                className={styles.serviceCard}
+              >
+                <span
+                  className={styles.cardNumber}
+                  aria-hidden="true"
+                >
                   {service.number}
                 </span>
 
                 <h3>{service.title}</h3>
+
                 <p>{service.description}</p>
 
                 <ul>
@@ -193,24 +240,45 @@ export default function Home() {
           </div>
 
           <div className={styles.sectionFooter}>
-            <p>Conheça os serviços e encontre o que faz sentido para você.</p>
-            <MoreLink to="/servicos" subject="nossos serviços" />
+            <p>
+              Conheça os serviços e encontre o que faz sentido para você.
+            </p>
+
+            <MoreLink
+              to="/servicos"
+              subject="nossos serviços"
+            />
           </div>
         </div>
       </section>
 
-      {/* QUEM SOMOS: uma seção clara cria contraste com a abertura. */}
-      <section className={styles.about} aria-labelledby="about-title">
-        <div className={`${styles.container} ${styles.aboutGrid}`}>
+      {/* =====================================================
+          QUEM SOMOS
+          ===================================================== */}
+
+      <section
+        className={styles.about}
+        aria-labelledby="about-title"
+      >
+        <div
+          className={`${styles.container} ${styles.aboutGrid}`}
+        >
           <div className={styles.aboutIntro}>
-            <p className={styles.eyebrow}>QUEM SOMOS</p>
+            <p className={styles.eyebrow}>
+              QUEM SOMOS
+            </p>
 
             <h2 id="about-title">
               A tecnologia é o meio.
-              <span>Seu trabalho é o ponto de partida.</span>
+              <span>
+                Seu trabalho é o ponto de partida.
+              </span>
             </h2>
 
-            <MoreLink to="/quem-somos" subject="a Another World" />
+            <MoreLink
+              to="/quem-somos"
+              subject="a Another World"
+            />
           </div>
 
           <div className={styles.aboutContent}>
@@ -220,19 +288,23 @@ export default function Home() {
             </p>
 
             <p>
-              Antes de falar de ferramentas, queremos entender sua rotina: o que
-              está funcionando, o que atrapalha e o que você gostaria de fazer
-              melhor.
+              Antes de falar de ferramentas, queremos entender sua rotina: o
+              que está funcionando, o que atrapalha e o que você gostaria de
+              fazer melhor.
             </p>
 
             <div className={styles.principles}>
               <div>
                 <h3>Conversa clara</h3>
-                <p>Explicar as opções de um jeito que ajude você a decidir.</p>
+
+                <p>
+                  Explicar as opções de um jeito que ajude você a decidir.
+                </p>
               </div>
 
               <div>
                 <h3>Soluções com propósito</h3>
+
                 <p>
                   Relacionar cada escolha ao que seu negócio realmente precisa.
                 </p>
@@ -242,17 +314,31 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Clientes e patrocinadores são apresentados separadamente. */}
+      {/* =====================================================
+          PARCEIROS
+          ===================================================== */}
+
       <Parceiros tipo="cliente" />
       <Parceiros tipo="patrocinador" />
 
-      {/* Etapas simples ajudam o visitante a entender o atendimento. */}
-      <section className={styles.process} aria-labelledby="process-title">
+      {/* =====================================================
+          PROCESSO
+          ===================================================== */}
+
+      <section
+        className={styles.process}
+        aria-labelledby="process-title"
+      >
         <div className={styles.container}>
           <div className={styles.processHeading}>
             <div>
-              <p className={styles.eyebrow}>COMO COMEÇAR</p>
-              <h2 id="process-title">Tudo começa com uma conversa.</h2>
+              <p className={styles.eyebrow}>
+                COMO COMEÇAR
+              </p>
+
+              <h2 id="process-title">
+                Tudo começa com uma conversa.
+              </h2>
             </div>
 
             <p>
@@ -263,12 +349,19 @@ export default function Home() {
 
           <ol className={styles.stepGrid}>
             {steps.map((step) => (
-              <li key={step.number} className={styles.step}>
-                <span className={styles.stepNumber} aria-hidden="true">
+              <li
+                key={step.number}
+                className={styles.step}
+              >
+                <span
+                  className={styles.stepNumber}
+                  aria-hidden="true"
+                >
                   {step.number}
                 </span>
 
                 <h3>{step.title}</h3>
+
                 <p>{step.description}</p>
               </li>
             ))}
@@ -276,12 +369,20 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CONTATO: resumo da página /contato e acesso ao orçamento. */}
-      <section className={styles.contact} aria-labelledby="contact-title">
+      {/* =====================================================
+          CONTATO
+          ===================================================== */}
+
+      <section
+        className={styles.contact}
+        aria-labelledby="contact-title"
+      >
         <div className={styles.container}>
           <div className={styles.contactPanel}>
             <div className={styles.contactContent}>
-              <p className={styles.eyebrow}>VAMOS CONVERSAR</p>
+              <p className={styles.eyebrow}>
+                VAMOS CONVERSAR
+              </p>
 
               <h2 id="contact-title">
                 Tem algo para resolver
@@ -295,11 +396,12 @@ export default function Home() {
               </p>
 
               <div className={styles.contactActions}>
-                <ActionLink to="/contato">Solicitar orçamento</ActionLink>
+                <ActionLink to="/contato">
+                  Solicitar orçamento
+                </ActionLink>
               </div>
             </div>
 
-            {/* Orientação útil, sem simular um atendimento ou conversa. */}
             <aside className={styles.contactAside}>
               <span className={styles.asideLabel}>
                 PODE CONTAR DO SEU JEITO
@@ -313,7 +415,9 @@ export default function Home() {
                 “Quero um site para minha empresa.”
               </p>
 
-              <span>Esses já são bons pontos de partida.</span>
+              <span>
+                Esses já são bons pontos de partida.
+              </span>
             </aside>
           </div>
         </div>

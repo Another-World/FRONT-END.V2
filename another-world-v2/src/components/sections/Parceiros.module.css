@@ -56,7 +56,6 @@
 }
 
 /* Duas colunas no celular. */
-/* Duas colunas no celular. */
 .grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -81,6 +80,7 @@
   Todas as imagens ocupam a mesma área visual.
 
   width e height criam uma "caixa" padronizada.
+
   object-fit: contain mantém a proporção original,
   evitando que o logo fique esticado.
 */
@@ -92,8 +92,6 @@
   object-fit: contain;
   object-position: center;
 }
-
-
 
 /* Só os cards que realmente possuem link recebem interação. */
 .logoLink {
@@ -142,13 +140,16 @@
   font-weight: 500;
   line-height: 1.5;
 }
+
 .logoCard img[alt*="Samtech" i] {
   transform: scale(1.8);
 }
+
 /*
   A partir de 620px, cada card terá no máximo 224px.
 
   auto-fit cria somente a quantidade necessária de colunas.
+
   Portanto:
   - três logos ficam centralizadas;
   - quatro logos também ficam centralizadas.
@@ -190,10 +191,12 @@
     min-height: 105px;
     padding: 16px;
   }
+
   .logoCard img {
     width: 120px;
     height: 52px;
   }
+
   .logoCard img[alt*="Samtech" i] {
     transform: scale(1.15);
   }
@@ -220,5 +223,104 @@
 
   .logoLink:hover {
     transform: none;
+  }
+}
+
+
+/* =========================================================
+   MODO CLARO
+   ========================================================= */
+
+:global(html[data-theme="light"]) .section {
+  --border: #d8cde2;
+  --text: #211a27;
+  --background: #f7f5fa;
+  --lavender: #7c3aed;
+  --muted: #62586d;
+  --purple: #7c3aed;
+
+  border-top-color: var(--border);
+  color: var(--text);
+  background: var(--background);
+}
+
+:global(html[data-theme="light"]) .sponsorsSection {
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      rgb(124 58 237 / 7%),
+      transparent 60%
+    ),
+    #eeeaf4;
+}
+
+:global(html[data-theme="light"]) .eyebrow {
+  color: #7c3aed;
+}
+
+:global(html[data-theme="light"]) .description {
+  color: #62586d;
+}
+
+:global(html[data-theme="light"]) .logoCard {
+  border-color: #d8cde2;
+  background: rgb(255 255 255 / 72%);
+}
+
+:global(html[data-theme="light"]) .logoLink:hover {
+  border-color: #7c3aed;
+  background: rgb(124 58 237 / 8%);
+}
+
+:global(html[data-theme="light"]) .logoLink:focus-visible {
+  outline-color: #7c3aed;
+}
+
+:global(html[data-theme="light"]) .placeholder {
+  color: #51475a;
+}
+
+:global(html[data-theme="light"]) .placeholderLabel {
+  color: #7a7084;
+}
+
+:global(html[data-theme="light"]) .placeholder strong {
+  color: #211a27;
+}
+
+
+/* =========================================================
+   TRANSIÇÃO DO TEMA
+   ========================================================= */
+
+.section,
+.sponsorsSection,
+.logoCard,
+.logoLink,
+.description,
+.placeholder,
+.placeholderLabel,
+.heading h2 {
+  transition:
+    background-color 300ms ease,
+    border-color 300ms ease,
+    color 300ms ease;
+}
+
+
+/* =========================================================
+   REDUÇÃO DE MOVIMENTO
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .section,
+  .sponsorsSection,
+  .logoCard,
+  .logoLink,
+  .description,
+  .placeholder,
+  .placeholderLabel,
+  .heading h2 {
+    transition: none;
   }
 }

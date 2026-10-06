@@ -1,297 +1,83 @@
-import {
-  useEffect,
-  useId,
-} from "react";
+import { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 
-import {
-  motion,
-  useReducedMotion,
-  useSpring,
-  useTransform,
-} from "motion/react";
+const items = [
+  { label: "Início", href: "/" },
+  { label: "Quem Somos", href: "/quem-somos" },
+  { label: "Serviços", href: "/servicos" },
+  { label: "Contato", href: "/contato" },
+];
 
-import { NavLink, useLocation } from "react-router-dom";
-
-const SPRING = {
-  type: "spring",
-  stiffness: 200,
-  damping: 28,
-  mass: 1,
-};
-
-const NECK_BREAK = 0.22;
-const NECK_H = 100;
-
-const FADE_IN = "transition-colors duration-[400ms]";
-const FADE_OUT = "transition-colors duration-0";
-
-const BAR = "bg-[#262626]";
-
-const SIZES = {
-  xs: {
-    label:
-      "gap-1 px-2 py-1.5 text-[11px] leading-4 [&_svg]:size-[11px]",
-    radius: 8,
-    separation: 14,
-  },
-
-  sm: {
-    label:
-      "gap-1.5 px-3.5 py-2 text-xs leading-4 [&_svg]:size-3",
-    radius: 10,
-    separation: 16,
-  },
-
-  md: {
-    label:
-      "gap-2 px-5 py-2.5 text-sm leading-5 [&_svg]:size-3.5",
-    radius: 12,
-    separation: 20,
-  },
-
-  lg: {
-    label:
-      "gap-2.5 px-6 py-3 text-base leading-6 [&_svg]:size-4",
-    radius: 14,
-    separation: 24,
-  },
-};
-
-function neckPath(gap, span) {
-  if (
-    !Number.isFinite(gap) ||
-    !Number.isFinite(span) ||
-    gap <= 0 ||
-    span <= 0
-  ) {
-    return "";
-  }
-
-  const waist =
-    NECK_H * (1 - gap / (span * NECK_BREAK));
-
-  if (waist <= 0) return "";
-
-  const start = span - gap;
-  const mid = start + gap / 2;
-
-  return `
-    M${start} 0
-    Q${mid} ${NECK_H - waist} ${span} 0
-    L${span} ${NECK_H}
-    Q${mid} ${waist} ${start} ${NECK_H}
-    Z
-  `;
-}
-
-function Segment({
-  gap,
-  span,
-  hasSeam,
-  leftFill,
-  rightFill,
-  reduced,
-  radii,
-  className,
-  style,
-  children,
-}) {
-  const marginLeft = useSpring(gap, SPRING);
-
-  const gradientId = `gooey-neck-${useId().replace(/:/g, "")}`;
+export default function GooeyNav() {
+  const location = useLocation();
+  const [active, setActive] = useState(location.pathname);
 
   useEffect(() => {
-    if (reduced) {
-      marginLeft.jump(gap);
-    } else {
-      marginLeft.set(gap);
-    }
-  }, [gap, marginLeft, reduced]);
-
-  const path = useTransform(
-    marginLeft,
-    (currentGap) => neckPath(currentGap, span)
-  );
+    setActive(location.pathname);
+  }, [location.pathname]);
 
   return (
-    <motion.li
-      className={`relative ${className || ""}`}
-      style={{
-        ...style,
-        marginLeft,
-      }}
-      initial={false}
-      animate={radii}
-      transition={reduced ? { duration: 0 } : SPRING}
-    >
-      {hasSeam && (
-        <svg
-          aria-hidden="true"
-          width={span}
-          viewBox={`0 0 ${span} ${NECK_H}`}
-          preserveAspectRatio="none"
-          className="pointer-events-none absolute top-0 right-full h-full"
-        >
-          <defs>
-            <linearGradient
-              id={gradientId}
-              x1="0"
-              x2="1"
-            >
-              <stop
-                offset="0"
-                stopColor={leftFill}
-              />
+    <nav className="relative flex items-center justify-center">
+      <div
+        className="
+          flex items-center gap-1
+          rounded-full
+          border border-[#8554b3]/30
+          bg-[#cab1e3]/30
+          px-2 py-2
+          shadow-lg shadow-[#8554b3]/10
+          backdrop-blur-md
+          transition-all duration-300
 
-              <stop
-                offset="1"
-                stopColor={rightFill}
-              />
-            </linearGradient>
-          </defs>
-
-          <motion.path
-            d={path}
-            fill={`url(#${gradientId})`}
-          />
-        </svg>
-      )}
-
-      {children}
-    </motion.li>
-  );
-}
-
-function NavLabel({
-  label,
-  to,
-  isActive,
-  size,
-  activeLabelColor,
-}) {
-  return (
-    <NavLink
-      to={to}
-      aria-current={isActive ? "page" : undefined}
-      className={`flex cursor-pointer items-center whitespace-nowrap font-medium ${
-        SIZES[size].label
-      } ${
-        isActive ? FADE_IN : FADE_OUT
-      } ${
-        isActive
-          ? "text-white"
-          : "text-[#868593] hover:text-white"
-      }`}
-      style={
-        isActive
-          ? { color: activeLabelColor }
-          : undefined
-      }
-    >
-      {label}
-    </NavLink>
-  );
-}
-
-export default function GooeyNav({
-  items,
-  size = "md",
-  activeColor = "#7C3AED",
-  activeLabelColor = "#ffffff",
-  separation,
-  radius,
-  className = "",
-}) {
-  const reduced = useReducedMotion() ?? false;
-
-  const location = useLocation();
-
-  /*
-   * Identifica automaticamente qual item corresponde
-   * à página atualmente aberta.
-   */
-  const active = items.findIndex(
-    (item) => item.to === location.pathname
-  );
-
-  const span =
-    separation ?? SIZES[size].separation;
-
-  const corner =
-    radius ?? SIZES[size].radius;
-
-  const open = (seam) =>
-    seam === 0 ||
-    seam === items.length ||
-    seam - 1 === active ||
-    seam === active;
-
-  const fill = (index) =>
-    index === active
-      ? activeColor
-      : "#262626";
-
-  return (
-    <nav
-      aria-label="Navegação principal"
-      className={`inline-block ${className}`}
-    >
-      <ul className="flex items-center">
-        {items.map((item, index) => {
-          const isActive = index === active;
+          dark:border-[#a080bd]/30
+          dark:bg-[#1a1420]/70
+          dark:shadow-[#7843ab]/10
+        "
+      >
+        {items.map((item) => {
+          const isActive = active === item.href;
 
           return (
-            <Segment
-              key={`${index}-${item.label}`}
-              gap={
-                index === 0
-                  ? 0
-                  : open(index)
-                  ? span
-                  : -1
-              }
-              span={span}
-              hasSeam={index > 0}
-              leftFill={fill(index - 1)}
-              rightFill={fill(index)}
-              reduced={reduced}
-              radii={{
-                borderTopLeftRadius:
-                  open(index) ? corner : 0,
+            <Link
+              key={item.href}
+              to={item.href}
+              onClick={() => setActive(item.href)}
+              className={`
+                relative
+                rounded-full
+                px-5 py-2.5
+                text-sm
+                font-semibold
+                whitespace-nowrap
+                outline-none
+                transition-all
+                duration-300
 
-                borderBottomLeftRadius:
-                  open(index) ? corner : 0,
+                ${
+                  isActive
+                    ? `
+                      bg-[#7843ab]
+                      text-white
+                      shadow-md
+                      shadow-[#7843ab]/30
+                    `
+                    : `
+                      text-[#4f3c5b]
+                      hover:bg-[#cda5f2]/50
+                      hover:text-[#7843ab]
 
-                borderTopRightRadius:
-                  open(index + 1) ? corner : 0,
-
-                borderBottomRightRadius:
-                  open(index + 1) ? corner : 0,
-              }}
-              className={`${BAR} ${
-                isActive
-                  ? FADE_IN
-                  : FADE_OUT
-              }`}
-              style={{
-                backgroundColor: isActive
-                  ? activeColor
-                  : "#262626",
-              }}
-            >
-              <NavLabel
-                label={item.label}
-                to={item.to}
-                isActive={isActive}
-                size={size}
-                activeLabelColor={
-                  activeLabelColor
+                      dark:text-[#eee5f5]
+                      dark:hover:bg-[#8554b3]/25
+                      dark:hover:text-[#cda5f2]
+                    `
                 }
-              />
-            </Segment>
+              `}
+            >
+              {item.label}
+            </Link>
           );
         })}
-      </ul>
+      </div>
     </nav>
   );
 }
