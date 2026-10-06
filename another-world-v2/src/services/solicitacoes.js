@@ -47,8 +47,50 @@ function opcional(valor) {
   return texto || undefined;
 }
 
-// Esta função agora é assíncrona: o formulário deve usar await.
-// Novas solicitações são gravadas exclusivamente pela API.
+// Guardamos apenas chave e hash na sessão, sem os campos pessoais do formulário.
+// Uma resposta perdida pode ser recuperada ao repetir os mesmos dados.
+const TENTATIVA_KEY = "aw_contato_tentativa";
+let tentativaEmMemoria = null;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+async function obterChaveEnvio(corpo) {
+  if (!globalThis.crypto?.randomUUID || !globalThis.crypto?.subtle) {
+    throw new Error("Abra o site por HTTPS ou localhost para enviar a solicitação.");
+  }
+  const bytes = new TextEncoder().encode(corpo);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  const hash = Array.from(new Uint8Array(digest), (byte) =>
+    byte.toString(16).padStart(2, "0"),
+  ).join("");
+  let anterior = tentativaEmMemoria;
+  try {
+    anterior = JSON.parse(sessionStorage.getItem(TENTATIVA_KEY) ?? "null") ?? anterior;
+  } catch {
+    // Navegadores que bloqueiam armazenamento usam a memória da página.
+  }
+  if (anterior?.hash === hash && UUID.test(anterior.chave ?? "")) {
+    tentativaEmMemoria = anterior;
+    return anterior.chave;
+  }
+  tentativaEmMemoria = { chave: crypto.randomUUID(), hash };
+  try {
+    sessionStorage.setItem(TENTATIVA_KEY, JSON.stringify(tentativaEmMemoria));
+  } catch {
+    // A tentativa continua protegida enquanto a página estiver aberta.
+  }
+  return tentativaEmMemoria.chave;
+}
+
+function finalizarTentativa(chave) {
+  if (tentativaEmMemoria?.chave === chave) tentativaEmMemoria = null;
+  try {
+    const armazenada = JSON.parse(sessionStorage.getItem(TENTATIVA_KEY) ?? "null");
+    if (armazenada?.chave === chave) sessionStorage.removeItem(TENTATIVA_KEY);
+  } catch {
+    // O formulário continua funcionando sem sessionStorage.
+  }
+}
+
 export async function criarSolicitacao(dados) {
   const payload = {
     nome: dados.nome.trim(),
@@ -66,22 +108,33 @@ export async function criarSolicitacao(dados) {
     canalPreferido: dados.canalPreferido ?? "email",
     whatsappAutorizado: dados.whatsappAutorizado === true,
   };
-
+  const corpo = JSON.stringify(payload);
+  const chave = await obterChaveEnvio(corpo);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
   let response;
+  let resultado;
   try {
     response = await fetch("/api/solicitacoes", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      headers: {
+        "Content-Type": "application/json",
+        "Idempotency-Key": chave,
+      },
+      body: corpo,
+      signal: controller.signal,
     });
+    resultado = await response.json().catch(() => null);
   } catch {
+    // Não apaga a chave: o servidor pode ter gravado antes da conexão cair.
     throw new Error(
-      "Não foi possível confirmar o envio. Confira sua conexão antes de tentar novamente.",
+      "Não foi possível confirmar o envio. Tente novamente com os mesmos dados para recuperar o protocolo.",
     );
+  } finally {
+    clearTimeout(timeout);
   }
-
-  const resultado = await response.json().catch(() => null);
   if (!response.ok) {
+    if (response.status === 409) finalizarTentativa(chave);
     const error = new Error(
       resultado?.erro ?? "Não foi possível enviar. Tente novamente em instantes.",
     );
@@ -89,8 +142,9 @@ export async function criarSolicitacao(dados) {
     throw error;
   }
   if (!resultado?.id || resultado.status !== STATUS.EM_ANALISE) {
-    throw new Error("O servidor não confirmou o envio. Confira antes de reenviar.");
+    throw new Error("O servidor não confirmou o envio. Tente novamente com os mesmos dados.");
   }
+  finalizarTentativa(chave);
   return resultado;
 }
 
