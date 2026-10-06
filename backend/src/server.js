@@ -16,9 +16,13 @@ if (!process.env.PGUSER || !process.env.PGPASSWORD) {
 app.disable("x-powered-by");
 app.use(helmet());
 
-// No desenvolvimento, não confiamos em IPs informados por headers do cliente.
-// Antes do deploy, configuraremos Nginx e trust proxy juntos, de forma restrita.
-app.set("trust proxy", false);
+// Na EC2, o Nginx encaminhará as requisições pela interface local.
+// Em produção, confiamos apenas nesse proxy local para identificar o IP.
+// No desenvolvimento, continuamos usando diretamente o IP da conexão.
+app.set(
+  "trust proxy",
+  process.env.NODE_ENV === "production" ? "loopback" : false,
+);
 const limiteSolicitacoes = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 10,
