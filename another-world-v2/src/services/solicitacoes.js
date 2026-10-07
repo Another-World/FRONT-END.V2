@@ -103,6 +103,11 @@ export async function criarSolicitacao(dados) {
     email: dados.email.trim().toLowerCase(),
     telefone: dados.telefone.replace(/\D/g, ""),
     servicoSlug: dados.servicoSlug,
+    // Envia os dados da empresa para os campos já existentes na API.
+    ...(dados.pessoaJuridica === true ? {
+      pessoaJuridica: true,
+      cnpj: String(dados.cnpj ?? "").trim(),
+    } : {}),
     cep: dados.cep.replace(/\D/g, ""),
     logradouro: opcional(dados.rua),
     bairro: opcional(dados.bairro),

@@ -10,6 +10,8 @@ const initialForm = {
   email: "",
   telefone: "",
   servicoSlug: "",
+  pessoaJuridica: false,
+  cnpj: "",
   cep: "",
   rua: "",
   bairro: "",
@@ -48,9 +50,14 @@ export default function Contato() {
     setForm((previous) => ({
       ...previous,
       [name]: nextValue,
+      ...(name === "pessoaJuridica" && !checked ? { cnpj: "" } : {}),
       ...(name === "canalPreferido" ? { whatsappAutorizado: false } : {}),
     }));
-    setErrors((previous) => ({ ...previous, [name]: "" }));
+    setErrors((previous) => ({
+      ...previous,
+      [name]: "",
+      ...(name === "pessoaJuridica" ? { cnpj: "" } : {}),
+    }));
     setSubmitError("");
     setSuccess(null);
   }
@@ -137,6 +144,14 @@ export default function Contato() {
     }
     if (!SERVICOS_ORCAMENTO.some((servico) => servico.slug === form.servicoSlug)) {
       newErrors.servicoSlug = "Escolha um serviço ou a opção Outro / Ainda não sei.";
+    }
+    // Mantém o formato numérico de CNPJ aceito pela API atual.
+    if (
+      form.pessoaJuridica &&
+      (!/^[0-9./\s-]+$/.test(form.cnpj) ||
+        form.cnpj.replace(/\D/g, "").length !== 14)
+    ) {
+      newErrors.cnpj = "Informe o CNPJ com 14 números, com ou sem pontuação.";
     }
     if (form.cep.replace(/\D/g, "").length !== 8) {
       newErrors.cep = "Digite um CEP com oito números.";
@@ -481,6 +496,53 @@ export default function Contato() {
                     ))}
                   </select>
                   {errors.servicoSlug && <p id="erro-servicoSlug" className="mt-1.5 text-xs text-red-400">{errors.servicoSlug}</p>}
+                </div>
+
+                {/* CNPJ aparece quando a solicitação é feita por uma empresa. */}
+                <div className="rounded-xl border border-border bg-bg-dark/30 p-4">
+                  <label htmlFor="pessoaJuridica" className="flex cursor-pointer items-start gap-3">
+                    <input
+                      id="pessoaJuridica"
+                      name="pessoaJuridica"
+                      type="checkbox"
+                      checked={form.pessoaJuridica}
+                      onChange={handleChange}
+                      className="mt-1 h-4 w-4 accent-purple"
+                    />
+                    <span>
+                      <span className="block text-sm font-medium text-text-main">
+                        Sou uma empresa / Pessoa Jurídica
+                      </span>
+                      <span className="mt-1 block text-xs leading-5 text-text-muted">
+                        Marque esta opção se a solicitação for feita em nome de uma empresa.
+                      </span>
+                    </span>
+                  </label>
+
+                  {form.pessoaJuridica && (
+                    <div className="mt-4">
+                      <label htmlFor="cnpj" className="mb-2 block text-sm font-medium text-text-main">
+                        CNPJ *
+                      </label>
+                      <input
+                        id="cnpj"
+                        name="cnpj"
+                        type="text"
+                        value={form.cnpj}
+                        onChange={handleChange}
+                        maxLength={30}
+                        placeholder="00.000.000/0000-00"
+                        aria-invalid={Boolean(errors.cnpj)}
+                        aria-describedby={errors.cnpj ? "erro-cnpj" : undefined}
+                        className={inputClass}
+                      />
+                      {errors.cnpj && (
+                        <p id="erro-cnpj" className="mt-1.5 text-xs text-red-400">
+                          {errors.cnpj}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Mensagem */}
