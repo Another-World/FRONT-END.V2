@@ -1,887 +1,643 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-
-import { criarSolicitacao } from "../../services/solicitacoes";
-
+import {
+  criarSolicitacao,
+  SERVICOS_ORCAMENTO,
+} from "../../services/solicitacoes";
 
 const initialForm = {
   nome: "",
   email: "",
   telefone: "",
-
-  tipoServico: "",
-
+  servicoSlug: "",
   pessoaJuridica: false,
   cnpj: "",
-
   cep: "",
   rua: "",
   bairro: "",
   cidade: "",
   uf: "",
-
+  numero: "",
+  complemento: "",
   mensagem: "",
+  canalPreferido: "email",
+  whatsappAutorizado: false,
 };
 
-
 export default function Contato() {
-  const [form, setForm] =
-    useState(initialForm);
+  const [form, setForm] = useState({ ...initialForm });
+  const [errors, setErrors] = useState({});
+  const [cepLoading, setCepLoading] = useState(false);
+  const [cepMessage, setCepMessage] = useState("");
+  const [success, setSuccess] = useState(null);
+  const [submitError, setSubmitError] = useState("");
+  const [sending, setSending] = useState(false);
+  const submitting = useRef(false);
+  const cepController = useRef(null);
 
-  const [errors, setErrors] =
-    useState({});
-
-  const [cepLoading, setCepLoading] =
-    useState(false);
-
-  const [cepMessage, setCepMessage] =
-    useState("");
-
-  const [success, setSuccess] =
-    useState(false);
-
-
-  // =====================================================
-  // CAMPOS
-  // =====================================================
+  // Cancela a consulta se a pessoa sair desta página.
+  useEffect(() => () => {
+    const controller = cepController.current;
+    cepController.current = null;
+    controller?.abort();
+  }, []);
 
   function handleChange(event) {
-    const { name, value } =
-      event.target;
-
+    const { name, value, type, checked } = event.target;
+    const nextValue = type === "checkbox"
+      ? checked
+      : name === "uf" ? value.toUpperCase() : value;
     setForm((previous) => ({
       ...previous,
-      [name]: value,
+      [name]: nextValue,
+      ...(name === "pessoaJuridica" && !checked ? { cnpj: "" } : {}),
+      ...(name === "canalPreferido" ? { whatsappAutorizado: false } : {}),
     }));
-
     setErrors((previous) => ({
       ...previous,
       [name]: "",
+      ...(name === "pessoaJuridica" ? { cnpj: "" } : {}),
     }));
-
-    if (name === "cep") {
-      setCepMessage("");
-    }
+    setSubmitError("");
+    setSuccess(null);
   }
-
-
-  function handlePessoaJuridicaChange(event) {
-    const pessoaJuridica =
-      event.target.checked;
-
-    setForm((previous) => ({
-      ...previous,
-      pessoaJuridica,
-      cnpj: pessoaJuridica
-        ? previous.cnpj
-        : "",
-    }));
-
-    setErrors((previous) => ({
-      ...previous,
-      cnpj: "",
-    }));
-  }
-
-
-  // =====================================================
-  // CEP
-  // =====================================================
 
   function formatCep(value) {
-    const numbers = value
-      .replace(/\D/g, "")
-      .slice(0, 8);
-
-    if (numbers.length > 5) {
-      return `${numbers.slice(0, 5)}-${numbers.slice(5)}`;
-    }
-
-    return numbers;
+    const numbers = value.replace(/\D/g, "").slice(0, 8);
+    return numbers.length > 5
+      ? `${numbers.slice(0, 5)}-${numbers.slice(5)}`
+      : numbers;
   }
-
 
   async function buscarCep(cepValue) {
-    const cep =
-      cepValue.replace(/\D/g, "");
+    const cep = cepValue.replace(/\D/g, "");
+    if (cep.length !== 8) return;
 
-
-    if (cep.length !== 8) {
-      return;
-    }
-
-
+    cepController.current?.abort();
+    const controller = new AbortController();
+    cepController.current = controller;
     setCepLoading(true);
     setCepMessage("");
-
+    const timeout = setTimeout(() => controller.abort(), 8000);
 
     try {
-      const response =
-        await fetch(
-          `https://viacep.com.br/ws/${cep}/json/`
-        );
-
-
-      if (!response.ok) {
-        throw new Error(
-          "Falha na consulta do CEP."
-        );
-      }
-
-
-      const data =
-        await response.json();
-
-
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`, {
+        signal: controller.signal,
+      });
+      if (!response.ok) throw new Error("Falha na consulta do CEP.");
+      const data = await response.json();
+      // Uma consulta antiga não pode sobrescrever um CEP novo.
+      if (cepController.current !== controller) return;
       if (data.erro) {
-        setCepMessage(
-          "CEP não encontrado."
-        );
-
-        setForm((previous) => ({
-          ...previous,
-          rua: "",
-          bairro: "",
-          cidade: "",
-          uf: "",
-        }));
-
+        setCepMessage("CEP não encontrado. Confira o número informado.");
         return;
       }
-
-
       setForm((previous) => ({
         ...previous,
-
-        rua:
-          data.logradouro || "",
-
-        bairro:
-          data.bairro || "",
-
-        cidade:
-          data.localidade || "",
-
-        uf:
-          data.uf || "",
+        rua: data.logradouro || "",
+        bairro: data.bairro || "",
+        cidade: data.localidade || "",
+        uf: data.uf || "",
       }));
-
-
-    } catch (error) {
-      console.error(error);
-
-      setCepMessage(
-        "Não foi possível consultar o CEP. Tente novamente."
-      );
-
+    } catch {
+      if (cepController.current === controller) {
+        setCepMessage("Consulta indisponível. Você pode preencher o endereço manualmente.");
+      }
     } finally {
-      setCepLoading(false);
+      clearTimeout(timeout);
+      if (cepController.current === controller) {
+        cepController.current = null;
+        setCepLoading(false);
+      }
     }
   }
 
-
   function handleCepChange(event) {
-    const formattedCep =
-      formatCep(event.target.value);
-
-
+    const controller = cepController.current;
+    cepController.current = null;
+    controller?.abort();
+    setCepLoading(false);
+    const cep = formatCep(event.target.value);
     setForm((previous) => ({
       ...previous,
-      cep: formattedCep,
+      cep,
+      rua: "",
+      bairro: "",
+      cidade: "",
+      uf: "",
     }));
-
-
+    setErrors((previous) => ({ ...previous, cep: "" }));
     setCepMessage("");
-
-
-    setErrors((previous) => ({
-      ...previous,
-      cep: "",
-    }));
+    setSubmitError("");
+    setSuccess(null);
   }
-
-
-  // =====================================================
-  // VALIDAÇÃO
-  // =====================================================
 
   function validateForm() {
     const newErrors = {};
-
-
-    if (!form.nome.trim()) {
-      newErrors.nome =
-        "Informe seu nome.";
+    if (!form.nome.trim()) newErrors.nome = "Informe seu nome.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      newErrors.email = "Digite um e-mail válido.";
     }
-
-
-    if (!form.email.trim()) {
-      newErrors.email =
-        "Informe seu e-mail.";
-
-    } else if (
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
-        form.email
-      )
-    ) {
-      newErrors.email =
-        "Digite um e-mail válido.";
+    const telefone = form.telefone.replace(/\D/g, "");
+    if (telefone.length < 10 || telefone.length > 15) {
+      newErrors.telefone = "Informe um telefone com DDD, incluindo o código do país se necessário.";
     }
-
-
-    if (!form.telefone.trim()) {
-      newErrors.telefone =
-        "Informe seu telefone.";
+    if (!SERVICOS_ORCAMENTO.some((servico) => servico.slug === form.servicoSlug)) {
+      newErrors.servicoSlug = "Escolha um serviço ou a opção Outro / Ainda não sei.";
     }
-
-
-    // Tipo de serviço
-    if (!form.tipoServico) {
-      newErrors.tipoServico =
-        "Selecione o tipo de serviço.";
-    }
-
-
-    // CNPJ somente para Pessoa Jurídica
+    // Mantém o formato numérico de CNPJ aceito pela API atual.
     if (
       form.pessoaJuridica &&
-      !form.cnpj.trim()
+      (!/^[0-9./\s-]+$/.test(form.cnpj) ||
+        form.cnpj.replace(/\D/g, "").length !== 14)
     ) {
-      newErrors.cnpj =
-        "Informe o CNPJ da empresa.";
+      newErrors.cnpj = "Informe o CNPJ com 14 números, com ou sem pontuação.";
     }
-
-
-    if (!form.cep.trim()) {
-      newErrors.cep =
-        "Informe seu CEP.";
-
-    } else if (
-      form.cep.replace(/\D/g, "").length !== 8
-    ) {
-      newErrors.cep =
-        "Digite um CEP válido.";
+    if (form.cep.replace(/\D/g, "").length !== 8) {
+      newErrors.cep = "Digite um CEP com oito números.";
     }
-
-
-    if (!form.mensagem.trim()) {
-      newErrors.mensagem =
-        "Digite uma mensagem.";
+    if (form.uf && !/^[A-Z]{2}$/.test(form.uf)) {
+      newErrors.uf = "Informe a sigla do estado com duas letras.";
     }
-
-
+    if (!form.mensagem.trim()) newErrors.mensagem = "Descreva o que você precisa.";
+    if (form.canalPreferido === "whatsapp" && !form.whatsappAutorizado) {
+      newErrors.whatsappAutorizado = "Autorize o contato por WhatsApp ou escolha e-mail.";
+    }
     setErrors(newErrors);
-
-
-    return (
-      Object.keys(newErrors).length === 0
-    );
+    return Object.keys(newErrors).length === 0;
   }
 
-
-  // =====================================================
-  // ENVIO
-  // =====================================================
-
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
+    if (submitting.current || cepLoading) return;
+    setSuccess(null);
+    setSubmitError("");
+    if (!validateForm()) return;
 
-    setSuccess(false);
-
-
-    if (!validateForm()) {
-      return;
-    }
-
-
+    // Bloqueia novos cliques enquanto a requisição está em andamento.
+    submitting.current = true;
+    setSending(true);
     try {
-      criarSolicitacao({
-        nome: form.nome,
-        email: form.email,
-        telefone: form.telefone,
-
-        cep: form.cep,
-
-        endereco: [
-          form.rua,
-          form.bairro,
-          form.cidade,
-          form.uf,
-        ]
-          .filter(Boolean)
-          .join(", "),
-
-        frente: form.tipoServico,
-
-        mensagem: form.mensagem,
-
-        pessoaJuridica:
-          form.pessoaJuridica,
-
-        cnpj:
-          form.cnpj,
-      });
-
-
-      setSuccess(true);
-
-      setForm(initialForm);
-
+      const resultado = await criarSolicitacao(form);
+      // Só confirma o sucesso depois da resposta da API.
+      setSuccess(resultado);
+      setForm({ ...initialForm });
       setErrors({});
-
       setCepMessage("");
-
     } catch (error) {
-      console.error(
-        "Erro ao criar solicitação:",
-        error
-      );
+      // Preserva todos os campos para a pessoa corrigir ou tentar novamente.
+      setSubmitError(error.message || "Não foi possível enviar a solicitação.");
+      if (Array.isArray(error.campos)) {
+        const invalidos = Object.fromEntries(error.campos.map((campo) => [
+          campo === "logradouro" ? "rua" : campo,
+          "Confira este campo.",
+        ]));
+        setErrors((previous) => ({ ...previous, ...invalidos }));
+      }
+    } finally {
+      submitting.current = false;
+      setSending(false);
     }
   }
-
-
-  // =====================================================
-  // ESTILO DOS INPUTS
-  // =====================================================
 
   const inputClass =
     "w-full rounded-xl border border-border bg-bg-section px-4 py-3 text-sm text-white outline-none transition focus:border-purple placeholder:text-text-muted";
 
-
-  // =====================================================
-  // TELA
-  // =====================================================
-
   return (
-    <main className="relative isolate min-h-screen overflow-hidden bg-[#101114]">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-0"
-        style={{
-          backgroundImage: `radial-gradient(1px 1px at 24px 38px, rgb(255 255 255 / 65%) 95%, transparent), radial-gradient(1px 1px at 116px 154px, rgb(219 208 245 / 50%) 95%, transparent), radial-gradient(1.5px 1.5px at 78px 92px, rgb(255 255 255 / 70%) 95%, transparent), radial-gradient(1px 1px at 192px 67px, rgb(255 255 255 / 35%) 95%, transparent), radial-gradient(2px 2px at 245px 218px, rgb(201 164 237 / 60%) 65%, transparent)`,
-          backgroundSize: "211px 239px, 307px 313px, 433px 397px, 509px 467px, 683px 619px",
-          opacity: 0.55,
-        }}
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-0"
-        style={{
-          backgroundImage: `radial-gradient(ellipse 65% 580px at 50% 0%, rgb(139 69 214 / 18%), transparent 75%), radial-gradient(ellipse 45% 700px at 100% 38%, rgb(77 83 160 / 11%), transparent 75%), radial-gradient(ellipse 55% 600px at 0% 85%, rgb(139 69 214 / 10%), transparent 75%)`,
-        }}
-      />
+    <main className="min-h-screen bg-bg-dark">
       {/* Cabeçalho da página */}
-      <section className="relative z-10 mx-auto max-w-[1200px] px-6 pb-12 pt-20">
+      <section className="mx-auto max-w-[1200px] px-6 pb-12 pt-20">
         <p className="mb-3 text-sm font-medium uppercase tracking-[0.2em] text-purple">
           Contato
         </p>
-
 
         <h1 className="max-w-2xl text-4xl font-bold text-white md:text-5xl">
           Vamos conversar sobre o seu projeto?
         </h1>
 
-
         <p className="mt-5 max-w-2xl text-base leading-7 text-text-muted">
           Entre em contato com a Another World. Conte um pouco sobre
           sua necessidade e nossa equipe poderá ajudar.
         </p>
-
       </section>
 
-
       {/* Conteúdo */}
-      <section className="relative z-10 mx-auto max-w-[1200px] px-6 pb-20">
+      <section className="mx-auto max-w-[1200px] px-6 pb-20">
         <div className="grid gap-8 lg:grid-cols-[1.4fr_0.8fr]">
 
-          {/* =================================================
-              FORMULÁRIO
-          ================================================= */}
+          {/* Formulário */}
           <div className="rounded-2xl border border-border bg-bg-section p-6 md:p-8">
-
             <div className="mb-8">
-
               <h2 className="text-2xl font-semibold text-white">
-                Envie uma mensagem
+                Solicite um orçamento
               </h2>
 
               <p className="mt-2 text-sm text-text-muted">
-                Preencha os campos abaixo e entraremos em contato.
+                Conte sua necessidade e escolha como prefere receber nosso retorno.
               </p>
-
             </div>
 
+            <form onSubmit={handleSubmit} noValidate>
+              <fieldset disabled={sending} aria-busy={sending} className="space-y-5">
+                <legend className="sr-only">Dados da solicitação de orçamento</legend>
 
-            <form
-              onSubmit={handleSubmit}
-              className="space-y-5"
-            >
-
-              {/* Nome */}
-              <div>
-
-                <label
-                  htmlFor="nome"
-                  className="mb-2 block text-sm font-medium text-white"
-                >
-                  Nome *
-                </label>
-
-
-                <input
-                  id="nome"
-                  name="nome"
-                  type="text"
-                  value={form.nome}
-                  onChange={handleChange}
-                  placeholder="Seu nome"
-                  className={inputClass}
-                />
-
-
-                {errors.nome && (
-                  <p className="mt-1.5 text-xs text-red-400">
-                    {errors.nome}
-                  </p>
-                )}
-
-              </div>
-
-
-              {/* E-mail */}
-              <div>
-
-                <label
-                  htmlFor="email"
-                  className="mb-2 block text-sm font-medium text-white"
-                >
-                  E-mail *
-                </label>
-
-
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={form.email}
-                  onChange={handleChange}
-                  placeholder="seuemail@email.com"
-                  className={inputClass}
-                />
-
-
-                {errors.email && (
-                  <p className="mt-1.5 text-xs text-red-400">
-                    {errors.email}
-                  </p>
-                )}
-
-              </div>
-
-
-              {/* Telefone */}
-              <div>
-
-                <label
-                  htmlFor="telefone"
-                  className="mb-2 block text-sm font-medium text-white"
-                >
-                  Telefone *
-                </label>
-
-
-                <input
-                  id="telefone"
-                  name="telefone"
-                  type="tel"
-                  value={form.telefone}
-                  onChange={handleChange}
-                  placeholder="(11) 99999-9999"
-                  className={inputClass}
-                />
-
-
-                {errors.telefone && (
-                  <p className="mt-1.5 text-xs text-red-400">
-                    {errors.telefone}
-                  </p>
-                )}
-
-              </div>
-
-
-              {/* =================================================
-                  TIPO DE SERVIÇO
-              ================================================= */}
-              <div>
-
-                <label
-                  htmlFor="tipoServico"
-                  className="mb-2 block text-sm font-medium text-white"
-                >
-                  Tipo de serviço *
-                </label>
-
-
-                <select
-                  id="tipoServico"
-                  name="tipoServico"
-                  value={form.tipoServico}
-                  onChange={handleChange}
-                  className={`${inputClass} cursor-pointer`}
-                >
-
-                  <option
-                    value=""
-                    className="bg-[#18191e]"
+                {/* Nome */}
+                <div>
+                  <label
+                    htmlFor="nome"
+                    className="mb-2 block text-sm font-medium text-white"
                   >
-                    Selecione uma opção
-                  </option>
-
-                  <option
-                    value="Hardware"
-                    className="bg-[#18191e]"
-                  >
-                    Hardware
-                  </option>
-
-                  <option
-                    value="Redes"
-                    className="bg-[#18191e]"
-                  >
-                    Redes
-                  </option>
-
-                  <option
-                    value="Desenvolvimento Web"
-                    className="bg-[#18191e]"
-                  >
-                    Desenvolvimento Web
-                  </option>
-
-                  <option
-                    value="Manutenção"
-                    className="bg-[#18191e]"
-                  >
-                    Manutenção
-                  </option>
-
-                  <option
-                    value="Outro / Ainda não sei"
-                    className="bg-[#18191e]"
-                  >
-                    Outro / Ainda não sei
-                  </option>
-
-                </select>
-
-
-                {errors.tipoServico && (
-                  <p className="mt-1.5 text-xs text-red-400">
-                    {errors.tipoServico}
-                  </p>
-                )}
-
-              </div>
-
-
-              {/* =================================================
-                  PESSOA JURÍDICA
-              ================================================= */}
-              <div className="rounded-xl border border-border bg-bg-dark/30 p-4">
-
-                <label className="flex cursor-pointer items-start gap-3">
+                    Nome *
+                  </label>
 
                   <input
-                    type="checkbox"
-                    checked={form.pessoaJuridica}
-                    onChange={
-                      handlePessoaJuridicaChange
-                    }
-                    className="mt-1 h-4 w-4 rounded border-border bg-bg-section text-purple accent-purple"
+                    id="nome"
+                    maxLength={120}
+                    aria-invalid={Boolean(errors.nome)}
+                    aria-describedby={errors.nome ? "erro-nome" : undefined}
+                    name="nome"
+                    type="text"
+                    value={form.nome}
+                    onChange={handleChange}
+                    placeholder="Seu nome"
+                    className={inputClass}
                   />
 
+                  {errors.nome && (
+                    <p id="erro-nome" className="mt-1.5 text-xs text-red-400">
+                      {errors.nome}
+                    </p>
+                  )}
+                </div>
 
-                  <span>
+                {/* E-mail */}
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="mb-2 block text-sm font-medium text-white"
+                  >
+                    E-mail *
+                  </label>
 
-                    <span className="block text-sm font-medium text-white">
-                      Sou uma empresa / Pessoa Jurídica
-                    </span>
+                  <input
+                    id="email"
+                    maxLength={254}
+                    aria-invalid={Boolean(errors.email)}
+                    aria-describedby={errors.email ? "erro-email" : undefined}
+                    name="email"
+                    type="email"
+                    value={form.email}
+                    onChange={handleChange}
+                    placeholder="seuemail@email.com"
+                    className={inputClass}
+                  />
 
-                    <span className="mt-1 block text-xs leading-5 text-text-muted">
-                      Marque esta opção se a solicitação for feita em nome de uma empresa.
-                    </span>
+                  {errors.email && (
+                    <p id="erro-email" className="mt-1.5 text-xs text-red-400">
+                      {errors.email}
+                    </p>
+                  )}
+                </div>
 
-                  </span>
+                {/* Telefone + CEP */}
+                <div className="grid gap-5 md:grid-cols-2">
 
-                </label>
-
-
-                {/* CNPJ aparece somente quando marcado */}
-                {form.pessoaJuridica && (
-                  <div className="mt-4">
-
+                  <div>
                     <label
-                      htmlFor="cnpj"
+                      htmlFor="telefone"
                       className="mb-2 block text-sm font-medium text-white"
                     >
-                      CNPJ *
+                      Telefone *
                     </label>
 
-
                     <input
-                      id="cnpj"
-                      name="cnpj"
-                      type="text"
-                      value={form.cnpj}
+                      id="telefone"
+                      maxLength={30}
+                      aria-invalid={Boolean(errors.telefone)}
+                      aria-describedby={errors.telefone ? "erro-telefone" : undefined}
+                      name="telefone"
+                      type="tel"
+                      value={form.telefone}
                       onChange={handleChange}
-                      placeholder="00.000.000/0000-00"
+                      placeholder="(11) 99999-9999"
                       className={inputClass}
                     />
 
+                    {errors.telefone && (
+                      <p id="erro-telefone" className="mt-1.5 text-xs text-red-400">
+                        {errors.telefone}
+                      </p>
+                    )}
+                  </div>
 
-                    {errors.cnpj && (
-                      <p className="mt-1.5 text-xs text-red-400">
-                        {errors.cnpj}
+                  <div>
+                    <label
+                      htmlFor="cep"
+                      className="mb-2 block text-sm font-medium text-white"
+                    >
+                      CEP *
+                    </label>
+
+                    <input
+                      id="cep"
+                      aria-invalid={Boolean(errors.cep)}
+                      aria-describedby="cep-ajuda"
+                      name="cep"
+                      type="text"
+                      inputMode="numeric"
+                      value={form.cep}
+                      onChange={handleCepChange}
+                      onBlur={() => buscarCep(form.cep)}
+                      placeholder="00000-000"
+                      maxLength={9}
+                      className={inputClass}
+                    />
+
+                    <div id="cep-ajuda" aria-live="polite">
+                    {cepLoading && (
+                      <p className="mt-1.5 text-xs text-purple">
+                        Consultando CEP...
                       </p>
                     )}
 
+                    {cepMessage && (
+                      <p className="mt-1.5 text-xs text-red-400">
+                        {cepMessage}
+                      </p>
+                    )}
+
+                    {errors.cep && (
+                      <p className="mt-1.5 text-xs text-red-400">
+                        {errors.cep}
+                      </p>
+                    )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Endereço preenchido pelo CEP */}
+                <div className="grid gap-5 md:grid-cols-2">
+
+                  <div className="md:col-span-2">
+                    <label
+                      htmlFor="rua"
+                      className="mb-2 block text-sm font-medium text-white"
+                    >
+                      Rua
+                    </label>
+
+                    <input
+                      id="rua"
+                      maxLength={180}
+                      aria-invalid={Boolean(errors.rua)}
+                      aria-describedby={errors.rua ? "erro-rua" : undefined}
+                      name="rua"
+                      type="text"
+                      value={form.rua}
+                      onChange={handleChange}
+                      placeholder="Preenchido automaticamente"
+                      className={inputClass}
+                    />
+                    {errors.rua && <p id="erro-rua" className="mt-1.5 text-xs text-red-400">{errors.rua}</p>}
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="bairro"
+                      className="mb-2 block text-sm font-medium text-white"
+                    >
+                      Bairro
+                    </label>
+
+                    <input
+                      id="bairro"
+                      maxLength={100}
+                      aria-invalid={Boolean(errors.bairro)}
+                      aria-describedby={errors.bairro ? "erro-bairro" : undefined}
+                      name="bairro"
+                      type="text"
+                      value={form.bairro}
+                      onChange={handleChange}
+                      placeholder="Bairro"
+                      className={inputClass}
+                    />
+                    {errors.bairro && <p id="erro-bairro" className="mt-1.5 text-xs text-red-400">{errors.bairro}</p>}
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="cidade"
+                      className="mb-2 block text-sm font-medium text-white"
+                    >
+                      Cidade
+                    </label>
+
+                    <input
+                      id="cidade"
+                      maxLength={100}
+                      aria-invalid={Boolean(errors.cidade)}
+                      aria-describedby={errors.cidade ? "erro-cidade" : undefined}
+                      name="cidade"
+                      type="text"
+                      value={form.cidade}
+                      onChange={handleChange}
+                      placeholder="Cidade"
+                      className={inputClass}
+                    />
+                    {errors.cidade && <p id="erro-cidade" className="mt-1.5 text-xs text-red-400">{errors.cidade}</p>}
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="uf"
+                      className="mb-2 block text-sm font-medium text-white"
+                    >
+                      UF
+                    </label>
+
+                    <input
+                      id="uf"
+                      aria-invalid={Boolean(errors.uf)}
+                      aria-describedby={errors.uf ? "erro-uf" : undefined}
+                      name="uf"
+                      type="text"
+                      value={form.uf}
+                      onChange={handleChange}
+                      placeholder="UF"
+                      maxLength={2}
+                      className={inputClass}
+                    />
+                    {errors.uf && <p id="erro-uf" className="mt-1.5 text-xs text-red-400">{errors.uf}</p>}
+                  </div>
+                  <div>
+                    <label htmlFor="numero" className="mb-2 block text-sm font-medium text-white">Número</label>
+                    <input id="numero" name="numero" type="text" value={form.numero}
+                      onChange={handleChange} maxLength={20} placeholder="Número ou S/N" className={inputClass} />
+                  </div>
+                  <div>
+                    <label htmlFor="complemento" className="mb-2 block text-sm font-medium text-white">Complemento</label>
+                    <input id="complemento" name="complemento" type="text" value={form.complemento}
+                      onChange={handleChange} maxLength={100} placeholder="Sala, bloco, apartamento..." className={inputClass} />
+                  </div>
+                </div>
+
+                {/* Os valores são os mesmos slugs cadastrados no PostgreSQL. */}
+                <div>
+                  <label htmlFor="servicoSlug" className="mb-2 block text-sm font-medium text-white">
+                    Serviço de interesse *
+                  </label>
+                  <select id="servicoSlug" name="servicoSlug" value={form.servicoSlug}
+                    onChange={handleChange} className={inputClass}
+                    aria-invalid={Boolean(errors.servicoSlug)}
+                    aria-describedby={errors.servicoSlug ? "erro-servicoSlug" : undefined}>
+                    <option value="">Selecione uma opção</option>
+                    {SERVICOS_ORCAMENTO.map((servico) => (
+                      <option key={servico.slug} value={servico.slug}>{servico.nome}</option>
+                    ))}
+                  </select>
+                  {errors.servicoSlug && <p id="erro-servicoSlug" className="mt-1.5 text-xs text-red-400">{errors.servicoSlug}</p>}
+                </div>
+
+                {/* CNPJ aparece quando a solicitação é feita por uma empresa. */}
+                <div className="rounded-xl border border-border bg-bg-dark/30 p-4">
+                  <label htmlFor="pessoaJuridica" className="flex cursor-pointer items-start gap-3">
+                    <input
+                      id="pessoaJuridica"
+                      name="pessoaJuridica"
+                      type="checkbox"
+                      checked={form.pessoaJuridica}
+                      onChange={handleChange}
+                      className="mt-1 h-4 w-4 accent-purple"
+                    />
+                    <span>
+                      <span className="block text-sm font-medium text-text-main">
+                        Sou uma empresa / Pessoa Jurídica
+                      </span>
+                      <span className="mt-1 block text-xs leading-5 text-text-muted">
+                        Marque esta opção se a solicitação for feita em nome de uma empresa.
+                      </span>
+                    </span>
+                  </label>
+
+                  {form.pessoaJuridica && (
+                    <div className="mt-4">
+                      <label htmlFor="cnpj" className="mb-2 block text-sm font-medium text-text-main">
+                        CNPJ *
+                      </label>
+                      <input
+                        id="cnpj"
+                        name="cnpj"
+                        type="text"
+                        value={form.cnpj}
+                        onChange={handleChange}
+                        maxLength={30}
+                        placeholder="00.000.000/0000-00"
+                        aria-invalid={Boolean(errors.cnpj)}
+                        aria-describedby={errors.cnpj ? "erro-cnpj" : undefined}
+                        className={inputClass}
+                      />
+                      {errors.cnpj && (
+                        <p id="erro-cnpj" className="mt-1.5 text-xs text-red-400">
+                          {errors.cnpj}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Mensagem */}
+                <div>
+                  <label
+                    htmlFor="mensagem"
+                    className="mb-2 block text-sm font-medium text-white"
+                  >
+                    Mensagem *
+                  </label>
+
+                  <textarea
+                    id="mensagem"
+                    maxLength={4000}
+                    aria-invalid={Boolean(errors.mensagem)}
+                    aria-describedby={errors.mensagem ? "erro-mensagem" : undefined}
+                    name="mensagem"
+                    value={form.mensagem}
+                    onChange={handleChange}
+                    placeholder="Conte um pouco sobre o que você precisa..."
+                    rows={6}
+                    className={`${inputClass} resize-none`}
+                  />
+
+                  {errors.mensagem && (
+                    <p id="erro-mensagem" className="mt-1.5 text-xs text-red-400">
+                      {errors.mensagem}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label htmlFor="canalPreferido" className="mb-2 block text-sm font-medium text-white">
+                    Como prefere receber nosso retorno?
+                  </label>
+                  <select id="canalPreferido" name="canalPreferido" value={form.canalPreferido}
+                    onChange={handleChange} className={inputClass}>
+                    <option value="email">E-mail</option>
+                    <option value="whatsapp">WhatsApp</option>
+                  </select>
+                  {form.canalPreferido === "whatsapp" && (
+                    <div className="mt-3">
+                      <label className="flex items-start gap-3 text-sm leading-6 text-text-muted">
+                        <input id="whatsappAutorizado" name="whatsappAutorizado" type="checkbox"
+                          checked={form.whatsappAutorizado} onChange={handleChange}
+                          className="mt-1 h-4 w-4 accent-purple"
+                          aria-invalid={Boolean(errors.whatsappAutorizado)}
+                          aria-describedby={errors.whatsappAutorizado ? "erro-whatsapp" : undefined} />
+                        Autorizo a Another World a entrar em contato por WhatsApp sobre esta solicitação.
+                      </label>
+                      {errors.whatsappAutorizado && <p id="erro-whatsapp" className="mt-1.5 text-xs text-red-400">{errors.whatsappAutorizado}</p>}
+                    </div>
+                  )}
+                </div>
+
+                {submitError && (
+                  <div role="alert" className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                    {submitError}
                   </div>
                 )}
 
-              </div>
+                {/* Sucesso */}
+                {success && (
+                  <div role="status" className="rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-400">
+                    Solicitação recebida. Nossa equipe retornará pelo canal escolhido.
+                    <span className="mt-2 block break-all text-xs">Protocolo: {success.id}</span>
+                  </div>
+                )}
 
-
-              {/* =================================================
-                  CEP
-              ================================================= */}
-              <div>
-
-                <label
-                  htmlFor="cep"
-                  className="mb-2 block text-sm font-medium text-white"
+                {/* Botão */}
+                <button
+                  type="submit"
+                  disabled={sending || cepLoading}
+                  className="w-full rounded-full bg-purple px-6 py-3.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-wait disabled:opacity-60"
                 >
-                  CEP *
-                </label>
+                  {sending ? "Enviando..." : cepLoading ? "Consultando CEP..." : "Enviar solicitação"}
+                </button>
 
-
-                <input
-                  id="cep"
-                  name="cep"
-                  type="text"
-                  inputMode="numeric"
-                  value={form.cep}
-                  onChange={handleCepChange}
-                  onBlur={() =>
-                    buscarCep(form.cep)
-                  }
-                  placeholder="00000-000"
-                  maxLength={9}
-                  className={inputClass}
-                />
-
-
-                {cepLoading && (
-                  <p className="mt-1.5 text-xs text-purple">
-                    Consultando CEP...
-                  </p>
-                )}
-
-
-                {cepMessage && (
-                  <p className="mt-1.5 text-xs text-red-400">
-                    {cepMessage}
-                  </p>
-                )}
-
-
-                {errors.cep &&
-                  !cepMessage && (
-                    <p className="mt-1.5 text-xs text-red-400">
-                      {errors.cep}
-                    </p>
-                  )}
-
-              </div>
-
-
-              {/* =================================================
-                  ENDEREÇO
-              ================================================= */}
-              <div className="grid gap-5 md:grid-cols-2">
-
-                <div className="md:col-span-2">
-
-                  <label
-                    htmlFor="rua"
-                    className="mb-2 block text-sm font-medium text-white"
-                  >
-                    Rua
-                  </label>
-
-
-                  <input
-                    id="rua"
-                    name="rua"
-                    type="text"
-                    value={form.rua}
-                    onChange={handleChange}
-                    placeholder="Preenchido automaticamente"
-                    className={inputClass}
-                  />
-
-                </div>
-
-
-                <div>
-
-                  <label
-                    htmlFor="bairro"
-                    className="mb-2 block text-sm font-medium text-white"
-                  >
-                    Bairro
-                  </label>
-
-
-                  <input
-                    id="bairro"
-                    name="bairro"
-                    type="text"
-                    value={form.bairro}
-                    onChange={handleChange}
-                    placeholder="Bairro"
-                    className={inputClass}
-                  />
-
-                </div>
-
-
-                <div>
-
-                  <label
-                    htmlFor="cidade"
-                    className="mb-2 block text-sm font-medium text-white"
-                  >
-                    Cidade
-                  </label>
-
-
-                  <input
-                    id="cidade"
-                    name="cidade"
-                    type="text"
-                    value={form.cidade}
-                    onChange={handleChange}
-                    placeholder="Cidade"
-                    className={inputClass}
-                  />
-
-                </div>
-
-
-                <div>
-
-                  <label
-                    htmlFor="uf"
-                    className="mb-2 block text-sm font-medium text-white"
-                  >
-                    UF
-                  </label>
-
-
-                  <input
-                    id="uf"
-                    name="uf"
-                    type="text"
-                    value={form.uf}
-                    onChange={handleChange}
-                    placeholder="UF"
-                    maxLength={2}
-                    className={inputClass}
-                  />
-
-                </div>
-
-              </div>
-
-
-              {/* =================================================
-                  MENSAGEM
-              ================================================= */}
-              <div>
-
-                <label
-                  htmlFor="mensagem"
-                  className="mb-2 block text-sm font-medium text-white"
-                >
-                  Mensagem *
-                </label>
-
-
-                <textarea
-                  id="mensagem"
-                  name="mensagem"
-                  value={form.mensagem}
-                  onChange={handleChange}
-                  placeholder="Conte um pouco sobre o que você precisa..."
-                  rows={6}
-                  className={`${inputClass} resize-none`}
-                />
-
-
-                {errors.mensagem && (
-                  <p className="mt-1.5 text-xs text-red-400">
-                    {errors.mensagem}
-                  </p>
-                )}
-
-              </div>
-
-
-              {/* =================================================
-                  SUCESSO
-              ================================================= */}
-              {success && (
-                <div className="rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-400">
-                  Solicitação enviada com sucesso!
-                </div>
-              )}
-
-
-              {/* =================================================
-                  BOTÃO
-              ================================================= */}
-              <button
-                type="submit"
-                className="w-full rounded-full bg-purple px-6 py-3.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-              >
-                Enviar mensagem
-              </button>
-
+              </fieldset>
             </form>
-
           </div>
 
-
-          {/* =================================================
-              INFORMAÇÕES
-          ================================================= */}
+          {/* Informações */}
           <aside className="h-fit rounded-2xl border border-border bg-bg-section p-6 md:p-8">
-
             <p className="text-sm font-medium uppercase tracking-[0.15em] text-purple">
               Fale conosco
             </p>
-
 
             <h2 className="mt-3 text-2xl font-semibold text-white">
               Informações de contato
             </h2>
 
-
             <div className="mt-8 space-y-7">
 
               <div>
-
                 <p className="text-xs font-medium uppercase tracking-wider text-text-muted">
                   Endereço
                 </p>
@@ -893,12 +649,9 @@ export default function Contato() {
                   <br />
                   CEP 05051-000
                 </p>
-
               </div>
 
-
               <div>
-
                 <p className="text-xs font-medium uppercase tracking-wider text-text-muted">
                   Telefone / WhatsApp
                 </p>
@@ -906,12 +659,9 @@ export default function Contato() {
                 <p className="mt-2 text-sm text-white">
                   0800 837-1429
                 </p>
-
               </div>
 
-
               <div>
-
                 <p className="text-xs font-medium uppercase tracking-wider text-text-muted">
                   E-mail
                 </p>
@@ -919,12 +669,9 @@ export default function Contato() {
                 <p className="mt-2 break-all text-sm text-white">
                   contato@anotherworld.com
                 </p>
-
               </div>
 
-
               <div>
-
                 <p className="text-xs font-medium uppercase tracking-wider text-text-muted">
                   Horário de atendimento
                 </p>
@@ -934,18 +681,14 @@ export default function Contato() {
                   <br />
                   09:00 às 18:00
                 </p>
-
               </div>
 
             </div>
 
-
             <div className="mt-10 border-t border-border pt-6">
-
               <p className="text-sm text-text-muted">
                 Precisa de ajuda com um projeto?
               </p>
-
 
               <Link
                 to="/servicos"
@@ -953,15 +696,11 @@ export default function Contato() {
               >
                 Conheça nossos serviços →
               </Link>
-
             </div>
-
           </aside>
 
         </div>
-
       </section>
-
     </main>
   );
 }
