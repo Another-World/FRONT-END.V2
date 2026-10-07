@@ -1,19 +1,29 @@
 import { useState, useRef, useEffect } from "react";
 
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import { useAuth } from "../../context/AuthContext";
 
 import logo from "../../assets/logo.png";
+
+import GooeyNav from "../ui/GooeyNav";
+
+import ThemeToggle from "../ui/ThemeToggle";
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
 
   const userMenuRef = useRef(null);
+
+  const menuItems = [
+    { label: "Home", to: "/" },
+    { label: "Quem Somos", to: "/quem-somos" },
+    { label: "Serviços", to: "/servicos" },
+    { label: "Contato", to: "/contato" },
+  ];
 
   useEffect(() => {
     if (!userMenuOpen) return;
@@ -46,23 +56,15 @@ export default function Header() {
     logout();
     setUserMenuOpen(false);
     setMenuOpen(false);
-    navigate("/");
   }
 
   const nomeExibido = user
     ? user.name?.split(" ")[0] || user.email
     : "";
 
-  const menuItems = [
-    { label: "Home", to: "/" },
-    { label: "Quem Somos", to: "/quem-somos" },
-    { label: "Serviços", to: "/servicos" },
-    { label: "Contato", to: "/contato" },
-  ];
-
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-bg-dark/95 backdrop-blur">
-      <div className="mx-auto flex h-[82px] max-w-[1440px] items-center justify-between px-6">
+      <div className="relative mx-auto flex h-[82px] max-w-[1440px] items-center justify-between px-6">
 
         {/* LOGO */}
         <Link
@@ -81,43 +83,41 @@ export default function Header() {
           </span>
         </Link>
 
-        {/* MENU DESKTOP */}
-        <nav className="hidden items-center gap-8 lg:flex">
-          {menuItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                `text-sm font-medium transition-colors ${
-                  isActive
-                    ? "text-white"
-                    : "text-text-muted hover:text-white"
-                }`
-              }
-            >
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
+        {/* MENU DESKTOP - GOOEY NAV */}
+        <div className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 lg:flex">
+          <GooeyNav
+            items={menuItems}
+            size="sm"
+            activeColor="#7C3AED"
+            activeLabelColor="#FFFFFF"
+          />
+        </div>
 
         {/* AÇÕES DESKTOP */}
-        <div className="hidden items-center gap-3 lg:flex">
+        <div className="hidden items-center gap-4 lg:flex">
 
+          {/* TEMA */}
+          <ThemeToggle />
+
+          {/* LOGIN / USUÁRIO */}
           {!user ? (
             <Link
               to="/login"
-              className="rounded-full bg-purple px-5 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90"
+              className="loginHeaderButton rounded-full bg-purple px-5 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90"
             >
               Faça seu login/cadastro
             </Link>
           ) : (
-            <div className="relative" ref={userMenuRef}>
+            <div
+              className="relative"
+              ref={userMenuRef}
+            >
               <button
                 type="button"
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
                 aria-expanded={userMenuOpen}
                 aria-haspopup="menu"
-                className="flex items-center gap-2 rounded-full border border-purple/50 px-5 py-2.5 text-sm font-medium text-purple transition-all hover:border-purple hover:bg-purple/10"
+                className="userHeaderButton flex items-center gap-2 rounded-full border border-purple/50 px-5 py-2.5 text-sm font-medium text-purple transition-all hover:border-purple hover:bg-purple/10"
               >
                 Seja Bem-Vindo, {nomeExibido}!
 
@@ -158,7 +158,6 @@ export default function Header() {
               )}
             </div>
           )}
-
         </div>
 
         {/* BOTÃO HAMBÚRGUER */}
@@ -169,24 +168,32 @@ export default function Header() {
           onClick={() => setMenuOpen(!menuOpen)}
           className="flex h-10 w-10 items-center justify-center rounded-lg border border-border text-white transition hover:bg-bg-section lg:hidden"
         >
-          <span className="sr-only">Menu</span>
+          <span className="sr-only">
+            Menu
+          </span>
 
           <div className="flex flex-col gap-1.5">
             <span
               className={`block h-0.5 w-5 bg-white transition-transform ${
-                menuOpen ? "translate-y-2 rotate-45" : ""
+                menuOpen
+                  ? "translate-y-2 rotate-45"
+                  : ""
               }`}
             />
 
             <span
               className={`block h-0.5 w-5 bg-white transition-opacity ${
-                menuOpen ? "opacity-0" : "opacity-100"
+                menuOpen
+                  ? "opacity-0"
+                  : "opacity-100"
               }`}
             />
 
             <span
               className={`block h-0.5 w-5 bg-white transition-transform ${
-                menuOpen ? "-translate-y-2 -rotate-45" : ""
+                menuOpen
+                  ? "-translate-y-2 -rotate-45"
+                  : ""
               }`}
             />
           </div>
@@ -199,38 +206,41 @@ export default function Header() {
           <nav className="flex flex-col gap-5">
 
             {menuItems.map((item) => (
-              <NavLink
+              <Link
                 key={item.to}
                 to={item.to}
                 onClick={() => setMenuOpen(false)}
-                className={({ isActive }) =>
-                  `text-base font-medium transition-colors ${
-                    isActive
-                      ? "text-white"
-                      : "text-text-muted hover:text-white"
-                  }`
-                }
+                className="text-base font-medium text-text-muted transition-colors hover:text-white"
               >
                 {item.label}
-              </NavLink>
+              </Link>
             ))}
 
             <div className="my-1 h-px bg-border" />
+
+            {/* TEMA MOBILE */}
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-text-muted">
+                Tema
+              </span>
+
+              <ThemeToggle />
+            </div>
 
             {/* DESLOGADO MOBILE */}
             {!user ? (
               <Link
                 to="/login"
                 onClick={() => setMenuOpen(false)}
-                className="rounded-full bg-purple px-5 py-3 text-center text-sm font-semibold text-white transition hover:opacity-90"
+                className="loginHeaderButton rounded-full bg-purple px-5 py-3 text-center text-sm font-semibold text-white transition hover:opacity-90"
               >
                 Faça seu login/cadastro
               </Link>
             ) : (
               <>
-                <p className="text-sm font-semibold text-purple">
+                <div className="userHeaderButtonMobile rounded-full px-5 py-3 text-center text-sm font-semibold">
                   Seja Bem-Vindo, {nomeExibido}!
-                </p>
+                </div>
 
                 <Link
                   to="/area-cliente"
@@ -249,7 +259,6 @@ export default function Header() {
                 </button>
               </>
             )}
-
           </nav>
         </div>
       )}

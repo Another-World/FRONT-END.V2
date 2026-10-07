@@ -1,23 +1,737 @@
 @import "tailwindcss";
 
+/* =========================================================
+   ANOTHER WORLD — SISTEMA DE CORES
+   ========================================================= */
+
 @theme {
   --font-sans: "Inter", sans-serif;
 
+  /* =======================================================
+     MODO ESCURO — ORIGINAL
+     ======================================================= */
+
   --color-bg-dark: #160b20;
-  --color-bg-section: #21102e;
+  --color-bg-section: #281d3b;
   --color-bg-footer: #100817;
+
   --color-bg-card: #1d1028;
   --color-bg-card-inner: #241333;
 
   --color-purple: #8b45d6;
   --color-border: #43265b;
 
+  --color-text-main: #f5f4f7;
   --color-text-muted: #a39aae;
   --color-text-soft: #8f859a;
   --color-text-faint: #706878;
 }
 
-body {
+/* =========================================================
+   MODO CLARO
+   ========================================================= */
+
+html[data-theme="light"] {
+  color-scheme: light;
+
+  --color-bg-dark: #cab1e3;
+  --color-bg-section: #c3add2;
+  --color-bg-footer: #9275ba;
+
+  --color-bg-card: #d5c3df;
+  --color-bg-card-inner: #c7b0d3;
+
+  --color-purple: #8554b3;
+  --color-purple-dark: #7843ab;
+  --color-purple-light: #cda5f2;
+  --color-purple-soft: #a080bd;
+  --color-border: #a080bd;
+
+  --color-text-main: #24192d;
+  --color-text-muted: #4f3c5b;
+  --color-text-soft: #614d6d;
+  --color-text-faint: #76627e;
+}
+
+/* =========================================================
+   BASE
+   ========================================================= */
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+html {
   background-color: var(--color-bg-dark);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+
+  background:
+    linear-gradient(
+      180deg,
+      var(--color-bg-dark) 0%,
+      var(--color-bg-section) 100%
+    );
+
+  color: var(--color-text-main);
   font-family: var(--font-sans);
+
+  transition:
+    background-color 0.4s ease,
+    color 0.4s ease;
+}
+
+/* =========================================================
+   FUNDO DO MODO CLARO
+   ========================================================= */
+
+html[data-theme="light"] {
+  background:
+    linear-gradient(
+      180deg,
+      #cab1e3 0%,
+      #c7aed1 45%,
+      #c3aacd 100%
+    );
+}
+
+html[data-theme="light"] body {
+  background:
+    radial-gradient(
+      ellipse 70% 42% at 50% -5%,
+      rgb(255 255 255 / 8%),
+      transparent 72%
+    ),
+    radial-gradient(
+      ellipse 48% 60% at 0% 35%,
+      rgb(133 84 179 / 10%),
+      transparent 75%
+    ),
+    radial-gradient(
+      ellipse 48% 60% at 100% 70%,
+      rgb(120 67 171 / 9%),
+      transparent 75%
+    ),
+    linear-gradient(
+      180deg,
+      #cab1e3 0%,
+      #c7aed1 45%,
+      #c3aacd 100%
+    );
+
+  color: #24192d;
+}
+
+/* =========================================================
+   ATMOSFERA DO MODO CLARO
+   ========================================================= */
+
+html[data-theme="light"] body::before {
+  content: "";
+
+  position: fixed;
+  inset: 0;
+
+  z-index: -10;
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      circle at 20% 18%,
+      rgb(255 255 255 / 8%) 0,
+      transparent 20%
+    ),
+    radial-gradient(
+      circle at 78% 25%,
+      rgb(255 255 255 / 7%) 0,
+      transparent 22%
+    ),
+    radial-gradient(
+      ellipse at 50% 100%,
+      rgb(93 45 126 / 12%),
+      transparent 55%
+    );
+}
+
+/* =========================================================
+   TRANSIÇÃO
+   ========================================================= */
+
+body,
+header,
+footer,
+main,
+section,
+article,
+aside,
+nav,
+button,
+input,
+select,
+textarea {
+  transition-property:
+    background-color,
+    border-color,
+    color,
+    box-shadow;
+
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
+}
+
+/* =========================================================
+   FUNDOS FIXOS
+   ========================================================= */
+
+html[data-theme="light"]
+[class~="bg-[#101114]"] {
+  background-color: #cab1e3 !important;
+}
+
+html[data-theme="light"]
+[class~="bg-[#18191e]"] {
+  background-color: #d5c3df !important;
+}
+
+html[data-theme="light"]
+[class~="bg-[#211c27]"] {
+  background-color: #c7b0d3 !important;
+}
+
+html[data-theme="light"]
+[class~="bg-[#151319]"] {
+  background-color: #c3add2 !important;
+}
+
+html[data-theme="light"]
+[class~="bg-[#222027]"] {
+  background-color: #d1bedb !important;
+}
+
+html[data-theme="light"]
+[class~="bg-[#222027]"]:hover {
+  background-color: #c3add2 !important;
+}
+
+html[data-theme="light"]
+[class~="bg-[#303138]"] {
+  background-color: #b39ac0 !important;
+}
+
+/* =========================================================
+   BORDAS
+   ========================================================= */
+
+html[data-theme="light"]
+[class~="border-[#303138]"] {
+  border-color: #a080bd !important;
+}
+
+html[data-theme="light"]
+[class~="border-[#45404e]"] {
+  border-color: #b49cbe !important;
+}
+
+html[data-theme="light"]
+[class~="border-[#49404e]"] {
+  border-color: #b49cbe !important;
+}
+
+html[data-theme="light"]
+[class~="border-[#55515f]"] {
+  border-color: #aa91b5 !important;
+}
+
+html[data-theme="light"]
+[class~="border-[#c9a4ed]"] {
+  border-color: #9671aa !important;
+}
+
+/* =========================================================
+   TEXTOS
+   ========================================================= */
+
+html[data-theme="light"]
+[class~="text-[#f5f4f7]"] {
+  color: #24192d !important;
+}
+
+html[data-theme="light"]
+[class~="text-[#b2b0bc]"] {
+  color: #4f3c5b !important;
+}
+
+html[data-theme="light"]
+[class~="text-[#d9cce7]"] {
+  color: #5f4b69 !important;
+}
+
+html[data-theme="light"]
+[class~="text-[#dedbe4]"] {
+  color: #51405c !important;
+}
+
+html[data-theme="light"]
+[class~="text-[#c9a4ed]"] {
+  color: #714294 !important;
+}
+
+/* =========================================================
+   ROXOS
+   ========================================================= */
+
+html[data-theme="light"]
+[class~="bg-purple"] {
+  background-color: #8554b3 !important;
+}
+
+html[data-theme="light"]
+[class~="bg-[#7735bd]"] {
+  background-color: #7843ab !important;
+}
+
+html[data-theme="light"]
+[class~="bg-[#c9a4ed]"] {
+  background-color: #8554b3 !important;
+}
+
+html[data-theme="light"]
+[class~="text-purple"] {
+  color: #8554b3 !important;
+}
+
+html[data-theme="light"]
+[class~="border-purple"] {
+  border-color: #8554b3 !important;
+}
+
+/* =========================================================
+   TEXTOS BRANCOS NO MODO CLARO
+   ========================================================= */
+
+html[data-theme="light"]
+main
+[class~="text-white"],
+html[data-theme="light"]
+footer
+[class~="text-white"] {
+  color: #24192d !important;
+}
+
+/* =========================================================
+   BOTÕES ROXOS
+   ========================================================= */
+
+html[data-theme="light"]
+button.bg-purple,
+html[data-theme="light"]
+a.bg-purple {
+  background-color: #8554b3 !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="light"]
+button.bg-purple:hover,
+html[data-theme="light"]
+a.bg-purple:hover {
+  background-color: #7843ab !important;
+  color: #ffffff !important;
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+html[data-theme="light"] header {
+  background-color: #9275ba !important;
+
+  border-color:
+    rgb(133 84 179 / 25%) !important;
+
+  box-shadow:
+    0 8px 30px rgb(71 45 88 / 10%);
+}
+
+html[data-theme="light"]
+header
+[class~="text-white"] {
+  color: #24192d !important;
+}
+
+html[data-theme="light"]
+header
+.text-text-main {
+  color: #24192d !important;
+}
+
+/* =========================================================
+   BOTÃO LOGIN / CADASTRO
+   ========================================================= */
+
+/* MODO ESCURO */
+
+.loginHeaderButton {
+  background-color: #8b45d6 !important;
+  color: #ffffff !important;
+
+  border-color: #8b45d6 !important;
+
+  box-shadow:
+    0 4px 14px rgb(0 0 0 / 18%);
+}
+
+.loginHeaderButton:hover {
+  background-color: #7735bd !important;
+  color: #ffffff !important;
+
+  border-color: #7735bd !important;
+}
+
+/* MODO CLARO */
+
+html[data-theme="light"]
+.loginHeaderButton {
+  background-color: #8554b3 !important;
+  color: #ffffff !important;
+
+  border-color: #8554b3 !important;
+
+  box-shadow:
+    0 4px 14px rgb(71 45 88 / 18%);
+}
+
+html[data-theme="light"]
+.loginHeaderButton:hover {
+  background-color: #7843ab !important;
+  color: #ffffff !important;
+
+  border-color: #7843ab !important;
+
+  box-shadow:
+    0 6px 18px rgb(71 45 88 / 25%);
+}
+
+/* =========================================================
+   BOTÃO "SEJA BEM-VINDO"
+   ========================================================= */
+
+/* MODO ESCURO */
+
+.userHeaderButton {
+  background-color: #8b45d6 !important;
+  color: #ffffff !important;
+
+  border-color: #8b45d6 !important;
+
+  box-shadow:
+    0 4px 14px rgb(0 0 0 / 18%);
+}
+
+.userHeaderButton:hover {
+  background-color: #7735bd !important;
+  color: #ffffff !important;
+
+  border-color: #7735bd !important;
+
+  box-shadow:
+    0 6px 18px rgb(0 0 0 / 25%);
+}
+
+/* MODO CLARO */
+
+html[data-theme="light"]
+.userHeaderButton {
+  background-color: #8554b3 !important;
+  color: #ffffff !important;
+
+  border-color: #8554b3 !important;
+
+  box-shadow:
+    0 4px 14px rgb(71 45 88 / 18%);
+}
+
+html[data-theme="light"]
+.userHeaderButton:hover {
+  background-color: #7843ab !important;
+  color: #ffffff !important;
+
+  border-color: #7843ab !important;
+
+  box-shadow:
+    0 6px 18px rgb(71 45 88 / 25%);
+}
+
+/* =========================================================
+   BOTÃO "SEJA BEM-VINDO" — MOBILE
+   ========================================================= */
+
+/* MODO ESCURO */
+
+.userHeaderButtonMobile {
+  background-color: #8b45d6 !important;
+  color: #ffffff !important;
+
+  box-shadow:
+    0 4px 14px rgb(0 0 0 / 18%);
+}
+
+/* MODO CLARO */
+
+html[data-theme="light"]
+.userHeaderButtonMobile {
+  background-color: #8554b3 !important;
+  color: #ffffff !important;
+
+  box-shadow:
+    0 4px 14px rgb(71 45 88 / 18%);
+}
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+html[data-theme="light"] footer {
+  background-color: #9275ba !important;
+  border-color: #8554b3 !important;
+}
+
+html[data-theme="light"]
+footer
+[class~="text-white"] {
+  color: #24192d !important;
+}
+
+/* =========================================================
+   INPUTS
+   ========================================================= */
+
+html[data-theme="light"]
+input[class~="text-white"],
+html[data-theme="light"]
+textarea[class~="text-white"],
+html[data-theme="light"]
+select[class~="text-white"] {
+  color: #24192d !important;
+}
+
+html[data-theme="light"]
+input,
+html[data-theme="light"]
+textarea,
+html[data-theme="light"]
+select {
+  border-color: #a080bd !important;
+  background-color: #d5c3df !important;
+  color: #24192d !important;
+}
+
+html[data-theme="light"]
+input:focus,
+html[data-theme="light"]
+textarea:focus,
+html[data-theme="light"]
+select:focus {
+  border-color: #8554b3 !important;
+
+  box-shadow:
+    0 0 0 3px rgb(133 84 179 / 13%);
+}
+
+html[data-theme="light"]
+input::placeholder,
+html[data-theme="light"]
+textarea::placeholder {
+  color: #76627e !important;
+}
+
+/* =========================================================
+   BOTÃO DE AJUDA
+   ========================================================= */
+
+html[data-theme="light"] .helpButton {
+  background:
+    linear-gradient(
+      135deg,
+      #7843ab,
+      #603982
+    ) !important;
+
+  color: #ffffff !important;
+  border-color: #8554b3 !important;
+
+  box-shadow:
+    0 8px 25px rgb(70 45 95 / 22%),
+    0 0 18px rgb(118 84 157 / 12%);
+}
+
+html[data-theme="light"] .helpButton:hover {
+  background:
+    linear-gradient(
+      135deg,
+      #693996,
+      #53316f
+    ) !important;
+
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .helpButton {
+  color: #ffffff !important;
+}
+
+.helpButton,
+.helpButton span,
+.helpButton span span {
+  color: #ffffff !important;
+}
+
+/* =========================================================
+   GOOEY NAV
+   ========================================================= */
+
+html[data-theme="light"] nav a {
+  color: #4f3c5b !important;
+}
+
+html[data-theme="light"] nav a:hover {
+  color: #7843ab !important;
+}
+
+html[data-theme="light"]
+nav a.bg-\[\#7843ab\] {
+  background-color: #7843ab !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] nav a {
+  color: #eee5f5 !important;
+}
+
+html[data-theme="dark"] nav a:hover {
+  color: #cda5f2 !important;
+}
+
+html[data-theme="dark"]
+nav a.bg-\[\#7843ab\] {
+  background-color: #7843ab !important;
+  color: #ffffff !important;
+}
+
+/* =========================================================
+   GOOEY NAV — BOTÕES
+   ========================================================= */
+
+html[data-theme="light"] nav button {
+  color: #4f3c5b !important;
+}
+
+html[data-theme="light"] nav button:hover {
+  color: #24192d !important;
+}
+
+html[data-theme="light"]
+nav button.bg-purple {
+  background-color: #8554b3 !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"]
+nav button.bg-purple {
+  color: #ffffff !important;
+}
+
+/* =========================================================
+   ERROS
+   ========================================================= */
+
+html[data-theme="light"]
+[class~="text-red-400"] {
+  color: #dc2626 !important;
+}
+
+/* =========================================================
+   ACENTOS
+   ========================================================= */
+
+html[data-theme="light"]
+[class~="accent-purple"] {
+  accent-color: #8554b3;
+}
+
+/* =========================================================
+   SELEÇÃO
+   ========================================================= */
+
+::selection {
+  background-color: var(--color-purple);
+  color: #ffffff;
+}
+
+/* =========================================================
+   SCROLLBAR
+   ========================================================= */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-purple);
+}
+
+/* =========================================================
+   SCROLLBAR — MODO CLARO
+   ========================================================= */
+
+html[data-theme="light"]
+::-webkit-scrollbar-track {
+  background: #c3add2;
+}
+
+html[data-theme="light"]
+::-webkit-scrollbar-thumb {
+  background: #967ca3;
+}
+
+html[data-theme="light"]
+::-webkit-scrollbar-thumb:hover {
+  background: #8554b3;
+}
+
+/* =========================================================
+   FOCO
+   ========================================================= */
+
+*:focus-visible {
+  outline: 2px solid var(--color-purple);
+  outline-offset: 3px;
+}
+
+/* =========================================================
+   REDUÇÃO DE MOVIMENTO
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

@@ -1,7 +1,9 @@
-import { useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+
 import ProjetosServico from "./ProjetosServico";
+
 import { services, projects } from "./dados";
+
 import {
   container,
   eyebrow,
@@ -13,22 +15,13 @@ import {
 } from "./visual";
 
 export default function Servicos() {
-  /*
-    useSearchParams lê a parte "?area=..." do endereço.
-    - /servicos                → mostra a lista de serviços
-    - /servicos?area=redes     → mostra os projetos de Redes
-    Assim não foi preciso criar uma rota nova no App.jsx.
-  */
   const [searchParams] = useSearchParams();
+
   const area = searchParams.get("area");
 
-  // Procura o serviço escolhido. Se não existir, fica undefined.
-  const selectedService = services.find((service) => service.slug === area);
-
-  // Ao trocar de tela, volta para o topo da página.
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [area]);
+  const selectedService = services.find(
+    (service) => service.slug === area
+  );
 
   return (
     <div className="relative isolate overflow-hidden bg-[#101114] font-sans text-[#f5f4f7]">
@@ -43,36 +36,48 @@ export default function Servicos() {
   );
 }
 
-// Tela principal: lista dos 3 serviços.
 function ListaServicos() {
   return (
     <>
-      {/* TOPO: título centralizado, como o hero da Home */}
-      <section className="pt-16 text-center md:pt-26" aria-labelledby="servicos-title">
+      <section
+        className="pt-16 text-center md:pt-26"
+        aria-labelledby="servicos-title"
+      >
         <div className={container}>
           <p className={badge}>
             Another World
-            <span className="text-[#c9a4ed]" aria-hidden="true">/</span>
+            <span
+              className="text-[#c9a4ed]"
+              aria-hidden="true"
+            >
+              /
+            </span>
             Serviços
           </p>
 
-          <h1 id="servicos-title" className={heroTitle}>
+          <h1
+            id="servicos-title"
+            className={heroTitle}
+          >
             Soluções de tecnologia
-            <span className="mt-2 block text-[#c9a4ed]">para problemas reais.</span>
+
+            <span className="mt-2 block text-[#c9a4ed]">
+              para problemas reais.
+            </span>
           </h1>
 
           <p className="mx-auto mt-7 max-w-162.5 text-base leading-[1.8] text-[#b2b0bc] md:text-lg">
-            Unimos conhecimento técnico e atendimento próximo para ajudar
-            empresas a construir uma operação mais conectada, segura e
-            preparada para evoluir.
+            Unimos conhecimento técnico e atendimento próximo
+            para ajudar empresas a construir uma operação mais
+            conectada, segura e preparada para evoluir.
           </p>
 
-          {/* Faixa com os nomes dos serviços, igual ao rodapé do hero da Home */}
+          {/* LINKS DAS ÁREAS */}
           <div className="mt-12 flex flex-wrap justify-center gap-x-12 gap-y-4 border-y border-[#303138] py-6 text-xs text-[#b2b0bc] md:mt-19">
             {services.map((service) => (
               <Link
                 key={service.slug}
-                to={`/servicos?area=${service.slug}`}
+                to={`/servicos?area=${service.slug}#projetos`}
                 className="transition-colors hover:text-[#c9a4ed]"
               >
                 {service.title}
@@ -82,51 +87,69 @@ function ListaServicos() {
         </div>
       </section>
 
-      {/* CARDS DOS SERVIÇOS: o card inteiro é um link para os projetos */}
-      <section className="py-14 md:py-22" aria-labelledby="lista-servicos-title">
+      <section
+        id="lista-servicos"
+        className="scroll-mt-24 py-14 md:py-22"
+        aria-labelledby="lista-servicos-title"
+      >
         <div className={container}>
           <div className="mx-auto mb-10 max-w-172.5 text-center">
-            <p className={eyebrow}>O que fazemos</p>
-            <h2 id="lista-servicos-title" className={sectionTitle}>
+            <p className={eyebrow}>
+              O que fazemos
+            </p>
+
+            <h2
+              id="lista-servicos-title"
+              className={sectionTitle}
+            >
               Três áreas para cuidar da sua tecnologia.
             </h2>
           </div>
 
           <div className="grid gap-5 md:grid-cols-3">
             {services.map((service) => {
-              // Conta quantos projetos existem para esse serviço.
               const total = projects.filter(
-                (project) => project.area === service.slug
+                (project) =>
+                  project.area === service.slug
               ).length;
 
               return (
-                <Link
+                <section
                   key={service.slug}
-                  to={`/servicos?area=${service.slug}`}
-                  className="group flex flex-col rounded-[14px] border border-[#303138] bg-[#18191e] p-7 transition-colors hover:border-[#c9a4ed]/60 focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-[#c9a4ed] lg:p-7.5"
+                  id={service.slug}
+                  className="scroll-mt-24"
                 >
-                  <div className="mb-9 flex items-center justify-between">
-                    <span className="text-[13px] tabular-nums text-[#c9a4ed]">
-                      {service.number}
-                    </span>
-                    <span className="text-xs text-[#b2b0bc]">
-                      {total === 1 ? "1 projeto" : `${total} projetos`}
-                    </span>
-                  </div>
+                  <Link
+                    to={`/servicos?area=${service.slug}#projetos`}
+                    className="group flex h-full flex-col rounded-[14px] border border-[#303138] bg-[#18191e] p-7 transition-colors hover:border-[#c9a4ed]/60 focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-[#c9a4ed] lg:p-7.5"
+                  >
+                    <div className="mb-9 flex items-center justify-between">
+                      <span className="text-[13px] tabular-nums text-[#c9a4ed]">
+                        {service.number}
+                      </span>
 
-                  <h3 className="mb-4 text-[23px] font-medium leading-[1.3] tracking-tight">
-                    {service.title}
-                  </h3>
-                  <p className="mb-7 text-[15px] leading-[1.8] text-[#b2b0bc]">
-                    {service.description}
-                  </p>
+                      <span className="text-xs text-[#b2b0bc]">
+                        {total === 1
+                          ? "1 projeto"
+                          : `${total} projetos`}
+                      </span>
+                    </div>
 
-                  {/* mt-auto empurra o "Ver projetos" para o fim do card */}
-                  <span className="mt-auto flex items-center gap-3 border-t border-[#303138] pt-5 text-sm font-semibold text-[#c9a4ed]">
-                    Ver projetos
-                    <Arrow className="transition-transform group-hover:translate-x-1" />
-                  </span>
-                </Link>
+                    <h3 className="mb-4 text-[23px] font-medium leading-[1.3] tracking-tight">
+                      {service.title}
+                    </h3>
+
+                    <p className="mb-7 text-[15px] leading-[1.8] text-[#b2b0bc]">
+                      {service.description}
+                    </p>
+
+                    <span className="mt-auto flex items-center gap-3 border-t border-[#303138] pt-5 text-sm font-semibold text-[#c9a4ed]">
+                      Ver projetos
+
+                      <Arrow className="transition-transform group-hover:translate-x-1" />
+                    </span>
+                  </Link>
+                </section>
               );
             })}
           </div>
