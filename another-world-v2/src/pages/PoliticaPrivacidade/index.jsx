@@ -1,73 +1,131 @@
-export default function PoliticaPrivacidade() {
+export default function TermosUso() {
   return (
-    <div className="min-h-screen bg-black px-6 py-16 text-white">
+    <div
+      className="min-h-screen px-6 py-16 transition-colors duration-300"
+      style={{
+        backgroundColor: "var(--color-bg-dark)",
+        color: "var(--color-text-main)",
+      }}
+    >
       <div className="mx-auto max-w-4xl">
-
-        <h1 className="mb-8 text-4xl font-bold">
-          Política de Privacidade
+        <h1
+          className="mb-8 text-4xl font-bold"
+          style={{ color: "var(--color-text-main)" }}
+        >
+          Termos de Uso
         </h1>
 
-        <div className="space-y-8 text-gray-300 leading-relaxed">
-
+        <div
+          className="space-y-8 leading-relaxed"
+          style={{ color: "var(--color-text-muted)" }}
+        >
           <section>
-            <h2 className="mb-3 text-2xl font-semibold text-white">
-              1. Introdução
+            <h2
+              className="mb-3 text-2xl font-semibold"
+              style={{ color: "var(--color-text-main)" }}
+            >
+              1. Aceitação dos termos
             </h2>
 
             <p>
-              A Another World valoriza a privacidade de seus usuários e busca
-              proteger os dados pessoais fornecidos durante a utilização do
-              nosso site.
+              Ao acessar e utilizar o site da Another World, o usuário
+              concorda com os presentes Termos de Uso e se compromete a
+              respeitar as condições estabelecidas neste documento.
             </p>
           </section>
 
           <section>
-            <h2 className="mb-3 text-2xl font-semibold text-white">
-              2. Dados coletados
+            <h2
+              className="mb-3 text-2xl font-semibold"
+              style={{ color: "var(--color-text-main)" }}
+            >
+              2. Utilização do site
             </h2>
 
             <p>
-              Podemos coletar informações fornecidas pelo usuário, como nome,
-              e-mail, telefone e outras informações necessárias para o
-              atendimento e utilização dos serviços disponíveis no site.
+              O usuário se compromete a utilizar o site de forma adequada,
+              responsável e de acordo com a legislação vigente, não realizando
+              atividades que possam prejudicar o funcionamento ou a segurança
+              da plataforma.
             </p>
           </section>
 
           <section>
-            <h2 className="mb-3 text-2xl font-semibold text-white">
-              3. Uso dos dados
+            <h2
+              className="mb-3 text-2xl font-semibold"
+              style={{ color: "var(--color-text-main)" }}
+            >
+              3. Cadastro e informações
             </h2>
 
             <p>
-              Os dados coletados poderão ser utilizados para prestar
-              atendimento, responder solicitações e melhorar a experiência
-              do usuário no site.
+              Ao realizar um cadastro, o usuário deve fornecer informações
+              verdadeiras e atualizadas. O usuário é responsável pela
+              manutenção da segurança de suas informações de acesso.
             </p>
           </section>
 
           <section>
-            <h2 className="mb-3 text-2xl font-semibold text-white">
-              4. Proteção das informações
+            <h2
+              className="mb-3 text-2xl font-semibold"
+              style={{ color: "var(--color-text-main)" }}
+            >
+              4. Propriedade intelectual
             </h2>
 
             <p>
-              A Another World busca adotar medidas para proteger as informações
-              pessoais fornecidas pelos usuários contra acessos não autorizados.
+              Os conteúdos, elementos visuais, textos, identidade visual e
+              demais materiais presentes no site pertencem à Another World ou
+              são utilizados de acordo com as permissões necessárias. A
+              reprodução ou utilização indevida desses materiais não é
+              permitida.
             </p>
           </section>
 
           <section>
-            <h2 className="mb-3 text-2xl font-semibold text-white">
-              5. Contato
+            <h2
+              className="mb-3 text-2xl font-semibold"
+              style={{ color: "var(--color-text-main)" }}
+            >
+              5. Disponibilidade do serviço
             </h2>
 
             <p>
-              Em caso de dúvidas relacionadas à privacidade e ao tratamento de
-              dados, o usuário poderá entrar em contato conosco através dos
-              canais disponíveis no site.
+              A Another World busca manter o site disponível e funcionando
+              corretamente, mas não garante que o serviço estará livre de
+              interrupções, erros ou indisponibilidades temporárias.
             </p>
           </section>
 
+          <section>
+            <h2
+              className="mb-3 text-2xl font-semibold"
+              style={{ color: "var(--color-text-main)" }}
+            >
+              6. Alterações dos termos
+            </h2>
+
+            <p>
+              Os presentes Termos de Uso poderão ser atualizados sempre que
+              necessário. As alterações passarão a valer após sua publicação
+              no site.
+            </p>
+          </section>
+
+          <section>
+            <h2
+              className="mb-3 text-2xl font-semibold"
+              style={{ color: "var(--color-text-main)" }}
+            >
+              7. Contato
+            </h2>
+
+            <p>
+              Em caso de dúvidas sobre estes Termos de Uso, o usuário poderá
+              entrar em contato com a Another World através dos canais
+              disponíveis no site.
+            </p>
+          </section>
         </div>
       </div>
     </div>
