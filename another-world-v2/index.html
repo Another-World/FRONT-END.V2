@@ -1,20 +1,84 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
 
-<head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="public/logo_another_world.svg" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="/logo_another_world.svg"
+    />
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>another-world-v2</title>
-</head>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
 
-<body>
-  <div id="root"></div>
-  <script type="module" src="/src/main.jsx"></script>
-</body>
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
 
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+
+    <meta
+      name="theme-color"
+      content="#160b20"
+    />
+
+    <!--
+      Aplica o tema salvo antes do React carregar.
+      Isso evita que a página apareça rapidamente no
+      modo escuro antes de mudar para o modo claro.
+    -->
+    <script>
+      (() => {
+        try {
+          const savedTheme =
+            localStorage.getItem("another-world-theme");
+
+          const theme =
+            savedTheme === "light"
+              ? "light"
+              : "dark";
+
+          document.documentElement.setAttribute(
+            "data-theme",
+            theme,
+          );
+
+          document
+            .querySelector('meta[name="theme-color"]')
+            ?.setAttribute(
+              "content",
+              theme === "light"
+                ? "#f7f5fa"
+                : "#160b20",
+            );
+        } catch {
+          document.documentElement.setAttribute(
+            "data-theme",
+            "dark",
+          );
+        }
+      })();
+    </script>
+
+    <title>Another World</title>
+  </head>
+
+  <body>
+    <div id="root"></div>
+
+    <script
+      type="module"
+      src="/src/main.jsx"
+    ></script>
+  </body>
 </html>

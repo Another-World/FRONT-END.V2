@@ -4,7 +4,7 @@ import logo from "../../assets/logo.png";
 
 export default function Footer() {
   return (
-    <footer className="border-t border-border bg-bg-dark">
+    <footer className="border-t border-border bg-bg-footer">
       <div className="mx-auto max-w-[1440px] px-6">
 
         {/* Parte principal */}
@@ -22,7 +22,14 @@ export default function Footer() {
                 className="h-30 w-30 object-contain"
               />
 
-              <span className="text-[17px] font-bold tracking-[0.08em] text-white">
+              <span
+                className="
+                  text-[17px]
+                  font-bold
+                  tracking-[0.08em]
+                  text-text-main
+                "
+              >
                 ANOTHER WORLD
               </span>
             </Link>
@@ -33,10 +40,9 @@ export default function Footer() {
             </p>
           </div>
 
-
           {/* Navegação */}
           <div>
-            <h3 className="mb-5 text-sm font-semibold text-white">
+            <h3 className="mb-5 text-sm font-semibold text-text-main">
               Navegação
             </h3>
 
@@ -44,28 +50,48 @@ export default function Footer() {
 
               <Link
                 to="/"
-                className="text-sm text-text-muted transition-colors hover:text-white"
+                className="
+                  text-sm
+                  text-text-muted
+                  transition-colors
+                  hover:text-purple
+                "
               >
                 Home
               </Link>
 
               <Link
                 to="/quem-somos"
-                className="text-sm text-text-muted transition-colors hover:text-white"
+                className="
+                  text-sm
+                  text-text-muted
+                  transition-colors
+                  hover:text-purple
+                "
               >
                 Quem Somos
               </Link>
 
               <Link
                 to="/servicos"
-                className="text-sm text-text-muted transition-colors hover:text-white"
+                className="
+                  text-sm
+                  text-text-muted
+                  transition-colors
+                  hover:text-purple
+                "
               >
                 Serviços
               </Link>
 
               <Link
                 to="/contato"
-                className="text-sm text-text-muted transition-colors hover:text-white"
+                className="
+                  text-sm
+                  text-text-muted
+                  transition-colors
+                  hover:text-purple
+                "
               >
                 Contato
               </Link>
@@ -73,10 +99,9 @@ export default function Footer() {
             </nav>
           </div>
 
-
           {/* Serviços */}
           <div>
-            <h3 className="mb-5 text-sm font-semibold text-white">
+            <h3 className="mb-5 text-sm font-semibold text-text-main">
               Serviços
             </h3>
 
@@ -84,28 +109,48 @@ export default function Footer() {
 
               <Link
                 to="/servicos"
-                className="text-sm text-text-muted transition-colors hover:text-white"
+                className="
+                  text-sm
+                  text-text-muted
+                  transition-colors
+                  hover:text-purple
+                "
               >
                 Hardware
               </Link>
 
               <Link
                 to="/servicos"
-                className="text-sm text-text-muted transition-colors hover:text-white"
+                className="
+                  text-sm
+                  text-text-muted
+                  transition-colors
+                  hover:text-purple
+                "
               >
                 Redes
               </Link>
 
               <Link
                 to="/servicos"
-                className="text-sm text-text-muted transition-colors hover:text-white"
+                className="
+                  text-sm
+                  text-text-muted
+                  transition-colors
+                  hover:text-purple
+                "
               >
                 Desenvolvimento Web
               </Link>
 
               <Link
                 to="/contato"
-                className="text-sm text-text-muted transition-colors hover:text-white"
+                className="
+                  text-sm
+                  text-text-muted
+                  transition-colors
+                  hover:text-purple
+                "
               >
                 Manutenção
               </Link>
@@ -113,10 +158,9 @@ export default function Footer() {
             </nav>
           </div>
 
-
           {/* Contato */}
           <div>
-            <h3 className="mb-5 text-sm font-semibold text-white">
+            <h3 className="mb-5 text-sm font-semibold text-text-main">
               Contato
             </h3>
 
@@ -132,7 +176,19 @@ export default function Footer() {
 
               <Link
                 to="/contato"
-                className="mt-3 w-fit rounded-full bg-purple px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                className="
+                  mt-3
+                  w-fit
+                  rounded-full
+                  bg-purple
+                  px-5
+                  py-2.5
+                  text-sm
+                  font-semibold
+                  text-white
+                  transition-opacity
+                  hover:opacity-90
+                "
               >
                 Falar conosco
               </Link>
@@ -142,20 +198,64 @@ export default function Footer() {
 
         </div>
 
-
         {/* Rodapé inferior */}
-        <div className="flex flex-col gap-4 border-t border-border py-6 sm:flex-row sm:items-center sm:justify-between">
+        <div
+          className="
+            flex
+            flex-col
+            gap-4
+            border-t
+            border-border
+            py-6
+            sm:flex-row
+            sm:items-center
+            sm:justify-between
+          "
+        >
 
           <p className="text-xs text-text-muted">
             © 2026 Another World. Todos os direitos reservados.
           </p>
 
-          <Link
-            to="/area-cliente"
-            className="text-xs text-text-muted transition-colors hover:text-purple"
-          >
-            Área do Cliente
-          </Link>
+          <div className="flex flex-wrap items-center gap-5">
+
+            <Link
+              to="/politica-de-privacidade"
+              className="
+                text-xs
+                text-text-muted
+                transition-colors
+                hover:text-purple
+              "
+            >
+              Política de Privacidade
+            </Link>
+
+            <Link
+              to="/termos-de-uso"
+              className="
+                text-xs
+                text-text-muted
+                transition-colors
+                hover:text-purple
+              "
+            >
+              Termos de Uso
+            </Link>
+
+            <Link
+              to="/area-cliente"
+              className="
+                text-xs
+                text-text-muted
+                transition-colors
+                hover:text-purple
+              "
+            >
+              Área do Cliente
+            </Link>
+
+          </div>
 
         </div>
 

@@ -8,9 +8,10 @@ import logo from "../../assets/logo.png";
 
 import GooeyNav from "../ui/GooeyNav";
 
+import ThemeToggle from "../ui/ThemeToggle";
+
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
-
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const { user, logout } = useAuth();
@@ -42,26 +43,12 @@ export default function Header() {
       }
     }
 
-    document.addEventListener(
-      "mousedown",
-      handleClickFora
-    );
-
-    document.addEventListener(
-      "keydown",
-      handleEsc
-    );
+    document.addEventListener("mousedown", handleClickFora);
+    document.addEventListener("keydown", handleEsc);
 
     return () => {
-      document.removeEventListener(
-        "mousedown",
-        handleClickFora
-      );
-
-      document.removeEventListener(
-        "keydown",
-        handleEsc
-      );
+      document.removeEventListener("mousedown", handleClickFora);
+      document.removeEventListener("keydown", handleEsc);
     };
   }, [userMenuOpen]);
 
@@ -77,7 +64,7 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-bg-dark/95 backdrop-blur">
-      <div className="mx-auto flex h-[82px] max-w-[1440px] items-center justify-between px-6">
+      <div className="relative mx-auto flex h-[82px] max-w-[1440px] items-center justify-between px-6">
 
         {/* LOGO */}
         <Link
@@ -97,7 +84,7 @@ export default function Header() {
         </Link>
 
         {/* MENU DESKTOP - GOOEY NAV */}
-        <div className="hidden lg:flex">
+        <div className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 lg:flex">
           <GooeyNav
             items={menuItems}
             size="sm"
@@ -107,11 +94,16 @@ export default function Header() {
         </div>
 
         {/* AÇÕES DESKTOP */}
-        <div className="hidden items-center gap-3 lg:flex">
+        <div className="hidden items-center gap-4 lg:flex">
+
+          {/* TEMA */}
+          <ThemeToggle />
+
+          {/* LOGIN / USUÁRIO */}
           {!user ? (
             <Link
               to="/login"
-              className="rounded-full bg-purple px-5 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90"
+              className="loginHeaderButton rounded-full bg-purple px-5 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90"
             >
               Faça seu login/cadastro
             </Link>
@@ -122,20 +114,16 @@ export default function Header() {
             >
               <button
                 type="button"
-                onClick={() =>
-                  setUserMenuOpen(!userMenuOpen)
-                }
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
                 aria-expanded={userMenuOpen}
                 aria-haspopup="menu"
-                className="flex items-center gap-2 rounded-full border border-purple/50 px-5 py-2.5 text-sm font-medium text-purple transition-all hover:border-purple hover:bg-purple/10"
+                className="userHeaderButton flex items-center gap-2 rounded-full border border-purple/50 px-5 py-2.5 text-sm font-medium text-purple transition-all hover:border-purple hover:bg-purple/10"
               >
                 Seja Bem-Vindo, {nomeExibido}!
 
                 <span
                   className={`text-[10px] transition-transform ${
-                    userMenuOpen
-                      ? "rotate-180"
-                      : ""
+                    userMenuOpen ? "rotate-180" : ""
                   }`}
                   aria-hidden="true"
                 >
@@ -152,9 +140,7 @@ export default function Header() {
                   <Link
                     to="/area-cliente"
                     role="menuitem"
-                    onClick={() =>
-                      setUserMenuOpen(false)
-                    }
+                    onClick={() => setUserMenuOpen(false)}
                     className="block px-5 py-3 text-sm text-text-muted transition hover:bg-bg-card-inner hover:text-white"
                   >
                     Área do Cliente
@@ -218,6 +204,7 @@ export default function Header() {
       {menuOpen && (
         <div className="border-t border-border bg-bg-dark px-6 py-6 lg:hidden">
           <nav className="flex flex-col gap-5">
+
             {menuItems.map((item) => (
               <Link
                 key={item.to}
@@ -231,20 +218,29 @@ export default function Header() {
 
             <div className="my-1 h-px bg-border" />
 
+            {/* TEMA MOBILE */}
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-text-muted">
+                Tema
+              </span>
+
+              <ThemeToggle />
+            </div>
+
             {/* DESLOGADO MOBILE */}
             {!user ? (
               <Link
                 to="/login"
                 onClick={() => setMenuOpen(false)}
-                className="rounded-full bg-purple px-5 py-3 text-center text-sm font-semibold text-white transition hover:opacity-90"
+                className="loginHeaderButton rounded-full bg-purple px-5 py-3 text-center text-sm font-semibold text-white transition hover:opacity-90"
               >
                 Faça seu login/cadastro
               </Link>
             ) : (
               <>
-                <p className="text-sm font-semibold text-purple">
+                <div className="userHeaderButtonMobile rounded-full px-5 py-3 text-center text-sm font-semibold">
                   Seja Bem-Vindo, {nomeExibido}!
-                </p>
+                </div>
 
                 <Link
                   to="/area-cliente"

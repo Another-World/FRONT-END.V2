@@ -1,94 +1,106 @@
 import { useEffect, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
-import logo from "../../assets/logo.png";
-import faq from "../../data/faq";
 
-function Chevron({ aberto }) {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      className={`h-4 w-4 shrink-0 transition-transform ${
-        aberto ? "rotate-180" : ""
-      }`}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      aria-hidden="true"
-    >
-      <path
-        d="m5 7.5 5 5 5-5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
+import { useLocation } from "react-router-dom";
+
+import logo from "../../assets/logo.png";
+
+import faq from "../../data/faq";
 
 export default function BotaoAjuda() {
   const [aberto, setAberto] = useState(false);
-  const [perguntaAberta, setPerguntaAberta] = useState(null);
 
-  const painelRef = useRef(null);
+  const [faqAberto, setFaqAberto] = useState(null);
+
   const location = useLocation();
 
-  // Fecha o painel quando muda de página
+  const painelRef = useRef(null);
+
+  const botaoRef = useRef(null);
+
   useEffect(() => {
-    setAberto(false);
-    setPerguntaAberta(null);
-  }, [location.pathname]);
-
-  // Fecha com ESC e ao clicar fora
-  useEffect(() => {
-    if (!aberto) return;
-
-    function handleKeyDown(event) {
-      if (event.key === "Escape") {
-        setAberto(false);
-      }
-    }
-
-    function handleClickOutside(event) {
+    function handleClickFora(event) {
       if (
         painelRef.current &&
-        !painelRef.current.contains(event.target)
+        !painelRef.current.contains(event.target) &&
+        botaoRef.current &&
+        !botaoRef.current.contains(event.target)
       ) {
         setAberto(false);
       }
     }
 
-    document.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handleClickFora);
 
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("mousedown", handleClickFora);
     };
-  }, [aberto]);
+  }, []);
+
+  useEffect(() => {
+    setAberto(false);
+    setFaqAberto(null);
+  }, [location.pathname]);
+
+  function alternarFaq(index) {
+    setFaqAberto((atual) =>
+      atual === index ? null : index,
+    );
+  }
 
   return (
-    <div
-      ref={painelRef}
-      className="fixed bottom-5 right-5 z-[60] md:bottom-6 md:right-6"
-    >
-      {/* PAINEL DE FAQ */}
+    <>
+      {/* =====================================================
+          PAINEL DE AJUDA
+          ===================================================== */}
+
       {aberto && (
-        <section
-          role="dialog"
-          aria-modal="false"
-          aria-label="Central de ajuda"
-          className="mb-3 flex w-[min(380px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-border bg-bg-section shadow-2xl shadow-black/40"
+        <div
+          ref={painelRef}
+          className="
+            fixed
+            bottom-24
+            right-6
+            z-[9998]
+            w-[380px]
+            max-w-[calc(100vw-32px)]
+            overflow-hidden
+            rounded-2xl
+            border
+            border-purple/30
+            bg-bg-section
+            shadow-2xl
+            shadow-black/30
+            transition-all
+            duration-300
+          "
         >
           {/* CABEÇALHO */}
-          <div className="flex items-center justify-between border-b border-border px-5 py-4">
+
+          <div
+            className="
+              flex
+              items-center
+              justify-between
+              border-b
+              border-border
+              px-5
+              py-4
+            "
+          >
             <div className="flex items-center gap-3">
               <img
                 src={logo}
                 alt="Another World"
-                className="h-9 w-9 rounded-full object-contain"
+                className="
+                  h-10
+                  w-10
+                  object-contain
+                  drop-shadow-[0_0_8px_rgba(133,84,179,0.25)]
+                "
               />
 
               <div>
-                <p className="text-sm font-semibold text-white">
+                <p className="text-sm font-semibold text-text-main">
                   Central de ajuda
                 </p>
 
@@ -98,52 +110,97 @@ export default function BotaoAjuda() {
               </div>
             </div>
 
-            {/* BOTÃO X */}
             <button
               type="button"
-              onClick={() => setAberto(false)}
+              onClick={() => {
+                setAberto(false);
+                setFaqAberto(null);
+              }}
               aria-label="Fechar central de ajuda"
-              className="flex h-8 w-8 items-center justify-center rounded-full text-text-muted transition hover:bg-bg-card-inner hover:text-white"
+              className="
+                flex
+                h-8
+                w-8
+                items-center
+                justify-center
+                rounded-full
+                text-text-muted
+                transition
+                hover:bg-bg-card-inner
+                hover:text-text-main
+              "
             >
-              <span
-                aria-hidden="true"
-                className="text-xl leading-none"
-              >
-                ×
-              </span>
+              ×
             </button>
           </div>
 
-          {/* LISTA DE PERGUNTAS */}
-          <div className="max-h-[min(60vh,480px)] overflow-y-auto px-4 py-3">
-            <div className="space-y-2">
+          {/* PERGUNTAS */}
+
+          <div className="max-h-[460px] overflow-y-auto p-4">
+            <div className="flex flex-col gap-2">
               {faq.map((item, index) => {
-                const abertoItem = perguntaAberta === index;
+                const estaAberto = faqAberto === index;
 
                 return (
                   <div
-                    key={item.pergunta}
-                    className="overflow-hidden rounded-xl border border-border bg-bg-card"
+                    key={index}
+                    className="
+                      overflow-hidden
+                      rounded-xl
+                      border
+                      border-border
+                      bg-bg-card
+                      transition-colors
+                      duration-300
+                    "
                   >
-                    {/* PERGUNTA */}
                     <button
                       type="button"
-                      aria-expanded={abertoItem}
-                      onClick={() =>
-                        setPerguntaAberta(
-                          abertoItem ? null : index
-                        )
-                      }
-                      className="flex w-full items-center justify-between gap-4 px-4 py-3.5 text-left text-sm font-medium text-white transition hover:bg-bg-card-inner"
+                      onClick={() => alternarFaq(index)}
+                      className="
+                        flex
+                        w-full
+                        items-center
+                        justify-between
+                        gap-4
+                        px-4
+                        py-3.5
+                        text-left
+                        text-sm
+                        font-medium
+                        text-text-main
+                        transition
+                        hover:bg-bg-card-inner
+                      "
                     >
                       <span>{item.pergunta}</span>
 
-                      <Chevron aberto={abertoItem} />
+                      <span
+                        className={`
+                          shrink-0
+                          text-sm
+                          text-text-muted
+                          transition-transform
+                          duration-200
+                          ${estaAberto ? "rotate-180" : ""}
+                        `}
+                      >
+                        ↓
+                      </span>
                     </button>
 
-                    {/* RESPOSTA */}
-                    {abertoItem && (
-                      <div className="border-t border-border px-4 pb-4 pt-3 text-sm leading-6 text-text-muted">
+                    {estaAberto && (
+                      <div
+                        className="
+                          border-t
+                          border-border
+                          px-4
+                          py-3.5
+                          text-sm
+                          leading-6
+                          text-text-muted
+                        "
+                      >
                         {item.resposta}
                       </div>
                     )}
@@ -152,43 +209,116 @@ export default function BotaoAjuda() {
               })}
             </div>
           </div>
-        </section>
+        </div>
       )}
 
-      {/* BOTÃO FLUTUANTE */}
+      {/* =====================================================
+          BOTÃO FLUTUANTE
+          ===================================================== */}
+
       <button
+        ref={botaoRef}
         type="button"
-        aria-expanded={aberto}
+        onClick={() => setAberto((atual) => !atual)}
         aria-label={
           aberto
             ? "Fechar central de ajuda"
             : "Abrir central de ajuda"
         }
-        onClick={() => setAberto((value) => !value)}
-        className="group flex items-center gap-3 rounded-full border border-purple/40 bg-bg-section px-4 py-3 text-left text-white shadow-xl shadow-black/30 transition hover:-translate-y-0.5 hover:border-purple hover:bg-bg-card"
+        className="
+          helpButton
+          fixed
+          bottom-6
+          right-6
+          z-[9999]
+          group
+          flex
+          items-center
+          gap-3
+          rounded-full
+          border
+          border-[#8554b3]/40
+          bg-[#7843ab]
+          px-4
+          py-3
+          text-left
+          !text-white
+          shadow-xl
+          shadow-black/30
+          transition-all
+          duration-300
+          hover:-translate-y-0.5
+          hover:border-[#8554b3]
+          hover:bg-[#8554b3]
+        "
       >
         {/* LOGO */}
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-purple/15 ring-1 ring-purple/30">
+
+        <span
+          className="
+            flex
+            h-10
+            w-10
+            shrink-0
+            items-center
+            justify-center
+            rounded-full
+            bg-white/10
+            ring-1
+            ring-white/20
+          "
+        >
           <img
             src={logo}
             alt=""
-            className="h-9 w-9 object-contain"
+            aria-hidden="true"
+            className="h-8 w-8 object-contain"
           />
         </span>
 
-        {/* TEXTO */}
-        <span className="hidden max-w-[190px] text-sm font-semibold leading-5 sm:block">
-          Precisa de ajuda? Vamos conversar
+        {/* TEXTO DO BOTÃO */}
+
+        <span className="min-w-0">
+          <span
+            className="
+              block
+              text-sm
+              font-semibold
+              !text-white
+            "
+          >
+            Precisa de ajuda?
+          </span>
+
+          <span
+            className="
+              block
+              text-sm
+              font-semibold
+              !text-white
+            "
+          >
+            Vamos conversar
+          </span>
         </span>
 
         {/* SETA */}
+
         <span
           aria-hidden="true"
-          className="hidden text-lg text-purple sm:block"
+          className="
+            hidden
+            text-lg
+            font-semibold
+            !text-white
+            transition-transform
+            group-hover:translate-x-0.5
+            sm:block
+          "
         >
           ›
         </span>
       </button>
-    </div>
+    </>
   );
 }

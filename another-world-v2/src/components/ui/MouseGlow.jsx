@@ -6,6 +6,11 @@ export default function MouseGlow() {
     y: -500,
   });
 
+  const [theme, setTheme] = useState(
+    () =>
+      document.documentElement.getAttribute("data-theme") || "dark",
+  );
+
   useEffect(() => {
     const handleMouseMove = (event) => {
       setPosition({
@@ -14,15 +19,37 @@ export default function MouseGlow() {
       });
     };
 
+    function handleThemeChange(event) {
+      if (
+        event.detail === "light" ||
+        event.detail === "dark"
+      ) {
+        setTheme(event.detail);
+      }
+    }
+
     window.addEventListener("mousemove", handleMouseMove);
+
+    window.addEventListener(
+      "another-world-theme-change",
+      handleThemeChange,
+    );
 
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
+
+      window.removeEventListener(
+        "another-world-theme-change",
+        handleThemeChange,
+      );
     };
   }, []);
 
+  const isLight = theme === "light";
+
   return (
     <div
+      aria-hidden="true"
       className="pointer-events-none fixed z-[9999] h-[380px] w-[380px] rounded-full"
       style={{
         left: `${position.x}px`,
@@ -32,31 +59,58 @@ export default function MouseGlow() {
         backgroundImage: `
           radial-gradient(
             circle,
-            rgba(168, 85, 247, 0.14) 0%,
-            rgba(168, 85, 247, 0.09) 22%,
-            rgba(168, 85, 247, 0.05) 40%,
-            rgba(168, 85, 247, 0.025) 55%,
+            ${
+              isLight
+                ? "rgba(145,119,181,0.38)"
+                : "rgba(168,85,247,0.14)"
+            } 0%,
+
+            ${
+              isLight
+                ? "rgba(145,119,181,0.25)"
+                : "rgba(168,85,247,0.09)"
+            } 22%,
+
+            ${
+              isLight
+                ? "rgba(145,119,181,0.15)"
+                : "rgba(168,85,247,0.05)"
+            } 40%,
+
+            ${
+              isLight
+                ? "rgba(145,119,181,0.07)"
+                : "rgba(168,85,247,0.025)"
+            } 55%,
+
             transparent 74%
           ),
+
           radial-gradient(
             circle,
-            rgba(192, 132, 252, 0.28) 1.8px,
+            ${
+              isLight
+                ? "rgba(145,119,181,0.30)"
+                : "rgba(124,58,237,0.28)"
+            } 1.8px,
             transparent 1.8px
           )
         `,
 
         backgroundSize: "100% 100%, 18px 18px",
 
-        filter: "blur(4px)",
+        filter: isLight
+          ? "blur(3px)"
+          : "blur(4px)",
 
         maskImage: `
           radial-gradient(
             circle,
             black 0%,
-            black 28%,
-            rgba(0,0,0,0.7) 48%,
-            rgba(0,0,0,0.3) 62%,
-            transparent 76%
+            black 30%,
+            rgba(0,0,0,0.8) 48%,
+            rgba(0,0,0,0.4) 63%,
+            transparent 78%
           )
         `,
 
@@ -64,10 +118,10 @@ export default function MouseGlow() {
           radial-gradient(
             circle,
             black 0%,
-            black 28%,
-            rgba(0,0,0,0.7) 48%,
-            rgba(0,0,0,0.3) 62%,
-            transparent 76%
+            black 30%,
+            rgba(0,0,0,0.8) 48%,
+            rgba(0,0,0,0.4) 63%,
+            transparent 78%
           )
         `,
       }}

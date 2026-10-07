@@ -1,30 +1,26 @@
 import { Link } from "react-router-dom";
-import Button from "../../components/ui/Button";
+
 import { services, projects } from "./dados";
+
 import {
   container,
   eyebrow,
-  sectionTitle,
   badge,
   heroTitle,
-  buttonHome,
   Arrow,
 } from "./visual";
 
-/*
-  Tela com os projetos de UM serviço.
-  Recebe o serviço escolhido (ex.: Redes) e mostra só os projetos daquela área.
-*/
 export default function ProjetosServico({ service }) {
-  // filter: pega somente os projetos cuja "area" é igual ao slug do serviço.
   const serviceProjects = projects.filter(
     (project) => project.area === service.slug
   );
 
   return (
     <>
-      {/* TOPO */}
-      <section className="pt-12 text-center md:pt-20" aria-labelledby="projetos-title">
+      <section
+        className="pt-12 text-center md:pt-20"
+        aria-labelledby="projetos-title"
+      >
         <div className={container}>
           <div className="mb-10 text-left">
             <Link
@@ -38,20 +34,29 @@ export default function ProjetosServico({ service }) {
 
           <p className={badge}>
             Serviços
-            <span className="text-[#c9a4ed]" aria-hidden="true">/</span>
+            <span
+              className="text-[#c9a4ed]"
+              aria-hidden="true"
+            >
+              /
+            </span>
             {service.title}
           </p>
 
-          <h1 id="projetos-title" className={heroTitle}>
+          <h1
+            id="projetos-title"
+            className={heroTitle}
+          >
             Projetos de
-            <span className="mt-2 block text-[#c9a4ed]">{service.title}</span>
+            <span className="mt-2 block text-[#c9a4ed]">
+              {service.title}
+            </span>
           </h1>
 
           <p className="mx-auto mt-7 max-w-162.5 text-base leading-[1.8] text-[#b2b0bc] md:text-lg">
             {service.description}
           </p>
 
-          {/* Abas para trocar de serviço sem voltar para a lista */}
           <nav
             className="mt-12 flex flex-wrap justify-center gap-3 border-y border-[#303138] py-6"
             aria-label="Escolher serviço"
@@ -62,11 +67,11 @@ export default function ProjetosServico({ service }) {
               return (
                 <Link
                   key={item.slug}
-                  to={`/servicos?area=${item.slug}`}
+                  to={`/servicos?area=${item.slug}#projetos`}
                   aria-current={isActive ? "page" : undefined}
                   className={`rounded-full border px-4 py-2 text-xs transition-colors ${
                     isActive
-                      ? "border-[#c9a4ed] bg-purple/15 text-white"
+                      ? "border-[#c9a4ed] bg-[#c9a4ed]/15 text-white"
                       : "border-[#303138] text-[#b2b0bc] hover:border-[#c9a4ed]/60 hover:text-white"
                   }`}
                 >
@@ -78,8 +83,10 @@ export default function ProjetosServico({ service }) {
         </div>
       </section>
 
-      {/* LISTA DE PROJETOS */}
-      <section className="py-14 md:py-22">
+      <section
+        id="projetos"
+        className="scroll-mt-24 py-14 md:py-22"
+      >
         <div className={container}>
           {serviceProjects.length > 0 ? (
             <div className="grid gap-6">
@@ -97,7 +104,9 @@ export default function ProjetosServico({ service }) {
                   </div>
 
                   <div className="flex flex-col p-7 sm:p-9">
-                    <p className={eyebrow}>{project.client}</p>
+                    <p className={eyebrow}>
+                      {project.client}
+                    </p>
 
                     <h2 className="text-[clamp(26px,2.6vw,34px)] font-medium leading-tight tracking-[-0.03em]">
                       {project.title}
@@ -113,53 +122,55 @@ export default function ProjetosServico({ service }) {
                           key={item}
                           className="flex items-baseline gap-2.5 text-[13px] leading-[1.6] text-[#dedbe4]"
                         >
-                          <span className="text-[#c9a4ed]" aria-hidden="true">↗</span>
+                          <span
+                            className="text-[#c9a4ed]"
+                            aria-hidden="true"
+                          >
+                            ↗
+                          </span>
                           {item}
                         </li>
                       ))}
                     </ul>
 
-                    {/*
-                      Links externos (PDF, site, GitHub) usam <a> com
-                      target="_blank" para abrir em uma nova aba do navegador.
-                    */}
-                    <div className="mt-8 flex flex-wrap gap-3">
-                      {project.links.map((link, index) => (
-                        <a
-                          key={link.label}
-                          href={link.href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`inline-flex min-h-11.5 items-center gap-3 rounded-lg border px-5 py-3 text-sm font-semibold transition-colors ${
-                            index === 0
-                              ? "border-transparent bg-purple text-white hover:bg-[#7735bd]"
-                              : "border-[#55515f] text-[#f5f4f7] hover:border-[#c9a4ed] hover:bg-[#222027]"
-                          }`}
-                        >
-                          {link.label}
-                          <Arrow />
-                        </a>
-                      ))}
-                    </div>
+                    {project.links?.length > 0 && (
+                      <div className="mt-8 flex flex-wrap gap-3">
+                        {project.links.map((link, index) => (
+                          <a
+                            key={link.label}
+                            href={link.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`inline-flex min-h-11.5 items-center gap-3 rounded-lg border px-5 py-3 text-sm font-semibold transition-colors ${
+                              index === 0
+                                ? "border-transparent bg-purple text-white hover:bg-[#7735bd]"
+                                : "border-[#55515f] text-[#f5f4f7] hover:border-[#c9a4ed] hover:bg-[#222027]"
+                            }`}
+                          >
+                            {link.label}
+                            <Arrow />
+                          </a>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </article>
               ))}
             </div>
           ) : (
-            // Mensagem para serviços que ainda não têm projetos cadastrados.
             <div className="rounded-[14px] border border-dashed border-[#45404e] px-6 py-16 text-center">
-              <p className={eyebrow}>Em breve</p>
+              <p className={eyebrow}>
+                Em breve
+              </p>
+
               <h2 className="text-2xl font-medium tracking-[-0.02em]">
-                Ainda não há projetos de {service.title} publicados.
+                Ainda não há projetos de{" "}
+                {service.title} publicados.
               </h2>
-          
             </div>
           )}
         </div>
       </section>
-
-      {/* PRÓXIMO PASSO */}
-    
     </>
   );
 }
