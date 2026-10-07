@@ -1,3 +1,9 @@
+// Na publicação, o endereço será definido nas variáveis da Vercel.
+// No desenvolvimento local, o valor vazio mantém o proxy do Vite.
+const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL ?? ""
+).trim().replace(/\/+$/, "");
+
 export const SERVICOS_ORCAMENTO = [
   { slug: "hardware", nome: "Hardware" },
   { slug: "redes", nome: "Redes" },
@@ -115,7 +121,7 @@ export async function criarSolicitacao(dados) {
   let response;
   let resultado;
   try {
-    response = await fetch("/api/solicitacoes", {
+    response = await fetch(`${API_BASE_URL}/api/solicitacoes`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
