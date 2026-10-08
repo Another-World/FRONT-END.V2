@@ -4,6 +4,8 @@ import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
 import { pool } from "./db.js";
 import { criarHandlerSolicitacoes } from "./solicitacoes.js";
+import { criarAutenticacao } from "./autenticacao.js";
+import { criarHandlersUsuarios } from "./usuarios.js";
 
 const app = express();
 const port = Number(process.env.PORT ?? 3001);
@@ -30,6 +32,26 @@ const limiteSolicitacoes = rateLimit({
   legacyHeaders: false,
   message: { erro: "Muitas tentativas de envio. Aguarde 15 minutos antes de tentar novamente." },
 });
+
+const exigirAutenticacao = criarAutenticacao();
+const usuarios = criarHandlersUsuarios(pool);
+const limitePerfil = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 120,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: { erro: "Muitas consultas à conta. Aguarde alguns minutos e tente novamente." },
+});
+
+// Autenticar antes de consultar ou alterar qualquer perfil.
+// POST sincroniza/cria o perfil; GET lê; PATCH edita os dados permitidos.
+app.use("/api/perfil", (_req, res, next) => {
+  res.set("Cache-Control", "no-store");
+  next();
+}, limitePerfil, exigirAutenticacao);
+app.post("/api/perfil", usuarios.sincronizar);
+app.get("/api/perfil", usuarios.consultar);
+app.patch("/api/perfil", express.json({ limit: "4kb" }), usuarios.atualizar);
 
 app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
 app.post(
