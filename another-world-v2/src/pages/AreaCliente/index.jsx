@@ -1,298 +1,73 @@
-import { useState } from "react";
-
+import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
-
 import { useAuth } from "../../context/AuthContext";
-
-import {
-  getSolicitacoesPorEmail,
-  STATUS_INFO,
-} from "../../services/solicitacoes";
-
+import { authErrorMessage } from "../../services/auth";
 import Button from "../../components/ui/Button";
 
-function formatarData(iso) {
-  return new Date(iso).toLocaleDateString("pt-BR");
-}
-
 export default function AreaCliente() {
-  const { user, logout, updateProfile } = useAuth();
+  const { user, logout } = useAuth();
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const pending = useRef(false);
 
-  const [editando, setEditando] = useState(false);
-  const [erro, setErro] = useState("");
-
-  const [form, setForm] = useState({
-    name: user.name ?? "",
-    telefone: user.telefone ?? "",
-    empresa: user.empresa ?? "",
-  });
-
-  const solicitacoes = getSolicitacoesPorEmail(user.email);
-
-  function handleChange(event) {
-    const { name, value } = event.target;
-
-    setForm((atual) => ({
-      ...atual,
-      [name]: value,
-    }));
-  }
-
-  function handleSalvar(event) {
-    event.preventDefault();
-    setErro("");
-
-    if (!form.name.trim()) {
-      setErro("O nome não pode ficar vazio.");
-      return;
+  async function handleLogout() {
+    if (pending.current) return;
+    pending.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      await logout();
+    } catch (err) {
+      setError(authErrorMessage(err));
+    } finally {
+      pending.current = false;
+      setBusy(false);
     }
-
-    updateProfile(form);
-    setEditando(false);
-  }
-
-  function handleCancelar() {
-    setForm({
-      name: user.name ?? "",
-      telefone: user.telefone ?? "",
-      empresa: user.empresa ?? "",
-    });
-
-    setErro("");
-    setEditando(false);
   }
 
   return (
     <div className="min-h-screen bg-bg-dark">
       <div className="mx-auto max-w-[1100px] px-6 py-16">
-
-        {/* SAUDAÇÃO */}
         <div className="mb-12 flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-purple">
-              Área do Cliente
-            </p>
-
-            <h1 className="text-3xl font-bold text-text-main">
-              Seja Bem-Vindo, {user.name || user.email}!
-            </h1>
-
-            <p className="mt-2 text-sm text-text-muted">
-              Aqui você acompanha seus dados e o andamento das suas
-              solicitações.
-            </p>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-purple">Área do Cliente</p>
+            <h1 className="text-3xl font-bold text-text-main">Seja bem-vindo, {user.name || user.email}!</h1>
+            <p className="mt-2 text-sm text-text-muted">Seu espaço na Another World.</p>
           </div>
-
-          <button
-            type="button"
-            onClick={logout}
-            className="rounded-full border border-border px-5 py-2.5 text-sm font-medium text-text-muted transition hover:border-purple hover:text-text-main"
-          >
-            Sair da conta
+          <button type="button" disabled={busy} onClick={handleLogout} className="rounded-full border border-border px-5 py-2.5 text-sm font-medium text-text-muted transition hover:border-purple hover:text-text-main disabled:opacity-60">
+            {busy ? "Saindo…" : "Sair da conta"}
           </button>
         </div>
 
-        {/* DADOS CADASTRAIS */}
+        {error && <p className="mb-6 text-sm text-text-main" role="alert">{error}</p>}
+
         <section className="mb-12 rounded-2xl border border-border bg-bg-card p-8">
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-text-main">
-              Dados cadastrais
-            </h2>
-
-            {!editando && (
-              <button
-                type="button"
-                onClick={() => setEditando(true)}
-                className="text-xs font-semibold uppercase tracking-wide text-purple hover:underline"
-              >
-                Editar
-              </button>
-            )}
-          </div>
-
-          {editando ? (
-            <form
-              onSubmit={handleSalvar}
-              className="flex flex-col gap-5"
-            >
-              <Campo
-                label="Nome"
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-              />
-
-              <Campo
-                label="Telefone"
-                name="telefone"
-                value={form.telefone}
-                onChange={handleChange}
-              />
-
-              <Campo
-                label="Empresa"
-                name="empresa"
-                value={form.empresa}
-                onChange={handleChange}
-              />
-
-              <p className="text-xs text-text-faint">
-                O e-mail ({user.email}) é o identificador da conta e não
-                pode ser alterado.
-              </p>
-
-              {erro && (
-                <p
-                  className="text-sm text-red-400"
-                  role="alert"
-                >
-                  {erro}
-                </p>
-              )}
-
-              <div className="flex gap-3">
-                <Button
-                  type="submit"
-                  variant="solid"
-                >
-                  Salvar
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCancelar}
-                >
-                  Cancelar
-                </Button>
-              </div>
-            </form>
-          ) : (
-            <dl className="grid gap-6 sm:grid-cols-2">
-              <Dado
-                label="Nome"
-                valor={user.name}
-              />
-
-              <Dado
-                label="E-mail"
-                valor={user.email}
-              />
-
-              <Dado
-                label="Telefone"
-                valor={user.telefone}
-              />
-
-              <Dado
-                label="Empresa"
-                valor={user.empresa}
-              />
-            </dl>
-          )}
+          <h2 className="mb-6 text-lg font-semibold text-text-main">Dados da conta</h2>
+          <dl className="grid gap-6 sm:grid-cols-2">
+            <Dado label="Nome" valor={user.name} />
+            <Dado label="E-mail" valor={user.email} />
+          </dl>
         </section>
 
-        {/* SOLICITAÇÕES */}
+        {/* Próxima etapa: ler o perfil e as solicitações pela API protegida.
+            Não ler pedidos do localStorage nem buscar clientes por e-mail
+            fornecido pelo navegador. O backend usará o JWT verificado. */}
         <section className="rounded-2xl border border-border bg-bg-card p-8">
-          <h2 className="mb-6 text-lg font-semibold text-text-main">
-            Minhas solicitações
-          </h2>
-
-          {solicitacoes.length === 0 ? (
-            <div className="py-10 text-center">
-              <p className="mb-6 text-sm text-text-muted">
-                Você ainda não fez nenhuma solicitação.
-              </p>
-
-              <Button
-                as={Link}
-                to="/contato"
-                variant="solid"
-              >
-                Fazer uma solicitação
-              </Button>
-            </div>
-          ) : (
-            <ul className="flex flex-col gap-4">
-              {solicitacoes.map((s) => {
-                const info = STATUS_INFO[s.status];
-
-                return (
-                  <li
-                    key={s.id}
-                    className="rounded-xl border border-border bg-bg-card-inner p-6"
-                  >
-                    <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-purple">
-                        {s.frente}
-                      </span>
-
-                      <span
-                        className={`rounded-full border px-3 py-1 text-xs font-semibold ${info.classe}`}
-                      >
-                        {info.label}
-                      </span>
-                    </div>
-
-                    <p className="mb-4 text-sm text-text-muted">
-                      {s.mensagem}
-                    </p>
-
-                    {s.resposta && (
-                      <p className="mb-4 border-l-2 border-purple pl-4 text-sm text-text-main">
-                        {s.resposta}
-                      </p>
-                    )}
-
-                    <p className="text-xs text-text-faint">
-                      Enviada em {formatarData(s.criadaEm)}
-                    </p>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+          <h2 className="mb-4 text-lg font-semibold text-text-main">Minhas solicitações</h2>
+          <p className="mb-3 text-sm text-text-muted">O acompanhamento de solicitações nesta área estará disponível em breve.</p>
+          <p className="mb-6 text-sm text-text-muted">Se você já enviou um pedido, guarde o protocolo exibido no envio. O formulário de contato continua disponível para novas solicitações.</p>
+          <Button as={Link} to="/contato" variant="solid">Fazer uma solicitação</Button>
         </section>
       </div>
     </div>
   );
 }
 
-// Dado em modo leitura
 function Dado({ label, valor }) {
   return (
     <div>
-      <dt className="mb-1 text-xs font-semibold uppercase tracking-wide text-text-muted">
-        {label}
-      </dt>
-
-      <dd className="text-text-main">
-        {valor || "—"}
-      </dd>
+      <dt className="mb-1 text-xs font-semibold uppercase tracking-wide text-text-muted">{label}</dt>
+      <dd className="break-words text-text-main">{valor || "—"}</dd>
     </div>
-  );
-}
-
-// Campo do formulário de edição
-function Campo({
-  label,
-  name,
-  value,
-  onChange,
-}) {
-  return (
-    <label className="flex flex-col gap-2">
-      <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
-        {label}
-      </span>
-
-      <input
-        type="text"
-        name={name}
-        value={value}
-        onChange={onChange}
-        className="border-b border-border bg-transparent py-2 text-text-main outline-none focus:border-purple"
-      />
-    </label>
   );
 }

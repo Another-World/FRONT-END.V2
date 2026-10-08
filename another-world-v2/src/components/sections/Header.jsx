@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 
 import { useAuth } from "../../context/AuthContext";
+import { authErrorMessage } from "../../services/auth";
 
 import logo from "../../assets/logo.png";
 
@@ -14,7 +15,10 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
-  const { user, logout } = useAuth();
+  const { user, logout, loading } = useAuth();
+  const [logoutError, setLogoutError] = useState("");
+  const [loggingOut, setLoggingOut] = useState(false);
+  const logoutPending = useRef(false);
 
   const userMenuRef = useRef(null);
 
@@ -52,10 +56,21 @@ export default function Header() {
     };
   }, [userMenuOpen]);
 
-  function handleLogout() {
-    logout();
-    setUserMenuOpen(false);
-    setMenuOpen(false);
+  async function handleLogout() {
+    if (logoutPending.current) return;
+    logoutPending.current = true;
+    setLoggingOut(true);
+    setLogoutError("");
+    try {
+      await logout();
+      setUserMenuOpen(false);
+      setMenuOpen(false);
+    } catch (error) {
+      setLogoutError(authErrorMessage(error));
+    } finally {
+      logoutPending.current = false;
+      setLoggingOut(false);
+    }
   }
 
   const nomeExibido = user
@@ -100,7 +115,9 @@ export default function Header() {
           <ThemeToggle />
 
           {/* LOGIN / USUÁRIO */}
-          {!user ? (
+          {loading ? (
+            <span className="text-sm text-text-muted" role="status">Verificando sessão…</span>
+          ) : !user ? (
             <Link
               to="/login"
               className="loginHeaderButton rounded-full bg-purple px-5 py-2.5 text-sm font-semibold text-white transition-all hover:opacity-90"
@@ -150,9 +167,10 @@ export default function Header() {
                     type="button"
                     role="menuitem"
                     onClick={handleLogout}
+                  disabled={loggingOut}
                     className="block w-full border-t border-border px-5 py-3 text-left text-sm text-text-muted transition hover:bg-bg-card-inner hover:text-white"
                   >
-                    Encerrar sessão
+                    {loggingOut ? "Saindo…" : "Encerrar sessão"}
                   </button>
                 </div>
               )}
@@ -228,7 +246,9 @@ export default function Header() {
             </div>
 
             {/* DESLOGADO MOBILE */}
-            {!user ? (
+            {loading ? (
+              <span className="text-sm text-text-muted" role="status">Verificando sessão…</span>
+            ) : !user ? (
               <Link
                 to="/login"
                 onClick={() => setMenuOpen(false)}
@@ -253,15 +273,17 @@ export default function Header() {
                 <button
                   type="button"
                   onClick={handleLogout}
+                  disabled={loggingOut}
                   className="rounded-full border border-border px-5 py-3 text-center text-sm font-medium text-text-muted transition hover:border-purple hover:text-white"
                 >
-                  Encerrar sessão
+                  {loggingOut ? "Saindo…" : "Encerrar sessão"}
                 </button>
               </>
             )}
           </nav>
         </div>
       )}
+      {logoutError && <p role="alert" className="border-t border-border px-6 py-3 text-sm text-text-main">{logoutError}</p>}
     </header>
   );
 }

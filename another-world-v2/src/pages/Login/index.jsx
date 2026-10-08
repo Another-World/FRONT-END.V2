@@ -1,6 +1,8 @@
-import { useState } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useRef, useState } from "react";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { callbackError } from "../../lib/authCallback";
+import { authErrorMessage, requestPasswordReset, changePassword } from "../../services/auth";
 import Button from "../../components/ui/Button";
 
 function SpaceBackground() {
@@ -27,27 +29,21 @@ function SpaceBackground() {
 }
 
 export default function Login() {
-  const { user, login, register } = useAuth();
-  const navigate = useNavigate();
+  const { user, loading, authError, passwordRecovery, finishRecovery, login, register } = useAuth();
+  const [mode, setMode] = useState("login");
+  const [error, setError] = useState(callbackError);
+  const [notice, setNotice] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [passwordChanged, setPasswordChanged] = useState(false);
+  const submitting = useRef(false);
+  const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
 
-  const [mode, setMode] = useState("login"); // "login" ou "cadastro"
-  const [error, setError] = useState("");
-  const [welcomeName, setWelcomeName] = useState(null);
+  const view = passwordRecovery ? "novaSenha" : mode;
+  const needsPassword = view !== "esqueci";
+  const needsConfirmation = view === "cadastro" || view === "novaSenha";
 
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
-
-  // Se a pessoa já está logada e cair aqui de novo (ex: digitou /login na URL),
-  // manda ela direto pra Área do Cliente em vez de mostrar o formulário.
-  //
-  // O "!welcomeName" é essencial: logo depois de entrar, o register/login já
-  // preencheu o user, então sem essa checagem este return dispararia primeiro
-  // e a tela de boas-vindas nunca chegaria a aparecer.
-  if (user && !welcomeName) {
+  // Aguarda a restauração da sessão e as operações assíncronas antes de navegar.
+  if (!loading && user && !passwordRecovery && !busy && !passwordChanged && !error) {
     return <Navigate to="/area-cliente" replace />;
   }
 
@@ -56,200 +52,165 @@ export default function Login() {
     setForm((current) => ({ ...current, [name]: value }));
   }
 
-  function switchMode(newMode) {
-    setMode(newMode);
+  function switchMode(nextMode) {
+    if (submitting.current) return;
+    setMode(nextMode);
     setError("");
-    setForm({ name: "", email: "", password: "", confirmPassword: "" });
+    setNotice("");
+    setForm((current) => ({ ...current, password: "", confirmPassword: "" }));
   }
 
-  function validateEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  }
-
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
+    // O ref bloqueia dois envios até mesmo antes do próximo render.
+    if (submitting.current || loading || authError) return;
+    submitting.current = true;
+    setBusy(true);
     setError("");
-
-    if (!validateEmail(form.email)) {
-      setError("Digite um e-mail válido.");
-      return;
-    }
+    setNotice("");
 
     try {
-      let session;
-
-      if (mode === "cadastro") {
-        if (form.password.length < 6) {
-          setError("A senha precisa ter pelo menos 6 caracteres.");
-          return;
-        }
-
-        if (form.password !== form.confirmPassword) {
-          setError("As senhas não coincidem.");
-          return;
-        }
-
-        session = register({
-          name: form.name,
-          email: form.email,
-          password: form.password,
-        });
-      } else {
-        session = login({
-          email: form.email,
-          password: form.password,
-        });
+      if (view !== "novaSenha" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+        setError("Digite um e-mail válido.");
+        return;
+      }
+      if (view === "cadastro" && !form.name.trim()) {
+        setError("Digite seu nome.");
+        return;
+      }
+      if (needsConfirmation && form.password.length < 8) {
+        setError("A senha precisa ter pelo menos 8 caracteres.");
+        return;
+      }
+      if (needsConfirmation && form.password !== form.confirmPassword) {
+        setError("As senhas não coincidem.");
+        return;
       }
 
-      // Mostra a mensagem de boas-vindas por um instante antes de redirecionar.
-      // Usa o nome que veio da sessão, não do formulário: no modo login o campo
-      // "nome" nem aparece, então form.name está vazio e cairia no e-mail.
-      setWelcomeName(session.name || session.email);
-      setTimeout(() => navigate("/area-cliente"), 1200);
+      if (view === "cadastro") {
+        const result = await register(form);
+        if (result.needsConfirmation) {
+          // Resposta neutra: não revela se este e-mail já possui uma conta.
+          setNotice("Confira seu e-mail para concluir o cadastro. Se você já tem uma conta, entre ou recupere sua senha.");
+          setMode("login");
+        }
+      } else if (view === "esqueci") {
+        await requestPasswordReset(form.email);
+        setNotice("Se houver uma conta com esse e-mail, você receberá um link para redefinir a senha. Confira também o spam.");
+      } else if (view === "novaSenha") {
+        if (!user || !passwordRecovery) {
+          setError("Solicite um novo link de recuperação de senha.");
+          return;
+        }
+        await changePassword(form.password);
+        setPasswordChanged(true);
+      } else {
+        await login(form);
+      }
+      setForm((current) => ({ ...current, password: "", confirmPassword: "" }));
     } catch (err) {
-      setError(err.message);
+      setError(authErrorMessage(err));
+    } finally {
+      submitting.current = false;
+      setBusy(false);
     }
   }
 
-  // Tela de sucesso — aparece por 1.2s antes do redirecionamento.
-  if (welcomeName) {
-    return (
-      <div className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-[#101114] px-6 text-center">
-        <SpaceBackground />
-
-        <div className="relative z-10">
-          <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-purple">
-            Tudo certo
-          </p>
-
-          <h1 className="text-3xl font-bold text-white">
-            Seja bem-vindo, {welcomeName}!
-          </h1>
-        </div>
-      </div>
-    );
-  }
+  const titles = {
+    login: "Acesse sua conta",
+    cadastro: "Crie sua conta",
+    esqueci: "Recupere seu acesso",
+    novaSenha: "Escolha uma nova senha",
+  };
+  const labels = {
+    login: "Entrar",
+    cadastro: "Criar conta",
+    esqueci: "Enviar link de recuperação",
+    novaSenha: "Salvar nova senha",
+  };
 
   return (
-    <div className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-[#101114] px-6 py-16">
+    <div className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-bg-dark px-6 py-16">
       <SpaceBackground />
-
       <div className="relative z-10 w-full max-w-md rounded-2xl border border-border bg-bg-card/90 p-8 backdrop-blur-sm">
-        {/* Abas Login / Cadastro */}
-        <div className="mb-8 flex border-b border-border">
-          <button
-            type="button"
-            onClick={() => switchMode("login")}
-            className={`flex-1 pb-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
-              mode === "login"
-                ? "border-b-2 border-purple text-white"
-                : "text-text-muted"
-            }`}
-          >
-            Entrar
-          </button>
+        {loading ? (
+          <p role="status" className="text-center text-text-muted">Verificando sua sessão…</p>
+        ) : passwordChanged ? (
+          <div className="flex flex-col gap-5 text-text-main">
+            <h1 className="text-2xl font-semibold" role="status">Senha atualizada</h1>
+            <p className="text-sm text-text-muted">Use a nova senha no seu próximo acesso.</p>
+            <Button type="button" variant="solid" onClick={() => {
+              setPasswordChanged(false);
+              finishRecovery();
+            }}>Continuar</Button>
+          </div>
+        ) : (
+          <>
+            <h1 className="mb-6 text-2xl font-semibold text-text-main">{titles[view]}</h1>
+            {!passwordRecovery && (view === "login" || view === "cadastro") && (
+              <div className="mb-6 flex border-b border-border">
+                {[ ["login", "Entrar"], ["cadastro", "Criar conta"] ].map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    disabled={busy}
+                    aria-pressed={view === value}
+                    onClick={() => switchMode(value)}
+                    className={`flex-1 pb-3 text-sm font-semibold uppercase tracking-wide transition-colors disabled:opacity-60 ${view === value ? "border-b-2 border-purple text-text-main" : "text-text-muted"}`}
+                  >{label}</button>
+                ))}
+              </div>
+            )}
 
-          <button
-            type="button"
-            onClick={() => switchMode("cadastro")}
-            className={`flex-1 pb-3 text-sm font-semibold uppercase tracking-wide transition-colors ${
-              mode === "cadastro"
-                ? "border-b-2 border-purple text-white"
-                : "text-text-muted"
-            }`}
-          >
-            Criar conta
-          </button>
-        </div>
+            {authError && (
+              <div className="mb-5 text-sm text-text-main">
+                <p role="alert">{authError}</p>
+                <button type="button" className="mt-2 text-purple underline" onClick={() => window.location.reload()}>Tentar novamente</button>
+              </div>
+            )}
+            {notice && <p role="status" className="mb-5 rounded-lg border border-border bg-bg-card-inner p-4 text-sm text-text-main">{notice}</p>}
+            {error && <p role="alert" className="mb-5 text-sm text-text-main">{error}</p>}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          {mode === "cadastro" && (
-            <label className="flex flex-col gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
-                Nome
-              </span>
-
-              <input
-                type="text"
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                required
-                className="border-b border-border bg-transparent py-2 text-white outline-none focus:border-purple"
-              />
-            </label>
-          )}
-
-          <label className="flex flex-col gap-2">
-            <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
-              E-mail
-            </span>
-
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              required
-              className="border-b border-border bg-transparent py-2 text-white outline-none focus:border-purple"
-            />
-          </label>
-
-          <label className="flex flex-col gap-2">
-            <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
-              Senha
-            </span>
-
-            <input
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              required
-              className="border-b border-border bg-transparent py-2 text-white outline-none focus:border-purple"
-            />
-          </label>
-
-          {mode === "cadastro" && (
-            <label className="flex flex-col gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
-                Confirmar senha
-              </span>
-
-              <input
-                type="password"
-                name="confirmPassword"
-                value={form.confirmPassword}
-                onChange={handleChange}
-                required
-                className="border-b border-border bg-transparent py-2 text-white outline-none focus:border-purple"
-              />
-            </label>
-          )}
-
-          {mode === "login" && (
-            <button
-              type="button"
-              className="text-right text-xs text-purple hover:underline"
-              onClick={() =>
-                alert("Recuperação de senha ainda não implementada.")
-              }
-            >
-              Esqueci minha senha
-            </button>
-          )}
-
-          {error && (
-            <p className="text-sm text-red-400" role="alert">
-              {error}
-            </p>
-          )}
-
-          <Button type="submit" variant="solid">
-            {mode === "login" ? "Entrar" : "Criar conta"}
-          </Button>
-        </form>
+            <form onSubmit={handleSubmit} aria-busy={busy}>
+              <fieldset disabled={busy || Boolean(authError)} className="flex min-w-0 flex-col gap-5 disabled:opacity-70">
+                {view === "cadastro" && (
+                  <Field label="Nome" name="name" autoComplete="name" maxLength={120} value={form.name} onChange={handleChange} />
+                )}
+                {view !== "novaSenha" && (
+                  <Field label="E-mail" name="email" type="email" autoComplete="email" maxLength={254} value={form.email} onChange={handleChange} />
+                )}
+                {needsPassword && (
+                  <Field label={view === "novaSenha" ? "Nova senha" : "Senha"} name="password" type="password" autoComplete={view === "login" ? "current-password" : "new-password"} minLength={needsConfirmation ? 8 : undefined} value={form.password} onChange={handleChange} />
+                )}
+                {needsConfirmation && (
+                  <>
+                    <Field label="Confirmar senha" name="confirmPassword" type="password" autoComplete="new-password" minLength={8} value={form.confirmPassword} onChange={handleChange} />
+                    <p className="text-xs text-text-muted">Use pelo menos 8 caracteres. Prefira uma senha longa e exclusiva.</p>
+                  </>
+                )}
+                {view === "login" && (
+                  <button type="button" className="text-right text-xs text-purple hover:underline" onClick={() => switchMode("esqueci")}>Esqueci minha senha</button>
+                )}
+                <Button type="submit" variant="solid" disabled={busy || Boolean(authError)} className="disabled:cursor-wait disabled:opacity-60">
+                  {busy ? "Aguarde…" : labels[view]}
+                </Button>
+                {view === "esqueci" && (
+                  <button type="button" className="text-sm text-purple hover:underline" onClick={() => switchMode("login")}>Voltar para entrar</button>
+                )}
+              </fieldset>
+            </form>
+          </>
+        )}
       </div>
     </div>
+  );
+}
+
+function Field({ label, ...props }) {
+  return (
+    <label className="flex flex-col gap-2">
+      <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">{label}</span>
+      <input required className="border-b border-border bg-transparent py-2 text-text-main outline-none focus:border-purple" {...props} />
+    </label>
   );
 }
