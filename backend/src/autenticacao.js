@@ -1,6 +1,18 @@
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { z } from "zod";
 
+// Ausência de sessão mantém o formulário público. Uma sessão enviada, mesmo
+// vazia/expirada, precisa ser validada: nunca rebaixar um token inválido a visitante.
+export function criarAutenticacaoOpcional(exigirAutenticacao) {
+  return (req, res, next) => {
+    if (req.get("Authorization") !== undefined) {
+      return exigirAutenticacao(req, res, next);
+    }
+    req.identidade = undefined;
+    return next();
+  };
+}
+
 // São dados de identidade, não permissões administrativas da aplicação.
 const identidadeSchema = z.object({
   sub: z.uuid(),

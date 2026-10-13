@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { authErrorMessage } from "../../services/auth";
 import { sincronizarPerfil, atualizarPerfil } from "../../services/perfil";
 import Button from "../../components/ui/Button";
+import MinhasSolicitacoes from "../../components/MinhasSolicitacoes";
 
 export default function AreaCliente() {
   const { user, logout } = useAuth();
@@ -139,15 +139,7 @@ function AreaDaConta({ user, logout }) {
           )}
         </section>
 
-        {/* Próxima etapa: ler as solicitações pela API protegida.
-            Não ler pedidos do localStorage nem buscar clientes por e-mail
-            fornecido pelo navegador. O backend usará o JWT verificado. */}
-        <section className="rounded-2xl border border-border bg-bg-card p-8">
-          <h2 className="mb-4 text-lg font-semibold text-text-main">Minhas solicitações</h2>
-          <p className="mb-3 text-sm text-text-muted">O acompanhamento de solicitações nesta área estará disponível em breve.</p>
-          <p className="mb-6 text-sm text-text-muted">Se você já enviou um pedido, guarde o protocolo exibido no envio. O formulário de contato continua disponível para novas solicitações.</p>
-          <Button as={Link} to="/contato" variant="solid">Fazer uma solicitação</Button>
-        </section>
+        <MinhasSolicitacoes usuarioId={user.id} habilitado={Boolean(perfil)} />
       </div>
     </div>
   );

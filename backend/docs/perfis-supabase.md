@@ -37,7 +37,7 @@ Campos extras são recusados. Erros: 400 dados inválidos, 401 sessão inválida
 
 Entrar na Área do Cliente sincroniza o perfil. O cadastro/confirmar e-mail no Supabase, sozinho, ainda não cria uma linha na EC2. A Área do Cliente permite editar nome, telefone e empresa e confirma a gravação pela API.
 
-Esta entrega não vincula novas solicitações ao UUID, não consulta pedidos reais e não envia mensagens. Pedidos anônimos anteriores não serão associados automaticamente por e-mail. A integração dessas solicitações será uma etapa separada.
+A integração de solicitações autenticadas e a listagem real estão documentadas em `solicitacoes-conta.md` e exigem a migration `005_solicitacoes_conta`. Pedidos anônimos anteriores não são associados automaticamente por e-mail. Esta API ainda não envia notificações por e-mail/WhatsApp.
 
 ## Verificação manual local
 

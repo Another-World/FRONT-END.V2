@@ -13,6 +13,20 @@ const perfilSchema = z.object({
 
 const colunas = "id, nome, email, telefone, empresa_nome_livre, papel, ativo, criado_em, atualizado_em";
 
+// O executor pode ser um pool ou o cliente de uma transação de solicitação.
+export async function sincronizarUsuario(executor, { id, nome, email }) {
+  const resultado = await executor.query(`
+    INSERT INTO aw.usuarios (id, nome, email)
+    VALUES ($1, $2, $3)
+    ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email
+      WHERE aw.usuarios.ativo AND aw.usuarios.email IS DISTINCT FROM EXCLUDED.email
+    RETURNING ${colunas}
+  `, [id, nome, email]);
+  return resultado.rows[0] ?? (await executor.query(
+    `SELECT ${colunas} FROM aw.usuarios WHERE id = $1`, [id],
+  )).rows[0];
+}
+
 function exibirPerfil(row) {
   return {
     id: row.id,
@@ -35,20 +49,10 @@ function responderPerfil(res, row) {
 export function criarHandlersUsuarios(pool) {
   return {
     async sincronizar(req, res) {
-      const { id, nome, email } = req.identidade;
       // O UUID e o e-mail vêm exclusivamente do JWT verificado.
       // Em contas existentes, preservar nome, telefone e empresa editados.
       // papel/ativo recebem os padrões do banco e não são escritos pela API.
-      const resultado = await pool.query(`
-        INSERT INTO aw.usuarios (id, nome, email)
-        VALUES ($1, $2, $3)
-        ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email
-          WHERE aw.usuarios.ativo AND aw.usuarios.email IS DISTINCT FROM EXCLUDED.email
-        RETURNING ${colunas}
-      `, [id, nome, email]);
-      const row = resultado.rows[0] ?? (await pool.query(
-        `SELECT ${colunas} FROM aw.usuarios WHERE id = $1`, [id],
-      )).rows[0];
+      const row = await sincronizarUsuario(pool, req.identidade);
       return responderPerfil(res, row);
     },
 
