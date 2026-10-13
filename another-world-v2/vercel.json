@@ -1,0 +1,32 @@
+{
+  "rewrites": [
+    {
+      "source": "/area-cliente",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/quem-somos",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/servicos",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/contato",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/politica-de-privacidade",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/termos-de-uso",
+      "destination": "/index.html"
+    }
+  ]
+}
