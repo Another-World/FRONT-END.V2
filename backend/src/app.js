@@ -5,6 +5,7 @@ import { criarHandlerSolicitacoes } from "./solicitacoes.js";
 import { criarAutenticacao, criarAutenticacaoOpcional } from "./autenticacao.js";
 import { criarHandlerListagemSolicitacoes } from "./listagemSolicitacoes.js";
 import { criarHandlersUsuarios } from "./usuarios.js";
+import { criarHandlerProntidao } from "./prontidao.js";
 
 export function criarApp({ pool, autenticacao = {}, limiteEnvios = 10, limiteConsultas = 120 }) {
   const app = express();
@@ -47,6 +48,16 @@ export function criarApp({ pool, autenticacao = {}, limiteEnvios = 10, limiteCon
   app.patch("/api/perfil", express.json({ limit: "4kb" }), usuarios.atualizar);
 
   app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
+  app.get("/api/ready", (_req, res, next) => {
+    res.set("Cache-Control", "no-store");
+    next();
+  }, rateLimit({
+    windowMs: 60 * 1000,
+    limit: 60,
+    standardHeaders: "draft-8",
+    legacyHeaders: false,
+    message: { erro: "Muitas verificações. Aguarde um minuto." },
+  }), criarHandlerProntidao(pool));
   app.use("/api/solicitacoes", (_req, res, next) => {
     res.set("Cache-Control", "no-store");
     next();

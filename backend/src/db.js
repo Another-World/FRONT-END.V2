@@ -12,3 +12,13 @@ export const pool = new Pool({
   max: 5,
   connectionTimeoutMillis: 5000,
 });
+
+// Falhas em clientes ociosos são eventos do pool, fora das promises de query.
+// Tratar o evento evita encerrar a API durante uma queda/reinício do banco.
+pool.on("error", () => {
+  console.error(JSON.stringify({
+    evento: "conexao_ociosa_postgres_indisponivel",
+    nivel: "erro",
+    instante: new Date().toISOString(),
+  }));
+});

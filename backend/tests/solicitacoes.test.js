@@ -31,6 +31,10 @@ async function reservar() {
   return liberar;
 }
 async function query(sql, parametros) {
+  if (typeof sql === "object") {
+    parametros = sql.values;
+    sql = sql.text;
+  }
   const resultado = await db.query(sql, parametros);
   return { rows: resultado.rows, rowCount: resultado.rows.length || resultado.affectedRows || 0 };
 }
@@ -123,6 +127,13 @@ test("005 concede só as leituras necessárias, mantém contato e exclusão prot
     has_table_privilege('aw_api', 'aw.solicitacoes_orcamento', 'DELETE') AS excluir,
     has_column_privilege('aw_api', 'aw.usuarios', 'papel', 'UPDATE') AS papel`);
   assert.deepEqual(r.rows[0], { status: true, nome: true, contato: false, excluir: false, papel: false });
+});
+
+test("prontidão consulta PostgreSQL com o papel aw_api e sem exigir login", async () => {
+  const r = await requisitar("GET", "/api/ready");
+  assert.equal(r.status, 200);
+  assert.equal(r.headers.get("cache-control"), "no-store");
+  assert.deepEqual(r.body, { status: "ok", banco: "ok" });
 });
 
 for (const [nome, overrides] of [
