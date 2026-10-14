@@ -112,7 +112,7 @@ function AreaDaConta({ user, logout }) {
         {error && <p className="mb-6 text-sm text-text-main" role="alert">{error}</p>}
 
         {perfil?.papel === "admin" && <div className="mb-8">
-          <Button as={Link} to="/atendimento" variant="solid">Painel de atendimento</Button>
+          <Button as={Link} to="/admin" variant="solid">Painel administrativo</Button>
         </div>}
 
         <section className="mb-12 rounded-2xl border border-border bg-bg-card p-8">

@@ -88,6 +88,23 @@ O painel usa o perfil retornado pela API para exibir o acesso, mas o servidor se
 
 O botão Abrir e-mail abre o aplicativo de e-mail do operador. Não há envio automático de mensagens, worker ou resposta administrativa escrita no banco nesta entrega.
 
-O rewrite `/atendimento → /index.html` foi acrescentado à Vercel. Publicação e variáveis de produção permanecem adiadas. O frontend local continua funcionando pelo túnel PuTTY e pelo proxy Vite.
+O atendimento passa a ser a seção **Solicitações**, em `/admin/solicitacoes`, dentro do `AdminLayout` da equipe (PR #39 / issue #31). O menu e as páginas de Dashboard, Orçamentos, Usuários e Avaliações são preservados; essas páginas mantêm seus estados de espera por integração. `/atendimento` redireciona para `/admin/solicitacoes`, e a Área do Cliente passa a oferecer o botão Painel administrativo, apontando para `/admin`.
+
+`RotaAdmin` envolve todas as páginas administrativas, respeita inicialização/recuperação da sessão e consulta o perfil na API para exigir `papel=admin`. Troca de conta ou página desmonta o estado anterior; retorno à aba/janela revalida o perfil. Uma falha na verificação impede o acesso. O `role` do navegador e metadata não concedem permissão. Cada endpoint continua revalidando a conta no PostgreSQL.
+
+O logout do layout aguarda o resultado do Supabase antes de navegar e mostra erro em caso de falha. Não foi incorporada a autenticação simulada de `services/auth.js` da main: permanece o serviço Supabase da branch autenticada, sem senhas no localStorage.
+
+Foram acrescentados rewrites exatos para `/admin` e as quatro subseções, preservando os rewrites públicos e `/atendimento`. Não é necessário alterar a API ou reaplicar a migration 006 para essa integração visual. As três variáveis de produção foram configuradas pelo operador na Vercel; a publicação do frontend integrado depende da validação final.
+
+Em 14/10/2026, o operador confirmou release 25ee256 ativa, migrations 001–006, health/ready 200, atendimento sem token 401, rota HTTPS 401 e primeiro perfil administrador ativo. O pedido de teste manteve a alteração de status após F5. O backup Nginx anterior à rota de atendimento é `/var/backups/another-world/nginx/api-atendimento-20261014T192549Z-10182.conf`.
+
+## Relação com as issues da equipe
+
+- **#31:** reaproveita layout, navegação e páginas da equipe; não substitui seu trabalho visual.
+- **#33:** integra lista, filtro por status, detalhes, atualização e histórico reais. Busca, confirmação explícita de decisões e regras de transição ainda precisam ser concluídas conforme o fluxo de negócio. Aceitar significa preparar um orçamento; não é contratação pelo cliente.
+- **#38:** reaproveita autenticação Supabase, autorização na API/banco e testes de acesso existentes, com proteção das rotas administrativas e logout assíncrono. A estratégia de validade de JWT após logout está descrita em Autorização.
+- **#32, #34, #35, #36 e #37:** indicadores, propostas/PDF, envio automático de e-mail, gestão de usuários e avaliações permanecem como entregas próprias; não declarar essas issues concluídas por esta integração.
+
+A integração foi validada com lint dos arquivos envolvidos, build com configuração publicável de teste e sete testes de componentes: sessão ausente/inicialização/recuperação, metadata sem autorização, revogação ao retomar janela, troca de conta/resposta antiga, troca de página/erro da API e logout confirmado/falho. Esses testes isolam o perfil e a sessão; não substituem os 44 testes reais da implementação de backend nem a conferência visual no navegador local. Não foram adicionadas dependências de teste ao projeto. O navegador automatizado não pôde ser instalado neste ambiente.
 
 `operacao-ec2.md` registra o snapshot operacional da release e28bdf9 e do backup anterior à 006; este documento descreve a entrega seguinte de atendimento.

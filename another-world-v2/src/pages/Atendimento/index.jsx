@@ -40,10 +40,10 @@ function AcessoAtendimento({ usuarioId }) {
     setPerfil(null); setNegado(false); setErro(""); setCarregando(true);
     setTentativa(v => v + 1);
   }
-  return <div className="min-h-screen bg-bg-dark">
-    <div className="mx-auto max-w-[1280px] px-6 py-12">
+  return <div className="w-full">
+    <div className="mx-auto w-full max-w-[1440px]">
       <Link to="/area-cliente" className="text-sm text-purple hover:underline">← Minha conta</Link>
-      <h1 className="mt-6 text-3xl font-bold text-text-main">Atendimento</h1>
+      <h1 className="mt-6 text-3xl font-bold text-text-main">Solicitações</h1>
       <p className="mt-2 mb-8 text-sm text-text-muted">Acompanhe as solicitações e atualize o andamento de cada pedido.</p>
       {carregando && <p role="status" className="text-text-muted">Verificando seu acesso…</p>}
       {!carregando && (erro || negado || perfil?.papel !== "admin") && <section className="rounded-2xl border border-border bg-bg-card p-8">

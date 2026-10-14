@@ -1,6 +1,26 @@
 {
   "rewrites": [
     {
+      "source": "/admin",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/admin/solicitacoes",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/admin/orcamentos",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/admin/usuarios",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/admin/avaliacoes",
+      "destination": "/index.html"
+    },
+    {
       "source": "/atendimento",
       "destination": "/index.html"
     },

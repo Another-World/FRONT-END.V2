@@ -1,6 +1,7 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 import MainLayout from "./Layouts/MainLayout";
+import AdminLayout from "./Layouts/AdminLayout";
 
 import Home from "./pages/Home";
 import QuemSomos from "./pages/Quem-somos";
@@ -14,6 +15,8 @@ import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import TermosDeUso from "./pages/TermosDeUso";
 
 import RotaProtegida from "./components/RotaProtegida";
+import RotaAdmin from "./components/RotaAdmin";
+import AdminPagina from "./pages/Admin";
 
 export default function App() {
   return (
@@ -62,8 +65,16 @@ export default function App() {
           }
         />
 
-        <Route path="/atendimento" element={<RotaProtegida><Atendimento /></RotaProtegida>} />
+      </Route>
 
+      <Route path="/atendimento" element={<Navigate to="/admin/solicitacoes" replace />} />
+
+      <Route path="/admin" element={<RotaAdmin><AdminLayout /></RotaAdmin>}>
+        <Route index element={<AdminPagina />} />
+        <Route path="solicitacoes" element={<Atendimento />} />
+        <Route path="orcamentos" element={<AdminPagina />} />
+        <Route path="usuarios" element={<AdminPagina />} />
+        <Route path="avaliacoes" element={<AdminPagina />} />
       </Route>
 
     </Routes>
