@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/atendimento",
+      "destination": "/index.html"
+    },
+    {
       "source": "/area-cliente",
       "destination": "/index.html"
     },

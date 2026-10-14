@@ -8,6 +8,7 @@ import Servicos from "./pages/Servicos";
 import Contato from "./pages/Contato";
 import Login from "./pages/Login";
 import AreaCliente from "./pages/AreaCliente";
+import Atendimento from "./pages/Atendimento";
 
 import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import TermosDeUso from "./pages/TermosDeUso";
@@ -60,6 +61,8 @@ export default function App() {
             </RotaProtegida>
           }
         />
+
+        <Route path="/atendimento" element={<RotaProtegida><Atendimento /></RotaProtegida>} />
 
       </Route>
 

@@ -91,5 +91,5 @@ Um HTTP 200 em health só comprova o processo HTTP. O teste autenticado de pedid
 
 - Publicação no domínio atual da Vercel requer acesso à equipe proprietária, variáveis VITE_SUPABASE/VITE_API_BASE_URL corretas e CORS HTTPS no Nginx.
 - Recuperação de senha depende das URLs de retorno autorizadas no Supabase e permanece adiada conforme orientação do usuário.
-- Não há painel administrativo, edição de status pelo cliente ou worker de notificações nesta entrega.
+- O painel administrativo e a alteração de status pela equipe estão em `atendimento.md` e exigem a migration 006. Não há edição de status pelo cliente nem worker de notificações.
 - JWTs já emitidos continuam aceitos até expirar após logout no Supabase; o bloqueio por ativo=false é verificado nas operações autenticadas.

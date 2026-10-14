@@ -9,7 +9,7 @@ const cursorSchema = z.object({
   criadaEm: z.iso.datetime({ precision: 6 }),
 }).strict();
 
-function decodificarCursor(valor) {
+export function decodificarCursor(valor) {
   if (!valor) return null;
   return cursorSchema.parse(JSON.parse(Buffer.from(valor, "base64url").toString("utf8")));
 }

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { authErrorMessage } from "../../services/auth";
 import { sincronizarPerfil, atualizarPerfil } from "../../services/perfil";
@@ -109,6 +110,10 @@ function AreaDaConta({ user, logout }) {
         </div>
 
         {error && <p className="mb-6 text-sm text-text-main" role="alert">{error}</p>}
+
+        {perfil?.papel === "admin" && <div className="mb-8">
+          <Button as={Link} to="/atendimento" variant="solid">Painel de atendimento</Button>
+        </div>}
 
         <section className="mb-12 rounded-2xl border border-border bg-bg-card p-8">
           <h2 className="mb-6 text-lg font-semibold text-text-main">Dados da conta</h2>

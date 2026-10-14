@@ -6,6 +6,7 @@ import { criarAutenticacao, criarAutenticacaoOpcional } from "./autenticacao.js"
 import { criarHandlerListagemSolicitacoes } from "./listagemSolicitacoes.js";
 import { criarHandlersUsuarios } from "./usuarios.js";
 import { criarHandlerProntidao } from "./prontidao.js";
+import { criarAutorizacaoAdmin, criarHandlersAtendimento } from "./atendimento.js";
 
 export function criarApp({ pool, autenticacao = {}, limiteEnvios = 10, limiteConsultas = 120 }) {
   const app = express();
@@ -70,6 +71,20 @@ export function criarApp({ pool, autenticacao = {}, limiteEnvios = 10, limiteCon
     express.json({ limit: "16kb" }),
     criarHandlerSolicitacoes(pool),
   );
+
+  const atendimento = criarHandlersAtendimento(pool);
+  app.use("/api/atendimento", (_req, res, next) => {
+    res.set("Cache-Control", "no-store");
+    next();
+  }, rateLimit({
+    windowMs: 15 * 60 * 1000, limit: 300,
+    standardHeaders: "draft-8", legacyHeaders: false,
+    message: { erro: "Muitas consultas ao atendimento. Aguarde alguns minutos." },
+  }), exigirAutenticacao, criarAutorizacaoAdmin(pool));
+  app.get("/api/atendimento/solicitacoes", atendimento.listar);
+  app.get("/api/atendimento/solicitacoes/:id", atendimento.consultar);
+  app.patch("/api/atendimento/solicitacoes/:id/status",
+    express.json({ limit: "1kb" }), atendimento.atualizarStatus);
 
   // Erros de leitura do corpo também devem chegar ao formulário como JSON.
   app.use((error, _req, res, _next) => {
