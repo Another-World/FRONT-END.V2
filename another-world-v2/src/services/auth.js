@@ -1,62 +1,98 @@
-// ⚠️ SIMULAÇÃO: isso guarda a senha em texto puro no localStorage.
-// Nunca faça isso em produção — numa API real, a senha é criptografada
-// (hash) no servidor e nunca fica visível nem circula assim.
+// ⚠️ SIMULAÇÃO PARA DESENVOLVIMENTO
+// Este arquivo usa localStorage e salva senhas em texto puro.
+// Não utilize este sistema de autenticação em produção.
+// Em um sistema real, a autenticação e as permissões devem ser
+// verificadas no servidor.
 
 const USERS_KEY = "aw_users";
 const SESSION_KEY = "aw_current_user";
 
-// Pega a lista de usuários "cadastrados" salva no navegador.
+// Recupera a lista de usuários cadastrados.
 function getUsers() {
   const raw = localStorage.getItem(USERS_KEY);
   return raw ? JSON.parse(raw) : [];
 }
 
+// Salva a lista de usuários.
 function saveUsers(users) {
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
 }
 
-// Monta a sessão a partir do usuário salvo.
-// O "...resto" pega TODOS os campos menos a senha — assim, quando alguém
-// adicionar um campo novo no cadastro (CPF, cargo...), ele entra na sessão
-// sozinho. Escolher campo por campo aqui era o que fazia telefone e empresa
-// sumirem toda vez que a pessoa saía e entrava de novo.
+// Cria uma sessão sem expor a senha.
 function criarSessao(user) {
   const { password, ...resto } = user;
   return resto;
 }
 
+// Cadastra um novo usuário.
 export function registerUser({ name, email, password }) {
   const users = getUsers();
 
-  if (users.some((u) => u.email === email)) {
+  const emailNormalizado = email.trim().toLowerCase();
+
+  if (
+    users.some(
+      (u) => u.email.trim().toLowerCase() === emailNormalizado
+    )
+  ) {
     throw new Error("Já existe uma conta com esse e-mail.");
   }
 
-  const newUser = { name, email, password, telefone: "", empresa: "" };
+  const newUser = {
+    name,
+    email: emailNormalizado,
+    password,
+    telefone: "",
+    empresa: "",
+    role: "cliente",
+  };
+
   saveUsers([...users, newUser]);
 
-  // Já cadastra e loga automaticamente.
   const session = criarSessao(newUser);
+
   localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+
   return session;
 }
 
+// Realiza o login.
 export function loginUser({ email, password }) {
   const users = getUsers();
-  const found = users.find((u) => u.email === email && u.password === password);
+
+  const emailNormalizado = email.trim().toLowerCase();
+
+  const found = users.find(
+    (u) =>
+      u.email.trim().toLowerCase() === emailNormalizado &&
+      u.password === password
+  );
 
   if (!found) {
     throw new Error("E-mail ou senha inválidos.");
   }
 
-  const session = criarSessao(found);
+  // Usuários antigos sem role são considerados clientes.
+  const usuarioAtualizado = {
+    ...found,
+    role: found.role || "cliente",
+  };
+
+  // Atualiza o cadastro caso seja um usuário antigo.
+  saveUsers(
+    users.map((u) =>
+      u.email === found.email ? usuarioAtualizado : u
+    )
+  );
+
+  const session = criarSessao(usuarioAtualizado);
+
   localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+
   return session;
 }
 
-// Atualiza os dados cadastrais de quem está logado.
-// Precisa salvar em DOIS lugares: na lista de usuários (pra não perder na
-// próxima vez que a pessoa logar) e na sessão atual (pra tela atualizar já).
+// Atualiza os dados do usuário conectado.
 export function updateUser({ name, telefone, empresa }) {
   const session = getCurrentUser();
 
@@ -64,21 +100,54 @@ export function updateUser({ name, telefone, empresa }) {
     throw new Error("Ninguém está logado.");
   }
 
-  const users = getUsers().map((u) =>
-    u.email === session.email ? { ...u, name, telefone, empresa } : u
-  );
-  saveUsers(users);
+  const users = getUsers();
 
-  const newSession = { ...session, name, telefone, empresa };
+  const usuarioEncontrado = users.find(
+    (u) => u.email === session.email
+  );
+
+  if (!usuarioEncontrado) {
+    throw new Error("Usuário não encontrado.");
+  }
+
+  const usuarioAtualizado = {
+    ...usuarioEncontrado,
+    name,
+    telefone,
+    empresa,
+  };
+
+  saveUsers(
+    users.map((u) =>
+      u.email === session.email ? usuarioAtualizado : u
+    )
+  );
+
+  // Mantém os demais dados da sessão, inclusive o perfil.
+  const newSession = criarSessao(usuarioAtualizado);
+
   localStorage.setItem(SESSION_KEY, JSON.stringify(newSession));
+
   return newSession;
 }
 
+// Recupera a sessão atual.
 export function getCurrentUser() {
   const raw = localStorage.getItem(SESSION_KEY);
-  return raw ? JSON.parse(raw) : null;
+
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(raw);
+  } catch {
+    localStorage.removeItem(SESSION_KEY);
+    return null;
+  }
 }
 
+// Encerra a sessão.
 export function logoutUser() {
   localStorage.removeItem(SESSION_KEY);
 }
