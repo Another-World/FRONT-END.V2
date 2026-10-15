@@ -1,15 +1,18 @@
 import { z } from "zod";
 import { decodificarCursor } from "./listagemSolicitacoes.js";
+import { STATUS_SOLICITACOES, acoesDisponiveis, identificarAcao } from "./fluxoSolicitacoes.js";
 
-const statusSchema = z.enum(["em_analise", "em_contato", "aceito", "negado", "concluida", "cancelada"]);
+const statusSchema = z.enum(STATUS_SOLICITACOES);
 const consultaSchema = z.object({
   limite: z.coerce.number().int().min(1).max(50).default(20),
   cursor: z.string().min(1).max(512).regex(/^[A-Za-z0-9_-]+$/).optional(),
   status: statusSchema.optional(),
+  busca: z.string().trim().min(2).max(120).optional(),
 }).strict();
 const alteracaoSchema = z.object({
   status: statusSchema,
   versao: z.number().int().min(0).max(2147483646),
+  confirmado: z.boolean().optional(),
 }).strict();
 const acessoNegado = "Acesso restrito à equipe de atendimento.";
 
@@ -37,6 +40,11 @@ function resumo(row) {
 }
 const colunasResumo = `s.id, s.status, s.versao_status, s.nome_contato, s.criada_em, s.atualizada_em,
   v.slug AS servico_slug, v.nome AS servico_nome`;
+
+function estado(row) {
+  return { id: row.id, status: row.status, versao: row.versao_status,
+    atualizadaEm: row.atualizada_em, acoesDisponiveis: acoesDisponiveis(row.status) };
+}
 
 export function criarHandlersAtendimento(pool) {
   async function executar(req, res, tarefa) {
@@ -86,6 +94,12 @@ export function criarHandlersAtendimento(pool) {
           parametros.push(consulta.status);
           condicoes.push(`s.status = $${parametros.length}`);
         }
+        if (consulta.busca) {
+          parametros.push(consulta.busca);
+          // Busca literal: %, _ e aspas não viram padrões nem comandos SQL.
+          condicoes.push(`(strpos(lower(s.nome_contato), lower($${parametros.length})) > 0
+            OR strpos(s.id::text, lower($${parametros.length})) > 0)`);
+        }
         if (cursor) {
           parametros.push(cursor.criadaEm, cursor.id);
           condicoes.push(`(s.criada_em, s.id) < ($${parametros.length - 1}::timestamptz, $${parametros.length}::uuid)`);
@@ -127,7 +141,7 @@ export function criarHandlersAtendimento(pool) {
         `, [id.data]);
         return {
           solicitacao: {
-            ...resumo(row), mensagem: row.mensagem,
+            ...resumo(row), acoesDisponiveis: acoesDisponiveis(row.status), mensagem: row.mensagem,
             contato: {
               email: row.email_contato, telefone: row.telefone_contato,
               pessoaJuridica: row.pessoa_juridica, cnpj: row.cnpj, empresa: row.empresa_nome_livre,
@@ -161,7 +175,14 @@ export function criarHandlersAtendimento(pool) {
           throw new FalhaHttp(409, "Este pedido foi alterado por outra operação. Atualize os detalhes antes de salvar.");
         }
         if (row.status === entrada.data.status) {
-          return { solicitacao: { id: row.id, status: row.status, versao: row.versao_status, atualizadaEm: row.atualizada_em } };
+          return { solicitacao: estado(row) };
+        }
+        const acao = acoesDisponiveis(row.status).find(item => item.status === entrada.data.status);
+        if (!acao) {
+          throw new FalhaHttp(409, "Esta mudança de status não é permitida. Atualize os detalhes e escolha uma ação disponível.");
+        }
+        if (acao.confirmacao && entrada.data.confirmado !== true) {
+          throw new FalhaHttp(400, "Confirme a decisão antes de alterar o status.");
         }
         const atualizado = await client.query(`
           UPDATE aw.solicitacoes_orcamento SET status = $2
@@ -173,9 +194,11 @@ export function criarHandlersAtendimento(pool) {
         `, [id.data, JSON.stringify({
           administradorId: req.identidade.id, statusAnterior: row.status, statusNovo: entrada.data.status,
           versaoAnterior: row.versao_status, versaoNova: atualizado.rows[0].versao_status,
+          acao: identificarAcao(row.status, entrada.data.status),
+          ...(acao.confirmacao ? { confirmado: true } : {}),
         })]);
         const novo = atualizado.rows[0];
-        return { solicitacao: { id: novo.id, status: novo.status, versao: novo.versao_status, atualizadaEm: novo.atualizada_em } };
+        return { solicitacao: estado(novo) };
       });
     },
   };

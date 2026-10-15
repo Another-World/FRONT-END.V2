@@ -6,6 +6,10 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const valido = item => item && UUID.test(item.id ?? "") && STATUS_INFO[item.status]
   && Number.isInteger(item.versao) && item.versao >= 0
   && Number.isFinite(Date.parse(item.atualizadaEm));
+const acoesValidas = item => Array.isArray(item?.acoesDisponiveis) && item.acoesDisponiveis.length <= 5
+  && new Set(item.acoesDisponiveis.map(acao => acao?.status)).size === item.acoesDisponiveis.length
+  && item.acoesDisponiveis.every(acao => STATUS_INFO[acao?.status] && acao.status !== item.status
+    && (acao.confirmacao === null || (typeof acao.confirmacao === "string" && acao.confirmacao.length > 0 && acao.confirmacao.length <= 500)));
 
 async function requisitar(usuarioId, path, { method = "GET", body, signal } = {}) {
   const sessao = await obterSessaoApi(usuarioId, true);
@@ -35,9 +39,10 @@ async function requisitar(usuarioId, path, { method = "GET", body, signal } = {}
   return data;
 }
 
-export async function listarAtendimento(usuarioId, { status, cursor, signal } = {}) {
+export async function listarAtendimento(usuarioId, { status, busca, cursor, signal } = {}) {
   const p = new URLSearchParams({ limite: "20" });
   if (status) p.set("status", status);
+  if (busca) p.set("busca", busca);
   if (cursor) p.set("cursor", cursor);
   const data = await requisitar(usuarioId, `?${p}`, { signal });
   if (!Array.isArray(data?.solicitacoes) || data.solicitacoes.length > 20
@@ -55,13 +60,14 @@ export async function consultarAtendimento(usuarioId, id, signal) {
       || !data.solicitacao.endereco || !Array.isArray(data.historico)) {
     throw new Error("A API não confirmou os detalhes do pedido.");
   }
+  if (!acoesValidas(data.solicitacao)) throw new Error("A API de solicitações precisa ser atualizada para esta versão do painel.");
   return data;
 }
-export async function alterarStatus(usuarioId, id, status, versao, signal) {
+export async function alterarStatus(usuarioId, id, status, versao, signal, confirmado = false) {
   const data = await requisitar(usuarioId, `/${encodeURIComponent(id)}/status`, {
-    method: "PATCH", body: { status, versao }, signal,
+    method: "PATCH", body: { status, versao, confirmado }, signal,
   });
-  if (!valido(data?.solicitacao) || data.solicitacao.id !== id || data.solicitacao.status !== status) {
+  if (!valido(data?.solicitacao) || data.solicitacao.id !== id || data.solicitacao.status !== status || !acoesValidas(data.solicitacao)) {
     throw new Error("A API não confirmou a alteração. Atualize os detalhes do pedido.");
   }
   return data.solicitacao;

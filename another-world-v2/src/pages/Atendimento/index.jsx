@@ -57,7 +57,8 @@ function AcessoAtendimento({ usuarioId }) {
 }
 
 function Painel({ usuarioId, bloquear }) {
-  const [consulta, setConsulta] = useState({ status: "", tentativa: 0 });
+  const [consulta, setConsulta] = useState({ status: "", busca: "", tentativa: 0 });
+  const [buscaRascunho, setBuscaRascunho] = useState("");
   const [pagina, setPagina] = useState(vazio);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
@@ -68,7 +69,7 @@ function Painel({ usuarioId, bloquear }) {
   useEffect(() => {
     const controller = new AbortController();
     requisicao.current = controller;
-    listarAtendimento(usuarioId, { status: consulta.status, signal: controller.signal }).then(resultado => {
+    listarAtendimento(usuarioId, { status: consulta.status, busca: consulta.busca, signal: controller.signal }).then(resultado => {
       if (!controller.signal.aborted) setPagina(resultado);
     }).catch(error => {
       if (!controller.signal.aborted) {
@@ -82,20 +83,20 @@ function Painel({ usuarioId, bloquear }) {
     return () => {
       controller.abort(); requisicao.current?.abort(); requisicao.current = null;
     };
-  }, [usuarioId, consulta.status, consulta.tentativa, bloquear]);
+  }, [usuarioId, consulta.status, consulta.busca, consulta.tentativa, bloquear]);
 
-  function atualizar(status = consulta.status) {
+  function atualizar(status = consulta.status, busca = consulta.busca) {
     if (salvando) return;
     requisicao.current?.abort(); setCarregando(true); setErro("");
     setPagina(vazio); setSelecionado(null);
-    setConsulta(anterior => ({ status, tentativa: anterior.tentativa + 1 }));
+    setConsulta(anterior => ({ status, busca, tentativa: anterior.tentativa + 1 }));
   }
   async function mais() {
     if (requisicao.current || !pagina.proximoCursor || salvando) return;
     const controller = new AbortController();
     requisicao.current = controller; setCarregando(true); setErro("");
     try {
-      const r = await listarAtendimento(usuarioId, { status: consulta.status, cursor: pagina.proximoCursor, signal: controller.signal });
+      const r = await listarAtendimento(usuarioId, { status: consulta.status, busca: consulta.busca, cursor: pagina.proximoCursor, signal: controller.signal });
       if (!controller.signal.aborted) setPagina(anterior => ({
         solicitacoes: [...new Map([...anterior.solicitacoes, ...r.solicitacoes].map(item => [item.id, item])).values()],
         proximoCursor: r.proximoCursor,
@@ -117,6 +118,20 @@ function Painel({ usuarioId, bloquear }) {
   }
   return <>
     <div className="mb-6 flex flex-wrap items-end gap-4">
+      <form onSubmit={event => { event.preventDefault(); atualizar(consulta.status, buscaRascunho.trim()); }}>
+        <fieldset disabled={salvando || carregando} className="flex flex-wrap items-end gap-3 disabled:opacity-70">
+          <div>
+            <label htmlFor="busca-solicitacoes" className="mb-2 block text-sm text-text-muted">Nome ou protocolo</label>
+            <input id="busca-solicitacoes" type="search" className={campo} minLength={2} maxLength={120}
+              placeholder="Digite pelo menos 2 caracteres" value={buscaRascunho}
+              onChange={event => setBuscaRascunho(event.target.value)} />
+          </div>
+          <Button type="submit">Buscar</Button>
+          <Button type="button" disabled={!buscaRascunho && !consulta.busca} onClick={() => {
+            setBuscaRascunho(""); atualizar(consulta.status, "");
+          }}>Limpar busca</Button>
+        </fieldset>
+      </form>
       <div className="min-w-[220px]">
         <label htmlFor="filtro-status" className="mb-2 block text-sm text-text-muted">Filtrar por status</label>
         <select id="filtro-status" className={campo} value={consulta.status} disabled={salvando || carregando}
@@ -187,17 +202,22 @@ function Detalhe({ id, usuarioId, bloquear, onAtualizado, onSalvando, consultaEm
   async function salvar(event) {
     event.preventDefault();
     if (alteracao.current || !resultado || precisaAtualizar || consultaEmAndamento) return;
+    const acao = resultado.solicitacao.acoesDisponiveis.find(item => item.status === novoStatus);
+    if (!acao) return;
+    if (acao.confirmacao && !window.confirm(acao.confirmacao)) return;
     const controller = new AbortController(); alteracao.current = controller;
     setSalvando(true); onSalvando(true); setErro(""); setAviso("");
     let confirmado = false;
     try {
-      const atualizado = await alterarStatus(usuarioId, id, novoStatus, resultado.solicitacao.versao, controller.signal);
+      const atualizado = await alterarStatus(usuarioId, id, novoStatus, resultado.solicitacao.versao, controller.signal, Boolean(acao.confirmacao));
       if (controller.signal.aborted) return;
       confirmado = true;
       setResultado(anterior => ({ ...anterior, solicitacao: { ...anterior.solicitacao, ...atualizado } }));
-      setAviso("Status atualizado."); onAtualizado(atualizado);
+      setAviso(acao.confirmacao && novoStatus === "em_analise" ? "Solicitação reaberta e registrada no histórico." : "Status atualizado."); onAtualizado(atualizado);
       const completo = await consultarAtendimento(usuarioId, id, controller.signal);
-      if (!controller.signal.aborted) setResultado(completo);
+      if (!controller.signal.aborted) {
+        setResultado(completo); setNovoStatus(completo.solicitacao.status); onAtualizado(completo.solicitacao);
+      }
     } catch (error) {
       if (!controller.signal.aborted) {
         if (error.status === 403 || error.status === 401) bloquear();
@@ -238,7 +258,8 @@ function Detalhe({ id, usuarioId, bloquear, onAtualizado, onSalvando, consultaEm
         <fieldset disabled={salvando || precisaAtualizar || consultaEmAndamento} className="space-y-4 disabled:opacity-70">
           <label htmlFor="novo-status" className="block text-sm font-semibold text-text-main">Atualizar status</label>
           <select id="novo-status" className={campo} value={novoStatus} onChange={event => setNovoStatus(event.target.value)}>
-            {Object.entries(STATUS_INFO).map(([valor,info]) => <option key={valor} value={valor}>{info.label}</option>)}
+            <option value={item.status}>{STATUS_INFO[item.status].label} (atual)</option>
+            {item.acoesDisponiveis.map(acao => <option key={acao.status} value={acao.status}>{STATUS_INFO[acao.status].label}</option>)}
           </select>
           <Button type="submit" variant="solid" disabled={novoStatus === item.status}>{salvando ? "Salvando…" : "Salvar status"}</Button>
         </fieldset>
@@ -247,7 +268,7 @@ function Detalhe({ id, usuarioId, bloquear, onAtualizado, onSalvando, consultaEm
       <section className="mt-7 border-t border-border pt-6"><h4 className="mb-4 text-sm font-semibold text-text-main">Histórico recente</h4>
         <ul className="space-y-3">{resultado.historico.map((evento,i) => <li key={`${evento.criadoEm}-${i}`} className="text-xs text-text-muted">
           <p className="text-text-main">{evento.tipo === "status_alterado"
-            ? `${STATUS_INFO[evento.detalhes.statusAnterior]?.label ?? "Status anterior"} → ${STATUS_INFO[evento.detalhes.statusNovo]?.label ?? "Novo status"}` : "Solicitação registrada"}</p>
+            ? `${evento.detalhes.acao === "reabertura" ? "Solicitação reaberta: " : ""}${STATUS_INFO[evento.detalhes.statusAnterior]?.label ?? "Status anterior"} → ${STATUS_INFO[evento.detalhes.statusNovo]?.label ?? "Novo status"}` : "Solicitação registrada"}</p>
           <p className="mt-1">{data(evento.criadoEm)}</p>
         </li>)}</ul>
       </section>
