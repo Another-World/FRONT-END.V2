@@ -5,6 +5,7 @@ const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "")
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const STATUS_ORCAMENTO = {
   rascunho: "Rascunho",
+  aguardando_envio: "Aguardando confirmação do e-mail",
   enviada: "Enviada manualmente",
   aceita: "Aceita pelo cliente (registro da equipe)",
   recusada: "Recusada pelo cliente (registro da equipe)",
@@ -126,6 +127,11 @@ export async function alterarOrcamento(uid, id, body, signal) {
       signal,
     }),
   );
+}
+export async function enviarOrcamentoEmail(uid, id, body, signal) {
+  return confirmar(await requisitar(uid, `/${encodeURIComponent(id)}/email`, {
+    method: "POST", body, signal,
+  }));
 }
 export const baixarProposta = (uid, id, signal) =>
   requisitar(uid, `/${encodeURIComponent(id)}/pdf`, { signal, pdf: true });

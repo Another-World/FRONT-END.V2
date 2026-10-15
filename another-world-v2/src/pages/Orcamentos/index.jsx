@@ -8,6 +8,7 @@ import {
   criarOrcamento,
   editarOrcamento,
   alterarOrcamento,
+  enviarOrcamentoEmail,
   baixarProposta,
   STATUS_ORCAMENTO,
 } from "../../services/orcamentos";
@@ -32,6 +33,8 @@ const rotulos = {
   rascunho_criado: "Rascunho criado",
   rascunho_editado: "Rascunho atualizado",
   envio_manual_confirmado: "Envio manual confirmado",
+  email_solicitado: "Envio de e-mail solicitado",
+  email_aceito_pelo_ses: "E-mail aceito pelo serviço de envio",
   resposta_registrada: "Resposta do cliente registrada pela equipe",
 };
 function valorEmCentavos(s) {
@@ -300,6 +303,13 @@ function Painel({ uid }) {
       "Ação registrada no histórico.",
     );
   }
+  function enviarEmail() {
+    if (ocupado || !detalhe || !revisado || mudou || !detalhe.emailDisponivel) return;
+    if (!window.confirm("Confirma o envio deste PDF por e-mail ao endereço exibido? A proposta ficará bloqueada e o envio será processado em seguida.")) return;
+    executar(signal => enviarOrcamentoEmail(uid, detalhe.orcamento.id, {
+      versao: detalhe.orcamento.versao, confirmado: true,
+    }, signal), "Envio solicitado. Atualize a proposta para conferir a confirmação do serviço de e-mail.");
+  }
   async function mais(tipo) {
     if (ocupado) return;
     setOcupado(true);
@@ -353,8 +363,8 @@ function Painel({ uid }) {
           Orçamentos e propostas
         </h1>
         <p className="mt-2 text-sm text-text-muted">
-          Elabore propostas para solicitações aceitas. Revise o PDF e registre o
-          envio manual e a resposta do cliente.
+          Elabore propostas para solicitações aceitas. Revise o PDF, escolha o
+          envio disponível e acompanhe a resposta do cliente.
         </p>
       </header>
       {erro && (
@@ -523,6 +533,11 @@ function Painel({ uid }) {
                     Proposta {o.id} · Versão {o.versao}
                   </p>
                   <p>{STATUS_ORCAMENTO[o.status]}</p>
+                  {detalhe.email && <p className="text-sm text-text-muted">
+                    E-mail: {detalhe.email.status === "enviada" ? "aceito pelo serviço de envio" :
+                      detalhe.email.status === "falhou" ? "resultado incerto; solicite conferência à equipe técnica" :
+                      detalhe.email.status === "processando" ? "processando" : "na fila"}
+                  </p>}
                   <p className="break-words text-sm">
                     Cliente: {o.cliente.nome} · {o.cliente.email}
                   </p>
@@ -640,8 +655,18 @@ function Painel({ uid }) {
                       >
                         Confirmar envio manual
                       </Button>
+                      {detalhe.emailDisponivel && <Button
+                        disabled={ocupado || !revisado || mudou || pendente}
+                        onClick={enviarEmail}
+                      >
+                        Enviar PDF por e-mail
+                      </Button>}
                     </>
                   )}
+                  {o.status === "aguardando_envio" && <p className="text-sm text-text-muted">
+                    A proposta está congelada enquanto aguardamos confirmação do serviço de e-mail.
+                    Atualize esta tela para ver o resultado.
+                  </p>}
                   {o.status === "enviada" && (
                     <>
                       <label className="block text-sm">

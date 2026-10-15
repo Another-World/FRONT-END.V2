@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { decodificarCursor } from "./listagemSolicitacoes.js";
 import { gerarPropostaPdf } from "./propostaPdf.js";
+import { registrarProposta } from "./emails.js";
 
 const texto = (max) =>
   z
@@ -25,7 +26,7 @@ const consultaSchema = z
   .object({
     limite: z.coerce.number().int().min(1).max(50).default(20),
     cursor: z.string().max(512).optional(),
-    status: z.enum(["rascunho", "enviada", "aceita", "recusada"]).optional(),
+    status: z.enum(["rascunho", "aguardando_envio", "enviada", "aceita", "recusada"]).optional(),
     solicitacaoId: z.uuid().optional(),
   })
   .strict();
@@ -39,6 +40,7 @@ const acaoSchema = z
     nota: texto(1000).optional(),
   })
   .strict();
+const emailSchema = z.object({ versao, confirmado: z.literal(true) }).strict();
 class Falha extends Error {
   constructor(status, message) {
     super(message);
@@ -110,7 +112,7 @@ function validarValidade(d) {
     );
 }
 let pdfsAtivos = 0;
-export function criarHandlersOrcamentos(pool) {
+export function criarHandlersOrcamentos(pool, { emailsEnabled = false } = {}) {
   async function executar(req, res, tarefa, pdf = false) {
     let client,
       descartar = false;
@@ -283,8 +285,18 @@ export function criarHandlersOrcamentos(pool) {
           "SELECT tipo,detalhes,criado_em FROM aw.orcamentos_eventos WHERE orcamento_id=$1 ORDER BY criado_em DESC,id DESC LIMIT 100",
           [req.params.id],
         );
+        const e = await c.query(`
+          SELECT id,status,tentativas,ultimo_erro,criada_em,enviada_em
+          FROM aw.comunicacoes WHERE orcamento_id=$1 AND tipo='proposta'
+          ORDER BY criada_em DESC LIMIT 1`, [req.params.id]);
         return {
           orcamento: detalhe(r.rows[0]),
+          emailDisponivel: emailsEnabled,
+          email: e.rows[0] ? {
+            id: e.rows[0].id, status: e.rows[0].status,
+            tentativas: e.rows[0].tentativas, erro: e.rows[0].ultimo_erro,
+            criadaEm: e.rows[0].criada_em, enviadaEm: e.rows[0].enviada_em,
+          } : null,
           historico: h.rows.map((e) => ({
             tipo: e.tipo,
             detalhes: e.detalhes,
@@ -443,6 +455,26 @@ export function criarHandlersOrcamentos(pool) {
             ...(d.nota ? { nota: d.nota } : {}),
           },
         );
+        return { orcamento: detalhe(r.rows[0]) };
+      });
+    },
+    async enviarEmail(req, res) {
+      if (!emailsEnabled) return res.status(503).json({ erro: "Envio de e-mails ainda não está configurado." });
+      const v = emailSchema.safeParse(req.body);
+      if (!idValido(req) || !v.success)
+        return res.status(400).json({ erro: "Confirme o envio por e-mail e informe a versão." });
+      return executar(req, res, async (c) => {
+        const { o, s } = await travar(c, req.params.id);
+        if (o.versao !== v.data.versao)
+          throw new Falha(409, "Orçamento alterado. Reabra os detalhes.");
+        if (o.status !== "rascunho" || s.status !== "aceito")
+          throw new Falha(409, "Somente rascunhos de solicitações aceitas podem ser enviados.");
+        validarValidade({ validade: dataIso(o.validade) });
+        const r = await c.query(
+          "UPDATE aw.orcamentos SET status='aguardando_envio' WHERE id=$1 RETURNING *",
+          [o.id]);
+        await registrarProposta(c, r.rows[0]);
+        await evento(c, req, r.rows[0], "email_solicitado", { confirmado: true });
         return { orcamento: detalhe(r.rows[0]) };
       });
     },

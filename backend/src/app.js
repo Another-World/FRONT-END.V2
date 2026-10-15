@@ -9,7 +9,8 @@ import { criarHandlersUsuarios } from "./usuarios.js";
 import { criarHandlerProntidao } from "./prontidao.js";
 import { criarAutorizacaoAdmin, criarHandlersAtendimento } from "./atendimento.js";
 
-export function criarApp({ pool, autenticacao = {}, limiteEnvios = 10, limiteConsultas = 120 }) {
+export function criarApp({ pool, autenticacao = {}, limiteEnvios = 10, limiteConsultas = 120,
+  emailsEnabled = process.env.EMAILS_ENABLED === "true" }) {
   const app = express();
   app.disable("x-powered-by");
   app.use(helmet());
@@ -73,7 +74,7 @@ export function criarApp({ pool, autenticacao = {}, limiteEnvios = 10, limiteCon
     criarHandlerSolicitacoes(pool),
   );
 
-  const atendimento = criarHandlersAtendimento(pool);
+  const atendimento = criarHandlersAtendimento(pool, { emailsEnabled });
   app.use("/api/atendimento", (_req, res, next) => {
     res.set("Cache-Control", "no-store");
     next();
@@ -87,12 +88,13 @@ export function criarApp({ pool, autenticacao = {}, limiteEnvios = 10, limiteCon
   app.patch("/api/atendimento/solicitacoes/:id/status",
     express.json({ limit: "1kb" }), atendimento.atualizarStatus);
 
-  const orcamentos = criarHandlersOrcamentos(pool);
+  const orcamentos = criarHandlersOrcamentos(pool, { emailsEnabled });
   app.get("/api/atendimento/orcamentos", orcamentos.listar);
   app.post("/api/atendimento/orcamentos", express.json({ limit: "16kb" }), orcamentos.criar);
   app.get("/api/atendimento/orcamentos/:id", orcamentos.consultar);
   app.patch("/api/atendimento/orcamentos/:id", express.json({ limit: "16kb" }), orcamentos.editar);
   app.patch("/api/atendimento/orcamentos/:id/status", express.json({ limit: "4kb" }), orcamentos.status);
+  app.post("/api/atendimento/orcamentos/:id/email", express.json({ limit: "1kb" }), orcamentos.enviarEmail);
   app.get("/api/atendimento/orcamentos/:id/pdf", orcamentos.pdf);
 
   // Erros de leitura do corpo também devem chegar ao formulário como JSON.
