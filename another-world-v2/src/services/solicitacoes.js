@@ -1,3 +1,5 @@
+import { obterSessaoApi } from "./sessaoApi";
+
 // Na publicação, o endereço será definido nas variáveis da Vercel.
 // No desenvolvimento local, o valor vazio mantém o proxy do Vite.
 const API_BASE_URL = (
@@ -59,11 +61,11 @@ const TENTATIVA_KEY = "aw_contato_tentativa";
 let tentativaEmMemoria = null;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-async function obterChaveEnvio(corpo) {
+async function obterChaveEnvio(corpo, usuarioId) {
   if (!globalThis.crypto?.randomUUID || !globalThis.crypto?.subtle) {
     throw new Error("Abra o site por HTTPS ou localhost para enviar a solicitação.");
   }
-  const bytes = new TextEncoder().encode(corpo);
+  const bytes = new TextEncoder().encode(usuarioId ? `${usuarioId}\n${corpo}` : corpo);
   const digest = await crypto.subtle.digest("SHA-256", bytes);
   const hash = Array.from(new Uint8Array(digest), (byte) =>
     byte.toString(16).padStart(2, "0"),
@@ -97,7 +99,8 @@ function finalizarTentativa(chave) {
   }
 }
 
-export async function criarSolicitacao(dados) {
+export async function criarSolicitacao(dados, usuarioId = null) {
+  const sessao = await obterSessaoApi(usuarioId);
   const payload = {
     nome: dados.nome.trim(),
     email: dados.email.trim().toLowerCase(),
@@ -120,7 +123,7 @@ export async function criarSolicitacao(dados) {
     whatsappAutorizado: dados.whatsappAutorizado === true,
   };
   const corpo = JSON.stringify(payload);
-  const chave = await obterChaveEnvio(corpo);
+  const chave = await obterChaveEnvio(corpo, usuarioId);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15000);
   let response;
@@ -131,6 +134,7 @@ export async function criarSolicitacao(dados) {
       headers: {
         "Content-Type": "application/json",
         "Idempotency-Key": chave,
+        ...(sessao ? { Authorization: `Bearer ${sessao.access_token}` } : {}),
       },
       body: corpo,
       signal: controller.signal,
@@ -155,41 +159,36 @@ export async function criarSolicitacao(dados) {
   if (!resultado?.id || resultado.status !== STATUS.EM_ANALISE) {
     throw new Error("O servidor não confirmou o envio. Tente novamente com os mesmos dados.");
   }
+  await obterSessaoApi(usuarioId);
   finalizarTentativa(chave);
   return resultado;
 }
 
-// Compatibilidade com as telas de demonstração atuais.
-// Estas funções ainda leem SOMENTE dados antigos deste navegador.
-// Elas não consultam nem alteram o PostgreSQL. A leitura real dependerá
-// da autenticação com Supabase e de novas rotas protegidas do backend.
-const KEY = "aw_solicitacoes";
-
-function lerTudo() {
+export async function listarSolicitacoes(usuarioId, { cursor, signal } = {}) {
+  const sessao = await obterSessaoApi(usuarioId, true);
+  const parametros = new URLSearchParams({ limite: "20" });
+  if (cursor) parametros.set("cursor", cursor);
+  const timeout = AbortSignal.timeout(15000);
+  let response;
   try {
-    const dados = JSON.parse(localStorage.getItem(KEY) ?? "[]");
-    return Array.isArray(dados) ? dados : [];
-  } catch {
-    return [];
+    response = await fetch(`${API_BASE_URL}/api/solicitacoes?${parametros}`, {
+      headers: { Authorization: `Bearer ${sessao.access_token}` },
+      cache: "no-store",
+      signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
+    });
+  } catch (error) {
+    if (signal?.aborted) throw error;
+    throw new Error("Não foi possível consultar seus pedidos. Verifique a conexão e tente novamente.", { cause: error });
   }
-}
-
-export function getSolicitacoes() {
-  return lerTudo().sort((a, b) =>
-    String(b.criadaEm ?? "").localeCompare(String(a.criadaEm ?? "")),
-  );
-}
-
-export function getSolicitacoesPorEmail(email) {
-  return getSolicitacoes().filter((solicitacao) => solicitacao.email === email);
-}
-
-// Apenas para registros antigos de demonstração, sem efeito no banco real.
-export function atualizarStatus(id, status, resposta = "") {
-  const lista = lerTudo().map((solicitacao) =>
-    solicitacao.id === id
-      ? { ...solicitacao, status, resposta, respondidaEm: new Date().toISOString() }
-      : solicitacao,
-  );
-  localStorage.setItem(KEY, JSON.stringify(lista));
+  const resultado = await response.json().catch(() => null);
+  if (!response.ok) throw new Error(resultado?.erro || "Não foi possível consultar seus pedidos.");
+  if (!Array.isArray(resultado?.solicitacoes) || resultado.solicitacoes.length > 20
+    || !(resultado.proximoCursor === null || typeof resultado.proximoCursor === "string")
+    || resultado.solicitacoes.some(item => !UUID.test(item?.id ?? "")
+      || !STATUS_INFO[item.status] || typeof item.servico?.nome !== "string"
+      || !Number.isFinite(Date.parse(item.criadaEm)))) {
+    throw new Error("A API não confirmou a lista de solicitações.");
+  }
+  await obterSessaoApi(usuarioId, true);
+  return resultado;
 }

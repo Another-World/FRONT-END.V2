@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
+import { sincronizarUsuario } from "./usuarios.js";
 
 const texto = (limite) => z.string().trim().min(1).max(limite);
 const opcional = (limite) => z.string().trim().max(limite).optional();
@@ -85,16 +86,28 @@ export function criarHandlerSolicitacoes(pool) {
       await client.query("BEGIN ISOLATION LEVEL READ COMMITTED");
       await client.query("SET LOCAL statement_timeout = '10s'");
 
+      const usuarioId = req.identidade?.id ?? null;
+      if (req.identidade) {
+        // Sincronizar dentro da mesma transação cria o perfil quando o cliente
+        // envia um pedido antes de abrir a Área do Cliente. O UPSERT bloqueia
+        // a linha até o fim da transação e preserva os dados cadastrais editados.
+        const usuario = await sincronizarUsuario(client, req.identidade);
+        if (!usuario?.ativo) {
+          await client.query("ROLLBACK");
+          return res.status(403).json({ erro: "Sua conta está desativada. Entre em contato com a Another World." });
+        }
+      }
+
       const consultarTentativa = () => client.query(
-        `SELECT id, criada_em, idempotencia_hash
+        `SELECT id, criada_em, idempotencia_hash, usuario_id
          FROM aw.solicitacoes_orcamento WHERE idempotencia_chave = $1`,
         [chave.data],
       );
       const responderReenvio = async (registro) => {
         await client.query("ROLLBACK");
-        if (registro.idempotencia_hash !== hash) {
+        if (registro.idempotencia_hash !== hash || registro.usuario_id !== usuarioId) {
           return res.status(409).json({
-            erro: "Esta chave de envio já foi usada com dados diferentes.",
+            erro: "Esta chave de envio já foi usada em outra tentativa. Envie novamente para obter uma nova chave.",
           });
         }
         return res.status(200).json(respostaOriginal(registro));
@@ -119,10 +132,10 @@ export function criarHandlerSolicitacoes(pool) {
           pessoa_juridica, cnpj, empresa_nome_livre,
           canal_preferido, whatsapp_autorizado_em,
           cep, logradouro, bairro, cidade, uf, numero, complemento, mensagem,
-          idempotencia_chave, idempotencia_hash
+          idempotencia_chave, idempotencia_hash, usuario_id
         ) VALUES (
           $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-          $11, $12, $13, $14, $15, $16, $17, $18, $19
+          $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
         ) ON CONFLICT (idempotencia_chave) DO NOTHING
         RETURNING id, criada_em`,
         [
@@ -130,7 +143,7 @@ export function criarHandlerSolicitacoes(pool) {
           dados.pessoaJuridica, dados.cnpj, dados.empresa,
           dados.canalPreferido, dados.whatsappAutorizado ? new Date() : null,
           dados.cep, dados.logradouro, dados.bairro, dados.cidade, dados.uf,
-          dados.numero, dados.complemento, dados.mensagem, chave.data, hash,
+          dados.numero, dados.complemento, dados.mensagem, chave.data, hash, usuarioId,
         ],
       );
       if (insercao.rowCount === 0) {

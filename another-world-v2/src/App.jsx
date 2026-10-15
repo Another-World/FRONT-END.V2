@@ -1,5 +1,4 @@
-
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 import MainLayout from "./Layouts/MainLayout";
 import AdminLayout from "./Layouts/AdminLayout";
@@ -10,6 +9,7 @@ import Servicos from "./pages/Servicos";
 import Contato from "./pages/Contato";
 import Login from "./pages/Login";
 import AreaCliente from "./pages/AreaCliente";
+import Atendimento from "./pages/Atendimento";
 
 import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import TermosDeUso from "./pages/TermosDeUso";
@@ -21,13 +21,30 @@ import AdminPagina from "./pages/Admin";
 export default function App() {
   return (
     <Routes>
-      {/* Páginas públicas */}
+
       <Route element={<MainLayout />}>
+
         <Route path="/" element={<Home />} />
-        <Route path="/quem-somos" element={<QuemSomos />} />
-        <Route path="/servicos" element={<Servicos />} />
-        <Route path="/contato" element={<Contato />} />
-        <Route path="/login" element={<Login />} />
+
+        <Route
+          path="/quem-somos"
+          element={<QuemSomos />}
+        />
+
+        <Route
+          path="/servicos"
+          element={<Servicos />}
+        />
+
+        <Route
+          path="/contato"
+          element={<Contato />}
+        />
+
+        <Route
+          path="/login"
+          element={<Login />}
+        />
 
         <Route
           path="/politica-de-privacidade"
@@ -47,39 +64,19 @@ export default function App() {
             </RotaProtegida>
           }
         />
+
       </Route>
 
-      {/* Painel administrativo protegido */}
-      <Route
-        path="/admin"
-        element={
-          <RotaAdmin>
-            <AdminLayout />
-          </RotaAdmin>
-        }
-      >
+      <Route path="/atendimento" element={<Navigate to="/admin/solicitacoes" replace />} />
+
+      <Route path="/admin" element={<RotaAdmin><AdminLayout /></RotaAdmin>}>
         <Route index element={<AdminPagina />} />
-
-        <Route
-          path="solicitacoes"
-          element={<AdminPagina />}
-        />
-
-        <Route
-          path="orcamentos"
-          element={<AdminPagina />}
-        />
-
-        <Route
-          path="usuarios"
-          element={<AdminPagina />}
-        />
-
-        <Route
-          path="avaliacoes"
-          element={<AdminPagina />}
-        />
+        <Route path="solicitacoes" element={<Atendimento />} />
+        <Route path="orcamentos" element={<AdminPagina />} />
+        <Route path="usuarios" element={<AdminPagina />} />
+        <Route path="avaliacoes" element={<AdminPagina />} />
       </Route>
+
     </Routes>
   );
 }

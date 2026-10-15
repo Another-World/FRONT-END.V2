@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import {
   criarSolicitacao,
   SERVICOS_ORCAMENTO,
@@ -25,6 +26,7 @@ const initialForm = {
 };
 
 export default function Contato() {
+  const { user, loading: verificandoConta } = useAuth();
   const [form, setForm] = useState({ ...initialForm });
   const [errors, setErrors] = useState({});
   const [cepLoading, setCepLoading] = useState(false);
@@ -169,7 +171,7 @@ export default function Contato() {
 
   async function handleSubmit(event) {
     event.preventDefault();
-    if (submitting.current || cepLoading) return;
+    if (submitting.current || cepLoading || verificandoConta) return;
     setSuccess(null);
     setSubmitError("");
     if (!validateForm()) return;
@@ -178,7 +180,7 @@ export default function Contato() {
     submitting.current = true;
     setSending(true);
     try {
-      const resultado = await criarSolicitacao(form);
+      const resultado = await criarSolicitacao(form, user?.id ?? null);
       // Só confirma o sucesso depois da resposta da API.
       setSuccess(resultado);
       setForm({ ...initialForm });
@@ -235,10 +237,15 @@ export default function Contato() {
               <p className="mt-2 text-sm text-text-muted">
                 Conte sua necessidade e escolha como prefere receber nosso retorno.
               </p>
+              <p className="mt-3 text-sm text-text-muted">
+                {verificandoConta ? "Verificando sua conta…" : user
+                  ? "Este pedido ficará disponível na sua Área do Cliente."
+                  : <><Link to="/login" className="text-purple hover:underline">Entre na sua conta</Link> para acompanhar o pedido. Você também pode enviar como visitante.</>}
+              </p>
             </div>
 
             <form onSubmit={handleSubmit} noValidate>
-              <fieldset disabled={sending} aria-busy={sending} className="space-y-5">
+              <fieldset disabled={sending || verificandoConta} aria-busy={sending} className="space-y-5">
                 <legend className="sr-only">Dados da solicitação de orçamento</legend>
 
                 {/* Nome */}
@@ -615,7 +622,7 @@ export default function Contato() {
                 {/* Botão */}
                 <button
                   type="submit"
-                  disabled={sending || cepLoading}
+                  disabled={sending || cepLoading || verificandoConta}
                   className="w-full rounded-full bg-purple px-6 py-3.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-wait disabled:opacity-60"
                 >
                   {sending ? "Enviando..." : cepLoading ? "Consultando CEP..." : "Enviar solicitação"}

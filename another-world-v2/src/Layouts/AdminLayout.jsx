@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   NavLink,
   Outlet,
   useNavigate,
 } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { authErrorMessage } from "../services/auth";
 
 const links = [
   { label: "Dashboard", path: "/admin", icon: "▦" },
@@ -32,12 +33,26 @@ const links = [
 
 export default function AdminLayout() {
   const [menuAberto, setMenuAberto] = useState(false);
+  const [saindo, setSaindo] = useState(false);
+  const [erroSaida, setErroSaida] = useState("");
+  const saidaPendente = useRef(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  function sair() {
-    logout();
-    navigate("/login", { replace: true });
+  async function sair() {
+    if (saidaPendente.current) return;
+    saidaPendente.current = true;
+    setSaindo(true);
+    setErroSaida("");
+    try {
+      await logout();
+      navigate("/login", { replace: true });
+    } catch (error) {
+      setErroSaida(authErrorMessage(error));
+    } finally {
+      saidaPendente.current = false;
+      setSaindo(false);
+    }
   }
 
   return (
@@ -116,10 +131,12 @@ export default function AdminLayout() {
             <button
               type="button"
               onClick={sair}
-              className="rounded-lg px-3 py-2 text-left text-sm text-red-300 hover:bg-red-950/40"
+              disabled={saindo}
+              className="rounded-lg px-3 py-2 text-left text-sm text-red-300 hover:bg-red-950/40 disabled:opacity-60"
             >
-              ↪ Sair da conta
+              {saindo ? "Saindo…" : "↪ Sair da conta"}
             </button>
+            {erroSaida && <p role="alert" className="px-3 text-sm text-red-300">{erroSaida}</p>}
           </div>
         </aside>
 

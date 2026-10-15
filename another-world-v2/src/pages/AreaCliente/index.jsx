@@ -1,298 +1,169 @@
-import { useState } from "react";
-
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-
 import { useAuth } from "../../context/AuthContext";
-
-import {
-  getSolicitacoesPorEmail,
-  STATUS_INFO,
-} from "../../services/solicitacoes";
-
+import { authErrorMessage } from "../../services/auth";
+import { sincronizarPerfil, atualizarPerfil } from "../../services/perfil";
 import Button from "../../components/ui/Button";
-
-function formatarData(iso) {
-  return new Date(iso).toLocaleDateString("pt-BR");
-}
+import MinhasSolicitacoes from "../../components/MinhasSolicitacoes";
 
 export default function AreaCliente() {
-  const { user, logout, updateProfile } = useAuth();
+  const { user, logout } = useAuth();
+  if (!user) return null;
+  // Ao trocar de conta, desmontar a interface anterior e limpar seus dados.
+  return <AreaDaConta key={user.id} user={user} logout={logout} />;
+}
 
-  const [editando, setEditando] = useState(false);
-  const [erro, setErro] = useState("");
+function AreaDaConta({ user, logout }) {
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const pending = useRef(false);
+  const [perfil, setPerfil] = useState(null);
+  const [carregando, setCarregando] = useState(true);
+  const [erroPerfil, setErroPerfil] = useState("");
+  const [avisoPerfil, setAvisoPerfil] = useState("");
+  const [salvando, setSalvando] = useState(false);
+  const [tentativa, setTentativa] = useState(0);
+  const [form, setForm] = useState({ nome: "", telefone: "", empresa: "" });
+  const salvamento = useRef(null);
 
-  const [form, setForm] = useState({
-    name: user.name ?? "",
-    telefone: user.telefone ?? "",
-    empresa: user.empresa ?? "",
-  });
+  useEffect(() => {
+    const controller = new AbortController();
+    let ativo = true;
 
-  const solicitacoes = getSolicitacoesPorEmail(user.email);
-
-  function handleChange(event) {
-    const { name, value } = event.target;
-
-    setForm((atual) => ({
-      ...atual,
-      [name]: value,
-    }));
-  }
-
-  function handleSalvar(event) {
-    event.preventDefault();
-    setErro("");
-
-    if (!form.name.trim()) {
-      setErro("O nome não pode ficar vazio.");
-      return;
-    }
-
-    updateProfile(form);
-    setEditando(false);
-  }
-
-  function handleCancelar() {
-    setForm({
-      name: user.name ?? "",
-      telefone: user.telefone ?? "",
-      empresa: user.empresa ?? "",
+    // Fora do callback onAuthStateChange: não bloquear o SDK do Supabase.
+    sincronizarPerfil(user.id, controller.signal).then((dados) => {
+      if (!ativo) return;
+      setPerfil(dados);
+      setForm({ nome: dados.nome, telefone: dados.telefone ?? "", empresa: dados.empresa ?? "" });
+    }).catch((err) => {
+      if (ativo) setErroPerfil(err.message);
+    }).finally(() => {
+      if (ativo) setCarregando(false);
     });
 
-    setErro("");
-    setEditando(false);
+    return () => {
+      ativo = false;
+      controller.abort();
+      salvamento.current?.abort();
+    };
+  }, [user.id, tentativa]);
+
+  async function handleSalvar(event) {
+    event.preventDefault();
+    if (salvamento.current || !perfil) return;
+    const controller = new AbortController();
+    salvamento.current = controller;
+    setSalvando(true);
+    setErroPerfil("");
+    setAvisoPerfil("");
+    try {
+      const dados = await atualizarPerfil(user.id, {
+        nome: form.nome.trim(),
+        telefone: form.telefone.trim() || null,
+        empresa: form.empresa.trim() || null,
+      }, controller.signal);
+      if (controller.signal.aborted) return;
+      setPerfil(dados);
+      setForm({ nome: dados.nome, telefone: dados.telefone ?? "", empresa: dados.empresa ?? "" });
+      setAvisoPerfil("Seus dados foram salvos.");
+    } catch (err) {
+      if (!controller.signal.aborted) setErroPerfil(err.message);
+    } finally {
+      if (!controller.signal.aborted) setSalvando(false);
+      if (salvamento.current === controller) salvamento.current = null;
+    }
+  }
+
+  function alterarCampo(event) {
+    const { name, value } = event.target;
+    setForm((anterior) => ({ ...anterior, [name]: value }));
+    setAvisoPerfil("");
+  }
+
+  async function handleLogout() {
+    if (pending.current) return;
+    pending.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      await logout();
+    } catch (err) {
+      setError(authErrorMessage(err));
+    } finally {
+      pending.current = false;
+      setBusy(false);
+    }
   }
 
   return (
     <div className="min-h-screen bg-bg-dark">
       <div className="mx-auto max-w-[1100px] px-6 py-16">
-
-        {/* SAUDAÇÃO */}
         <div className="mb-12 flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-purple">
-              Área do Cliente
-            </p>
-
-            <h1 className="text-3xl font-bold text-text-main">
-              Seja Bem-Vindo, {user.name || user.email}!
-            </h1>
-
-            <p className="mt-2 text-sm text-text-muted">
-              Aqui você acompanha seus dados e o andamento das suas
-              solicitações.
-            </p>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-purple">Área do Cliente</p>
+            <h1 className="text-3xl font-bold text-text-main">Seja bem-vindo, {perfil?.nome || user.name || user.email}!</h1>
+            <p className="mt-2 text-sm text-text-muted">Seu espaço na Another World.</p>
           </div>
-
-          <button
-            type="button"
-            onClick={logout}
-            className="rounded-full border border-border px-5 py-2.5 text-sm font-medium text-text-muted transition hover:border-purple hover:text-text-main"
-          >
-            Sair da conta
+          <button type="button" disabled={busy} onClick={handleLogout} className="rounded-full border border-border px-5 py-2.5 text-sm font-medium text-text-muted transition hover:border-purple hover:text-text-main disabled:opacity-60">
+            {busy ? "Saindo…" : "Sair da conta"}
           </button>
         </div>
 
-        {/* DADOS CADASTRAIS */}
+        {error && <p className="mb-6 text-sm text-text-main" role="alert">{error}</p>}
+
+        {perfil?.papel === "admin" && <div className="mb-8">
+          <Button as={Link} to="/admin" variant="solid">Painel administrativo</Button>
+        </div>}
+
         <section className="mb-12 rounded-2xl border border-border bg-bg-card p-8">
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-text-main">
-              Dados cadastrais
-            </h2>
-
-            {!editando && (
-              <button
-                type="button"
-                onClick={() => setEditando(true)}
-                className="text-xs font-semibold uppercase tracking-wide text-purple hover:underline"
-              >
-                Editar
-              </button>
-            )}
-          </div>
-
-          {editando ? (
-            <form
-              onSubmit={handleSalvar}
-              className="flex flex-col gap-5"
-            >
-              <Campo
-                label="Nome"
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-              />
-
-              <Campo
-                label="Telefone"
-                name="telefone"
-                value={form.telefone}
-                onChange={handleChange}
-              />
-
-              <Campo
-                label="Empresa"
-                name="empresa"
-                value={form.empresa}
-                onChange={handleChange}
-              />
-
-              <p className="text-xs text-text-faint">
-                O e-mail ({user.email}) é o identificador da conta e não
-                pode ser alterado.
-              </p>
-
-              {erro && (
-                <p
-                  className="text-sm text-red-400"
-                  role="alert"
-                >
-                  {erro}
-                </p>
-              )}
-
-              <div className="flex gap-3">
-                <Button
-                  type="submit"
-                  variant="solid"
-                >
-                  Salvar
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCancelar}
-                >
-                  Cancelar
-                </Button>
-              </div>
+          <h2 className="mb-6 text-lg font-semibold text-text-main">Dados da conta</h2>
+          {carregando && <p className="text-sm text-text-muted" role="status">Carregando seus dados…</p>}
+          {erroPerfil && <p className="mb-4 text-sm text-text-main" role="alert">{erroPerfil}</p>}
+          {!carregando && !perfil && (
+            <Button type="button" variant="outline" onClick={() => {
+              setCarregando(true);
+              setErroPerfil("");
+              setTentativa((valor) => valor + 1);
+            }}>
+              Tentar novamente
+            </Button>
+          )}
+          {perfil && !carregando && (
+            <form onSubmit={handleSalvar}>
+              <fieldset disabled={salvando || busy} className="grid gap-6 disabled:opacity-70 sm:grid-cols-2">
+                <CampoPerfil label="Nome" name="nome" value={form.nome} onChange={alterarCampo} required maxLength={120} autoComplete="name" />
+                <Dado label="E-mail da conta" valor={perfil.email} />
+                <CampoPerfil label="Telefone (opcional)" name="telefone" type="tel" value={form.telefone} onChange={alterarCampo} maxLength={25} autoComplete="tel" />
+                <CampoPerfil label="Empresa (opcional)" name="empresa" value={form.empresa} onChange={alterarCampo} maxLength={160} autoComplete="organization" />
+                <div className="sm:col-span-2">
+                  <Button type="submit" variant="solid">{salvando ? "Salvando…" : "Salvar dados"}</Button>
+                </div>
+              </fieldset>
+              {avisoPerfil && <p className="mt-4 text-sm text-text-main" role="status">{avisoPerfil}</p>}
             </form>
-          ) : (
-            <dl className="grid gap-6 sm:grid-cols-2">
-              <Dado
-                label="Nome"
-                valor={user.name}
-              />
-
-              <Dado
-                label="E-mail"
-                valor={user.email}
-              />
-
-              <Dado
-                label="Telefone"
-                valor={user.telefone}
-              />
-
-              <Dado
-                label="Empresa"
-                valor={user.empresa}
-              />
-            </dl>
           )}
         </section>
 
-        {/* SOLICITAÇÕES */}
-        <section className="rounded-2xl border border-border bg-bg-card p-8">
-          <h2 className="mb-6 text-lg font-semibold text-text-main">
-            Minhas solicitações
-          </h2>
-
-          {solicitacoes.length === 0 ? (
-            <div className="py-10 text-center">
-              <p className="mb-6 text-sm text-text-muted">
-                Você ainda não fez nenhuma solicitação.
-              </p>
-
-              <Button
-                as={Link}
-                to="/contato"
-                variant="solid"
-              >
-                Fazer uma solicitação
-              </Button>
-            </div>
-          ) : (
-            <ul className="flex flex-col gap-4">
-              {solicitacoes.map((s) => {
-                const info = STATUS_INFO[s.status];
-
-                return (
-                  <li
-                    key={s.id}
-                    className="rounded-xl border border-border bg-bg-card-inner p-6"
-                  >
-                    <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-purple">
-                        {s.frente}
-                      </span>
-
-                      <span
-                        className={`rounded-full border px-3 py-1 text-xs font-semibold ${info.classe}`}
-                      >
-                        {info.label}
-                      </span>
-                    </div>
-
-                    <p className="mb-4 text-sm text-text-muted">
-                      {s.mensagem}
-                    </p>
-
-                    {s.resposta && (
-                      <p className="mb-4 border-l-2 border-purple pl-4 text-sm text-text-main">
-                        {s.resposta}
-                      </p>
-                    )}
-
-                    <p className="text-xs text-text-faint">
-                      Enviada em {formatarData(s.criadaEm)}
-                    </p>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </section>
+        <MinhasSolicitacoes usuarioId={user.id} habilitado={Boolean(perfil)} />
       </div>
     </div>
   );
 }
 
-// Dado em modo leitura
-function Dado({ label, valor }) {
+function CampoPerfil({ label, name, ...props }) {
   return (
     <div>
-      <dt className="mb-1 text-xs font-semibold uppercase tracking-wide text-text-muted">
-        {label}
-      </dt>
-
-      <dd className="text-text-main">
-        {valor || "—"}
-      </dd>
+      <label htmlFor={`perfil-${name}`} className="mb-2 block text-xs font-semibold uppercase tracking-wide text-text-muted">{label}</label>
+      <input id={`perfil-${name}`} name={name} {...props} className="w-full rounded-xl border border-border bg-bg-dark px-4 py-3 text-text-main outline-none focus:border-purple focus:ring-2 focus:ring-purple/30" />
     </div>
   );
 }
 
-// Campo do formulário de edição
-function Campo({
-  label,
-  name,
-  value,
-  onChange,
-}) {
+function Dado({ label, valor }) {
   return (
-    <label className="flex flex-col gap-2">
-      <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
-        {label}
-      </span>
-
-      <input
-        type="text"
-        name={name}
-        value={value}
-        onChange={onChange}
-        className="border-b border-border bg-transparent py-2 text-text-main outline-none focus:border-purple"
-      />
-    </label>
+    <div>
+      <dt className="mb-1 text-xs font-semibold uppercase tracking-wide text-text-muted">{label}</dt>
+      <dd className="break-words text-text-main">{valor || "—"}</dd>
+    </div>
   );
 }

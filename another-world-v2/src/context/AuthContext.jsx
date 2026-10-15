@@ -1,51 +1,114 @@
-import { createContext, useContext, useState } from "react";
-import { registerUser, loginUser, logoutUser, getCurrentUser, updateUser } from "../services/auth";
+import { createContext, useContext, useEffect, useState } from "react";
+// Ler o link antes da inicialização do cliente Supabase.
+import {
+  recoveryFromLink,
+  readRecoveryUser,
+  rememberRecoveryUser,
+  cleanCallbackErrorUrl,
+} from "../lib/authCallback";
+import { supabase, supabaseConfigError } from "../lib/supabase";
+import {
+  registerUser,
+  loginUser,
+  logoutUser,
+  removeLegacyAuth,
+  toDisplayUser,
+  authErrorMessage,
+} from "../services/auth";
 
-// Context é uma "caixa de informação" que qualquer componente do app
-// pode acessar, sem precisar passar props de pai pra filho pra filho
-// (imagina passar "user" através de 5 componentes só pra chegar no último —
-// o Context evita isso).
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  // getCurrentUser() já lê do localStorage — assim, se a pessoa recarregar
-  // a página, o estado "user" já nasce preenchido (login não se perde).
-  const [user, setUser] = useState(getCurrentUser);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(Boolean(supabase));
+  const [authError, setAuthError] = useState(supabaseConfigError);
+  const [passwordRecovery, setPasswordRecovery] = useState(false);
 
-  // Todas devolvem a sessão, pra quem chamou poder usar o nome na hora
-  // sem precisar esperar o estado atualizar.
-  function register(data) {
-    const session = registerUser(data);
-    setUser(session);
+  useEffect(() => {
+    removeLegacyAuth();
+    cleanCallbackErrorUrl();
+    if (!supabase) return;
+
+    let active = true;
+    let revision = 0;
+    let linkPending = recoveryFromLink;
+
+    function receiveSession(session, event) {
+      if (!active) return;
+      const nextUser = toDisplayUser(session?.user);
+      const recovering = Boolean(nextUser && (
+        event === "PASSWORD_RECOVERY"
+        || linkPending
+        || readRecoveryUser() === nextUser.id
+      ));
+      if (nextUser || event === "SIGNED_OUT") linkPending = false;
+      rememberRecoveryUser(recovering ? nextUser.id : null);
+      setPasswordRecovery(recovering);
+      setUser(nextUser);
+      setAuthError("");
+      setLoading(false);
+    }
+
+    // Callback síncrono: não chamar/aguardar outros métodos do SDK aqui.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        revision += 1;
+        receiveSession(session, event);
+      },
+    );
+
+    // getSession restaura a interface; não substitui validação JWT no backend.
+    // O contador impede uma resposta antiga de desfazer um logout recente.
+    const initialRevision = revision;
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (!active || revision !== initialRevision) return;
+      if (error) throw error;
+      receiveSession(data.session, "INITIAL_SESSION");
+    }).catch((error) => {
+      if (!active || revision !== initialRevision) return;
+      setAuthError(authErrorMessage(error));
+      setLoading(false);
+    });
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // O evento do Supabase mantém usuário/sessão sincronizados, inclusive
+  // atualização de token e saída em outra aba. Não criamos sessão própria.
+  function finishRecovery() {
+    rememberRecoveryUser(null);
+    setPasswordRecovery(false);
+  }
+
+  async function login(data) {
+    const session = await loginUser(data);
+    finishRecovery();
     return session;
   }
 
-  function login(data) {
-    const session = loginUser(data);
-    setUser(session);
-    return session;
-  }
-
-  function updateProfile(data) {
-    const session = updateUser(data);
-    setUser(session);
-    return session;
-  }
-
-  function logout() {
-    logoutUser();
+  async function logout() {
+    await logoutUser();
+    finishRecovery();
     setUser(null);
   }
 
   return (
-    <AuthContext.Provider value={{ user, register, login, updateProfile, logout }}>
+    <AuthContext.Provider value={{
+      user, loading, authError, passwordRecovery,
+      register: registerUser, login, logout, finishRecovery,
+    }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-// Hook customizado pra facilitar o uso — em vez de importar useContext +
-// AuthContext em todo componente, só importa esse useAuth().
+// Hook e provider ficam juntos para manter os imports atuais do projeto.
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (!context) throw new Error("useAuth deve ser usado dentro de AuthProvider.");
+  return context;
 }

@@ -8,9 +8,24 @@ import { useAuth } from "../context/AuthContext";
 // O replace evita que a pessoa consiga "voltar" no navegador pra rota
 // protegida — ela seria jogada pro login de novo, num vai-e-volta chato.
 export default function RotaProtegida({ children }) {
-  const { user } = useAuth();
+  const { user, loading, authError, passwordRecovery } = useAuth();
 
-  if (!user) {
+  if (loading) {
+    return <p className="px-6 py-20 text-center text-text-muted" role="status">Verificando sua sessão…</p>;
+  }
+
+  if (authError) {
+    return (
+      <div className="px-6 py-20 text-center text-text-main">
+        <p role="alert">{authError}</p>
+        <button type="button" className="mt-4 text-purple underline" onClick={() => window.location.reload()}>
+          Tentar novamente
+        </button>
+      </div>
+    );
+  }
+
+  if (!user || passwordRecovery) {
     return <Navigate to="/login" replace />;
   }
 
