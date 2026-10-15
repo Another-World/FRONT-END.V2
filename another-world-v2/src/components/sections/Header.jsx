@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 
 import { useAuth } from "../../context/AuthContext";
 import { authErrorMessage } from "../../services/auth";
+import { consultarPerfil, EVENTO_PERFIL_ATUALIZADO } from "../../services/perfil";
 
 import logo from "../../assets/logo.png";
 
@@ -16,11 +17,40 @@ export default function Header() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const { user, logout, loading } = useAuth();
+  const usuarioId = user?.id;
+  const [nomePerfil, setNomePerfil] = useState(null);
   const [logoutError, setLogoutError] = useState("");
   const [loggingOut, setLoggingOut] = useState(false);
   const logoutPending = useRef(false);
 
   const userMenuRef = useRef(null);
+
+  useEffect(() => {
+    if (!usuarioId) return;
+    const controller = new AbortController();
+
+    function receberNome(event) {
+      const perfil = event.detail;
+      if (perfil?.id !== usuarioId || typeof perfil.nome !== "string") return;
+      // Uma consulta antiga não pode desfazer o nome recém-salvo.
+      controller.abort();
+      setNomePerfil({ id: usuarioId, nome: perfil.nome });
+    }
+
+    window.addEventListener(EVENTO_PERFIL_ATUALIZADO, receberNome);
+    consultarPerfil(usuarioId, controller.signal).then(perfil => {
+      if (!controller.signal.aborted && typeof perfil.nome === "string") {
+        setNomePerfil({ id: usuarioId, nome: perfil.nome });
+      }
+    }).catch(() => {
+      // Perfil ainda não criado ou API indisponível: manter o nome da sessão.
+    });
+
+    return () => {
+      controller.abort();
+      window.removeEventListener(EVENTO_PERFIL_ATUALIZADO, receberNome);
+    };
+  }, [usuarioId]);
 
   const menuItems = [
     { label: "Home", to: "/" },
@@ -73,9 +103,8 @@ export default function Header() {
     }
   }
 
-  const nomeExibido = user
-    ? user.name?.split(" ")[0] || user.email
-    : "";
+  const nomeDaConta = nomePerfil && nomePerfil.id === usuarioId ? nomePerfil.nome : user?.name;
+  const nomeExibido = user ? nomeDaConta?.trim().split(/\s+/)[0] || user.email : "";
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-bg-dark/95 backdrop-blur">

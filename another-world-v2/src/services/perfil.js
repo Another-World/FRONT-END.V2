@@ -1,6 +1,14 @@
 import { supabase, supabaseConfigError } from "../lib/supabase";
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "").trim().replace(/\/+$/, "");
+export const EVENTO_PERFIL_ATUALIZADO = "aw:perfil-atualizado";
+
+function informarNome(perfil) {
+  // Só exibição: este evento não carrega nem concede permissões.
+  window.dispatchEvent(new CustomEvent(EVENTO_PERFIL_ATUALIZADO, {
+    detail: { id: perfil.id, nome: perfil.nome },
+  }));
+}
 
 async function requisitarPerfil(method, usuarioId, dados, signal) {
   if (!supabase) throw new Error(supabaseConfigError || "Acesso à conta indisponível.");
@@ -38,10 +46,18 @@ async function requisitarPerfil(method, usuarioId, dados, signal) {
 }
 
 // Repetir a sincronização não cria outro perfil e não apaga as edições.
-export function sincronizarPerfil(usuarioId, signal) {
-  return requisitarPerfil("POST", usuarioId, undefined, signal);
+export async function sincronizarPerfil(usuarioId, signal) {
+  const perfil = await requisitarPerfil("POST", usuarioId, undefined, signal);
+  informarNome(perfil);
+  return perfil;
 }
 
-export function atualizarPerfil(usuarioId, dados, signal) {
-  return requisitarPerfil("PATCH", usuarioId, dados, signal);
+export async function atualizarPerfil(usuarioId, dados, signal) {
+  const perfil = await requisitarPerfil("PATCH", usuarioId, dados, signal);
+  informarNome(perfil);
+  return perfil;
+}
+
+export function consultarPerfil(usuarioId, signal) {
+  return requisitarPerfil("GET", usuarioId, undefined, signal);
 }
