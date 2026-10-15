@@ -15,7 +15,7 @@ Entrega: listar pedidos de todas as contas e visitantes, consultar contato/mensa
 
 | Método | Caminho | Uso |
 | --- | --- | --- |
-| GET | `/api/atendimento/solicitacoes` | Listar pedidos; `limite` 1–50, padrão 20; filtro `status` opcional e `cursor` opcional |
+| GET | `/api/atendimento/solicitacoes` | Listar pedidos; `limite` 1–50, padrão 20; filtros `status` e `busca` opcionais, com `cursor` opcional |
 | GET | `/api/atendimento/solicitacoes/:id` | Detalhe do pedido e últimos 50 eventos |
 | PATCH | `/api/atendimento/solicitacoes/:id/status` | Alterar somente status, com versão esperada |
 
@@ -25,17 +25,34 @@ Corpo do PATCH:
 {"status":"em_contato","versao":0}
 ```
 
-Status: `em_analise`, `em_contato`, `aceito`, `negado`, `concluida`, `cancelada`. O administrador pode corrigir/reabrir qualquer status. Não há restrições adicionais de transição de negócio nesta entrega.
+Para decisões que exigem confirmação, enviar também o booleano `confirmado: true`:
+
+```json
+{"status":"aceito","versao":0,"confirmado":true}
+```
+
+Aceitar significa concordar em **preparar um orçamento**, não contratação pelo cliente. Aceite, recusa, cancelamento, conclusão e reabertura exigem confirmação na interface e aceitação explícita na requisição. O booleano não substitui a autorização do administrador nem prova, por si só, uma interação humana.
+
+| Status atual | Próximos status permitidos |
+| --- | --- |
+| `em_analise` | `em_contato`, `aceito`, `negado`, `cancelada` |
+| `em_contato` | `em_analise`, `aceito`, `negado`, `cancelada` |
+| `aceito` | `em_analise`, `em_contato`, `concluida`, `cancelada` |
+| `negado`, `cancelada`, `concluida` | Somente `em_analise`, por reabertura confirmada |
+
+A regra de reabertura foi escolhida pelo responsável pelo projeto em 15/10/2026. A API confere o status atual sob lock; um cliente não pode pular essa validação enviando um status válido do enum. Detalhes e respostas de atualização incluem `acoesDisponiveis: [{status, confirmacao}]`; a tela usa essa lista do servidor para montar as opções e a mensagem de confirmação. Repetir o mesmo status com a versão atual continua sendo uma operação sem efeito, sem novo evento ou confirmação obrigatória.
+
+`busca` aceita de 2 a 120 caracteres após trim, por parte do nome de contato ou protocolo, sem distinguir maiúsculas/minúsculas. A busca é literal: `%`, `_` e aspas não recebem significado especial. O termo é enviado como parâmetro SQL e combinado com status e paginação; não é uma busca por e-mail. A interface consulta ao submeter o formulário, preserva a busca ao trocar status/carregar mais e reinicia a paginação ao alterar os filtros. Para esta base pequena não foi acrescentado índice de substring; consultas permanecem sujeitas a timeout. Medir o plano com volume real antes de escolher um índice específico.
 
 Lista retorna protocolo, nome de contato, serviço, status, versão e datas. Contato completo/mensagem/endereço e histórico só aparecem no detalhe administrativo. Hash/chave de idempotência não são retornados. A paginação usa `(criada_em, id)` e preserva microssegundos. Mudanças de status entre páginas podem alterar os resultados de um filtro; usar Atualizar lista para consultar novamente a fila.
 
-Respostas: 401 para JWT ausente/inválido; 403 para conta sem administração ativa; 400 para corpo/filtro/protocolo inválido; 404 para pedido inexistente; 409 para versão antiga. Todas as respostas de atendimento usam `Cache-Control: no-store`. Limite independente de 300 requisições por IP em 15 minutos.
+Respostas: 401 para JWT ausente/inválido; 403 para conta sem administração ativa; 400 para corpo/filtro/protocolo inválido ou confirmação ausente; 404 para pedido inexistente; 409 para versão antiga ou transição não permitida. Todas as respostas de atendimento usam `Cache-Control: no-store`. Limite independente de 300 requisições por IP em 15 minutos.
 
 ## Concorrência e histórico
 
 A migration 006 adiciona `versao_status`, inicialmente zero. O trigger existente passa a controlar a versão: somente uma mudança real de status a incrementa, inclusive em atualizações diretas por um operador. A API tem UPDATE apenas de `status`, sem UPDATE da versão.
 
-O PATCH bloqueia o perfil administrador antes do pedido, confere a versão, altera o status e grava `status_alterado` na mesma transação. O evento inclui UUID do administrador, status/versão anteriores e novos. Uma falha no histórico desfaz também status, versão e data. Status igual com a versão atual não gera evento novo; uma versão antiga retorna 409 mesmo se o status solicitado coincidir.
+O PATCH bloqueia o perfil administrador antes do pedido, confere a versão, transição e confirmação, altera o status e grava `status_alterado` na mesma transação. O evento inclui UUID do administrador, status/versão anteriores e novos, `acao` e `confirmado: true` quando exigido. Uma reabertura usa `acao: "reabertura"`; a tela destaca esse registro no histórico. Uma falha no histórico desfaz também status, versão e data. Status igual com a versão atual não gera evento novo; uma versão antiga retorna 409 mesmo se o status solicitado coincidir.
 
 Uma alteração direta no banco avança a versão, mas não grava o evento com identidade Supabase deste endpoint. Preferir o painel para ter esse histórico de autoria. Uma resposta HTTP perdida pode ocorrer após o commit; atualizar o detalhe antes de tentar novamente. A interface bloqueia novo salvamento após erro até os detalhes serem atualizados.
 
@@ -70,7 +87,7 @@ O rollback do software mantém a 006; não apagar a coluna, eventos ou permissõ
 
 ## Validação
 
-44 testes de backend aprovados no desenvolvimento, incluindo JWTs inválidos, clientes/metadata, revogação antes/durante a operação, grants, contatos de visitantes/contas, filtro/paginação, rollback do histórico, versão antiga e escrita concorrente. Build do frontend e lint dos arquivos alterados aprovados.
+55 testes de backend aprovados no desenvolvimento, incluindo os 44 cenários anteriores e busca/paginação, termos literais/SQL, confirmação explícita, reabertura dos três status encerrados, transições proibidas, rollback da reabertura e reaberturas concorrentes. Build do frontend e lint dos arquivos alterados aprovados. Quatro testes isolados de componentes verificaram cancelamento da confirmação sem PATCH, reabertura confirmada com versão, confirmação de aceite e preservação da busca em filtro/paginação; não são testes visuais de navegador.
 
 Os testes SQL usam PGlite e transações serializadas em uma conexão. O teste de dois envios confirma o resultado 200/409 nesse contexto; não é um teste de contenção com várias conexões PostgreSQL nativas. O código usa locks e versão no PostgreSQL para controlar concorrência.
 
@@ -81,6 +98,8 @@ O navegador de testes não estava instalado no ambiente de desenvolvimento; a va
 3. Histórico registra a mudança; F5 mantém o status; Área do Cliente mostra o novo status ao atualizar.
 4. Duas abas com detalhe antigo: depois de salvar na primeira, a segunda recebe conflito e exige Atualizar detalhes.
 5. Validar layout em celular e desktop, filtros, lista vazia e carregamento de mais pedidos.
+6. Buscar nome/protocolo, combinar com status e limpar a busca.
+7. Em um pedido de teste recusado/cancelado/concluído, escolher Em análise: cancelar a confirmação não altera o pedido; confirmar grava a reabertura, que permanece após F5.
 
 ## Frontend e publicação
 
@@ -101,10 +120,16 @@ Em 14/10/2026, o operador confirmou release 25ee256 ativa, migrations 001–006,
 ## Relação com as issues da equipe
 
 - **#31:** reaproveita layout, navegação e páginas da equipe; não substitui seu trabalho visual.
-- **#33:** integra lista, filtro por status, detalhes, atualização e histórico reais. Busca, confirmação explícita de decisões e regras de transição ainda precisam ser concluídas conforme o fluxo de negócio. Aceitar significa preparar um orçamento; não é contratação pelo cliente.
+- **#33:** implementa lista, busca, filtro por status, detalhes, atualização e histórico reais, confirmação de decisões e regras de transição/reabertura. A publicação desta evolução exige primeiro atualizar a API, seguida do frontend e da conferência final de aceite. Aceitar significa preparar um orçamento; não é contratação pelo cliente.
 - **#38:** reaproveita autenticação Supabase, autorização na API/banco e testes de acesso existentes, com proteção das rotas administrativas e logout assíncrono. A estratégia de validade de JWT após logout está descrita em Autorização.
 - **#32, #34, #35, #36 e #37:** indicadores, propostas/PDF, envio automático de e-mail, gestão de usuários e avaliações permanecem como entregas próprias; não declarar essas issues concluídas por esta integração.
 
 A integração foi validada com lint dos arquivos envolvidos, build com configuração publicável de teste e sete testes de componentes: sessão ausente/inicialização/recuperação, metadata sem autorização, revogação ao retomar janela, troca de conta/resposta antiga, troca de página/erro da API e logout confirmado/falho. Esses testes isolam o perfil e a sessão; não substituem os 44 testes reais da implementação de backend nem a conferência visual no navegador local. Não foram adicionadas dependências de teste ao projeto. O navegador automatizado não pôde ser instalado neste ambiente.
 
 `operacao-ec2.md` registra o snapshot operacional da release e28bdf9 e do backup anterior à 006; este documento descreve a entrega seguinte de atendimento.
+
+## Publicação da busca e do fluxo de reabertura
+
+Não há nova migration, dependência ou grant. Permanecem as migrations 001–006, os endpoints atuais e o snippet Nginx existente. Publicar a branch, instalar o backend na EC2 com verificação e rollback pelo procedimento de releases, e depois integrar o frontend à main para a Vercel.
+
+O frontend novo exige `acoesDisponiveis` no detalhe e não oferece salvamento contra uma API anterior. Durante o intervalo entre as publicações, o frontend antigo pode listar/ver detalhes e registrar andamento comum, mas decisões que exigem `confirmado: true` serão recusadas até a atualização da tela. Em rollback para o backend anterior, manter esse bloqueio da tela nova e restabelecer uma combinação compatível de frontend/backend; não remover registros de histórico.
