@@ -1,4 +1,5 @@
 import express from "express";
+import { criarHandlersOrcamentos } from "./orcamentos.js";
 import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
 import { criarHandlerSolicitacoes } from "./solicitacoes.js";
@@ -85,6 +86,14 @@ export function criarApp({ pool, autenticacao = {}, limiteEnvios = 10, limiteCon
   app.get("/api/atendimento/solicitacoes/:id", atendimento.consultar);
   app.patch("/api/atendimento/solicitacoes/:id/status",
     express.json({ limit: "1kb" }), atendimento.atualizarStatus);
+
+  const orcamentos = criarHandlersOrcamentos(pool);
+  app.get("/api/atendimento/orcamentos", orcamentos.listar);
+  app.post("/api/atendimento/orcamentos", express.json({ limit: "16kb" }), orcamentos.criar);
+  app.get("/api/atendimento/orcamentos/:id", orcamentos.consultar);
+  app.patch("/api/atendimento/orcamentos/:id", express.json({ limit: "16kb" }), orcamentos.editar);
+  app.patch("/api/atendimento/orcamentos/:id/status", express.json({ limit: "4kb" }), orcamentos.status);
+  app.get("/api/atendimento/orcamentos/:id/pdf", orcamentos.pdf);
 
   // Erros de leitura do corpo também devem chegar ao formulário como JSON.
   app.use((error, _req, res, _next) => {

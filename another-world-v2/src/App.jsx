@@ -10,6 +10,7 @@ import Contato from "./pages/Contato";
 import Login from "./pages/Login";
 import AreaCliente from "./pages/AreaCliente";
 import Atendimento from "./pages/Atendimento";
+import Orcamentos from "./pages/Orcamentos";
 
 import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import TermosDeUso from "./pages/TermosDeUso";
@@ -72,7 +73,7 @@ export default function App() {
       <Route path="/admin" element={<RotaAdmin><AdminLayout /></RotaAdmin>}>
         <Route index element={<AdminPagina />} />
         <Route path="solicitacoes" element={<Atendimento />} />
-        <Route path="orcamentos" element={<AdminPagina />} />
+        <Route path="orcamentos" element={<Orcamentos />} />
         <Route path="usuarios" element={<AdminPagina />} />
         <Route path="avaliacoes" element={<AdminPagina />} />
       </Route>

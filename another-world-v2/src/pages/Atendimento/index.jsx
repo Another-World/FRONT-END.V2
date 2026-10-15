@@ -253,6 +253,7 @@ function Detalhe({ id, usuarioId, bloquear, onAtualizado, onSalvando, consultaEm
         <Dado className="sm:col-span-2" titulo="Endereço" valor={[item.endereco.logradouro,item.endereco.numero,item.endereco.complemento,item.endereco.bairro].filter(Boolean).join(", ")} />
       </dl>
       <div className="my-6 rounded-xl border border-border bg-bg-dark/30 p-4"><h4 className="mb-2 text-sm font-semibold text-text-main">Mensagem</h4><p className="whitespace-pre-wrap break-words text-sm text-text-muted">{item.mensagem}</p></div>
+      {item.status === "aceito" && <p className="mb-4"><Link className="text-sm text-purple hover:underline" to={`/admin/orcamentos?solicitacao=${item.id}`}>Elaborar proposta comercial</Link></p>}
       <a className="text-sm text-purple hover:underline" href={`mailto:${encodeURIComponent(item.contato.email)}`}>Abrir e-mail do contato</a>
       <form onSubmit={salvar} className="mt-7 border-t border-border pt-6">
         <fieldset disabled={salvando || precisaAtualizar || consultaEmAndamento} className="space-y-4 disabled:opacity-70">
