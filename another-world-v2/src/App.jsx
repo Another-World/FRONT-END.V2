@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import AreaCliente from "./pages/AreaCliente";
 import Atendimento from "./pages/Atendimento";
 import Orcamentos from "./pages/Orcamentos";
+import Usuarios from "./pages/Usuarios";
 
 import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import TermosDeUso from "./pages/TermosDeUso";
@@ -74,7 +75,7 @@ export default function App() {
         <Route index element={<AdminPagina />} />
         <Route path="solicitacoes" element={<Atendimento />} />
         <Route path="orcamentos" element={<Orcamentos />} />
-        <Route path="usuarios" element={<AdminPagina />} />
+        <Route path="usuarios" element={<Usuarios />} />
         <Route path="avaliacoes" element={<AdminPagina />} />
       </Route>
 

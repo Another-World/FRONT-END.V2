@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { sincronizarPerfil } from "../../services/perfil";
 import { listarAtendimento, consultarAtendimento, alterarStatus } from "../../services/atendimento";
@@ -57,12 +57,16 @@ function AcessoAtendimento({ usuarioId }) {
 }
 
 function Painel({ usuarioId, bloquear }) {
+  const [parametros] = useSearchParams();
   const [consulta, setConsulta] = useState({ status: "", busca: "", tentativa: 0 });
   const [buscaRascunho, setBuscaRascunho] = useState("");
   const [pagina, setPagina] = useState(vazio);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
-  const [selecionado, setSelecionado] = useState(null);
+  const [selecionado, setSelecionado] = useState(() => {
+    const pedido = parametros.get("pedido");
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(pedido ?? "") ? pedido : null;
+  });
   const [salvando, setSalvando] = useState(false);
   const requisicao = useRef(null);
 
