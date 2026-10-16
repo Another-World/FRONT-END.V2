@@ -6,6 +6,7 @@ import { once } from "node:events";
 import { PGlite } from "@electric-sql/pglite";
 import { createLocalJWKSet, exportJWK, generateKeyPair, SignJWT } from "jose";
 import { criarApp } from "../src/app.js";
+import { criarProcessadorEmails } from "../src/emails.js";
 
 const A = randomUUID();
 const B = randomUUID();
@@ -119,6 +120,7 @@ before(async () => {
     "005_solicitacoes_conta.sql",
     "006_atendimento.sql",
     "007_orcamentos.sql",
+    "008_emails.sql",
   ]) {
     await db.exec(
       await readFile(new URL(`../migrations/${f}`, import.meta.url), "utf8"),
@@ -207,6 +209,15 @@ async function editar(o, extra = {}) {
     token: await jwt(),
     body: { ...dados, versao: o.versao, ...extra },
   });
+}
+async function ligarEmails() {
+  await new Promise(resolve => server.close(resolve));
+  server = criarApp({ pool,
+    autenticacao: { supabaseUrl: "https://teste.supabase.co", resolverChaves },
+    limiteEnvios: 100, emailsEnabled: true,
+  }).listen(0, "127.0.0.1");
+  await once(server, "listening");
+  base = `http://127.0.0.1:${server.address().port}`;
 }
 
 test("007 restringe grants de identidade, contato, versão, datas, exclusão e auditoria", async () => {
@@ -540,4 +551,94 @@ test("PDF protegido contém dados comerciais, sem URL pública nem ampliação d
   });
   assert.ok(!JSON.stringify(cliente.body).includes("valorCentavos"));
   assert.ok(!JSON.stringify(cliente.body).includes("contato@example.test"));
+});
+
+test("008 não amplia privilégios e mantém e-mails desligados até configuração", async () => {
+  const g = (await pool.query(`SELECT
+    has_table_privilege('aw_api','aw.comunicacoes','DELETE') AS excluir,
+    has_column_privilege('aw_api','aw.comunicacoes','destinatario','UPDATE') AS destino,
+    has_column_privilege('aw_api','aw.comunicacoes','provedor_id','UPDATE') AS retorno`)).rows[0];
+  assert.deepEqual(g, { excluir: false, destino: false, retorno: true });
+  const o = (await criar()).body.orcamento;
+  const r = await request("POST", `${rota}/${o.id}/email`, {
+    token: await jwt(), body: { versao: 0, confirmado: true },
+  });
+  assert.equal(r.status, 503);
+  assert.equal((await request("GET", `${rota}/${o.id}`, { token: await jwt() })).body.emailDisponivel, false);
+  assert.equal((await pool.query("SELECT count(*)::int AS n FROM aw.comunicacoes")).rows[0].n, 0);
+});
+
+test("decisão ativa enfileira uma vez o destinatário do pedido, sem envio prematuro", async () => {
+  await ligarEmails();
+  const id = await pedido(null, { email: "destino@example.test" });
+  const a = await alterar(id, "aceito");
+  assert.equal(a.status, 200);
+  assert.equal((await alterar(id, "aceito", a.body.solicitacao.versao)).status, 200);
+  const r = await pool.query("SELECT * FROM aw.comunicacoes WHERE solicitacao_id=$1", [id]);
+  assert.equal(r.rows.length, 1);
+  assert.equal(r.rows[0].status, "pendente");
+  assert.equal(r.rows[0].destinatario, "destino@example.test");
+  assert.match(r.rows[0].conteudo, /aceita/);
+  const inv = await request("PATCH", `${caminho}/${id}/status`, {
+    token: await jwt(B), body: { status: "negado", versao: a.body.solicitacao.versao, confirmado: true },
+  });
+  assert.equal(inv.status, 403);
+});
+
+test("proposta enfileirada congela dados e só muda para enviada depois da aceitação no SES", async () => {
+  await ligarEmails();
+  const o = (await criar()).body.orcamento;
+  const caminhoEmail = `${rota}/${o.id}/email`;
+  assert.equal((await request("POST", caminhoEmail, { token: await jwt(B),
+    body: { versao: 0, confirmado: true } })).status, 403);
+  assert.equal((await request("POST", caminhoEmail, { token: await jwt(),
+    body: { versao: 0, confirmado: false } })).status, 400);
+  const r = await request("POST", caminhoEmail, { token: await jwt(),
+    body: { versao: 0, confirmado: true } });
+  assert.equal(r.status, 200);
+  assert.equal(r.body.orcamento.status, "aguardando_envio");
+  assert.equal(r.body.orcamento.enviadaEm, null);
+  assert.equal((await editar(r.body.orcamento)).status, 409);
+  assert.equal((await acao(r.body.orcamento, "enviada")).status, 409);
+  assert.equal((await criar({ solicitacaoId: o.solicitacaoId })).status, 409);
+  const visto = [];
+  const filaEmail = criarProcessadorEmails(pool, async msg => {
+    visto.push(msg);
+    return "ses-teste-123";
+  });
+  assert.equal(await filaEmail.processarUm(), true);
+  assert.equal(await filaEmail.processarUm(), true);
+  assert.equal(await filaEmail.processarUm(), false);
+  assert.equal(visto.length, 2);
+  const propostaEnviada = visto.find(v => v.anexo);
+  assert.equal(propostaEnviada.destinatario, "contato@example.test");
+  assert.equal(propostaEnviada.anexo.subarray(0, 5).toString(), "%PDF-");
+  const detalhe = (await request("GET", `${rota}/${o.id}`, { token: await jwt() })).body;
+  assert.equal(detalhe.orcamento.status, "enviada");
+  assert.ok(detalhe.orcamento.enviadaEm);
+  assert.equal(detalhe.email.status, "enviada");
+  assert.equal(detalhe.email.tentativas, 1);
+  assert.equal(detalhe.historico[0].tipo, "email_aceito_pelo_ses");
+});
+
+test("falha incerta não é reenviada e mantém a proposta aguardando", async () => {
+  await ligarEmails();
+  const o = (await criar()).body.orcamento;
+  await request("POST", `${rota}/${o.id}/email`, { token: await jwt(),
+    body: { versao: 0, confirmado: true } });
+  let tentativas = 0;
+  const filaEmail = criarProcessadorEmails(pool, async () => {
+    tentativas++;
+    if (tentativas === 2) throw new Error("timeout do provedor");
+    return "ses-teste-decisao";
+  });
+  assert.equal(await filaEmail.processarUm(), true);
+  assert.equal(await filaEmail.processarUm(), true);
+  assert.equal(await filaEmail.processarUm(), false);
+  assert.equal(tentativas, 2);
+  const d = (await request("GET", `${rota}/${o.id}`, { token: await jwt() })).body;
+  assert.equal(d.email.status, "falhou");
+  assert.equal(d.email.erro, "resultado_incerto");
+  assert.equal(d.orcamento.status, "aguardando_envio");
+  assert.equal(d.orcamento.enviadaEm, null);
 });

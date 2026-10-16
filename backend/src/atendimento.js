@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { decodificarCursor } from "./listagemSolicitacoes.js";
 import { STATUS_SOLICITACOES, acoesDisponiveis, identificarAcao } from "./fluxoSolicitacoes.js";
+import { registrarDecisao } from "./emails.js";
 
 const statusSchema = z.enum(STATUS_SOLICITACOES);
 const consultaSchema = z.object({
@@ -46,7 +47,7 @@ function estado(row) {
     atualizadaEm: row.atualizada_em, acoesDisponiveis: acoesDisponiveis(row.status) };
 }
 
-export function criarHandlersAtendimento(pool) {
+export function criarHandlersAtendimento(pool, { emailsEnabled = false } = {}) {
   async function executar(req, res, tarefa) {
     let client;
     let descartar = false;
@@ -166,7 +167,7 @@ export function criarHandlersAtendimento(pool) {
       }
       return executar(req, res, async client => {
         const anterior = await client.query(`
-          SELECT id, status, versao_status, atualizada_em FROM aw.solicitacoes_orcamento
+          SELECT id, status, versao_status, atualizada_em, nome_contato, email_contato FROM aw.solicitacoes_orcamento
           WHERE id = $1 FOR UPDATE
         `, [id.data]);
         const row = anterior.rows[0];
@@ -198,6 +199,8 @@ export function criarHandlersAtendimento(pool) {
           ...(acao.confirmacao ? { confirmado: true } : {}),
         })]);
         const novo = atualizado.rows[0];
+        if (emailsEnabled)
+          await registrarDecisao(client, { ...row, versao_status: novo.versao_status }, novo.status);
         return { solicitacao: estado(novo) };
       });
     },
