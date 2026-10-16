@@ -6,7 +6,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const STATUS_ORCAMENTO = {
   rascunho: "Rascunho",
   aguardando_envio: "Aguardando confirmação do e-mail",
-  enviada: "Enviada manualmente",
+  enviada: "Envio registrado",
   aceita: "Aceita pelo cliente (registro da equipe)",
   recusada: "Recusada pelo cliente (registro da equipe)",
 };

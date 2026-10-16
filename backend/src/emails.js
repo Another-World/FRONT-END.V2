@@ -39,8 +39,8 @@ export async function registrarProposta(client, proposta) {
 }
 
 // Uma chamada incerta ao provedor nunca é repetida automaticamente. Um
-// operador deve reconciliar uma mensagem "processando" com o SES antes de
-// decidir por qualquer novo envio: SES não deduplica por chave desta tabela.
+// operador deve reconciliar uma mensagem "processando" com o Gmail antes de
+// decidir por qualquer novo envio: SMTP não deduplica por chave desta tabela.
 export function criarProcessadorEmails(pool, enviar) {
   async function processarUm() {
     const c = await pool.connect();
@@ -91,7 +91,7 @@ export function criarProcessadorEmails(pool, enviar) {
       });
       if (typeof identificador !== "string" || !identificador) throw new Error("sem_identificador");
     } catch (e) {
-      // Inclusive timeout: talvez o SES tenha aceitado. Exigir reconciliação.
+      // Inclusive timeout: talvez o SMTP tenha aceitado. Exigir reconciliação.
       await pool.query(`
         UPDATE aw.comunicacoes SET status='falhou',ultimo_erro='resultado_incerto'
         WHERE id=$1 AND status='processando'`, [mensagem.id]).catch(() => {});
@@ -118,14 +118,14 @@ export function criarProcessadorEmails(pool, enviar) {
         if (!proposta.rowCount) throw new Error("proposta_em_estado_inesperado");
         await fim.query(`
           INSERT INTO aw.orcamentos_eventos(orcamento_id,tipo,detalhes)
-          VALUES ($1,'email_aceito_pelo_ses',$2::jsonb)
+          VALUES ($1,'email_aceito_pelo_provedor',$2::jsonb)
         `, [mensagem.orcamento_id, JSON.stringify({ mensagemId: mensagem.id,
           provedorId: identificador, versao: proposta.rows[0].versao })]);
       }
       await fim.query("COMMIT");
     } catch (e) {
       await fim.query("ROLLBACK").catch(() => {});
-      // A aceitação pelo SES já pode ter ocorrido: não reenviar.
+      // A aceitação pelo SMTP já pode ter ocorrido: não reenviar.
       console.error(JSON.stringify({ evento: "email_aceito_sem_confirmacao_local",
         id: mensagem.id, provedorId: identificador, codigo: e.code ?? "interno" }));
       throw e;

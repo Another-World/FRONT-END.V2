@@ -585,7 +585,7 @@ test("decisão ativa enfileira uma vez o destinatário do pedido, sem envio prem
   assert.equal(inv.status, 403);
 });
 
-test("proposta enfileirada congela dados e só muda para enviada depois da aceitação no SES", async () => {
+test("proposta enfileirada congela dados e só muda para enviada depois da aceitação pelo provedor", async () => {
   await ligarEmails();
   const o = (await criar()).body.orcamento;
   const caminhoEmail = `${rota}/${o.id}/email`;
@@ -618,7 +618,7 @@ test("proposta enfileirada congela dados e só muda para enviada depois da aceit
   assert.ok(detalhe.orcamento.enviadaEm);
   assert.equal(detalhe.email.status, "enviada");
   assert.equal(detalhe.email.tentativas, 1);
-  assert.equal(detalhe.historico[0].tipo, "email_aceito_pelo_ses");
+  assert.equal(detalhe.historico[0].tipo, "email_aceito_pelo_provedor");
 });
 
 test("falha incerta não é reenviada e mantém a proposta aguardando", async () => {

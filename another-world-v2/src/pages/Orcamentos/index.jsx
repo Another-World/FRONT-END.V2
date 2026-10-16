@@ -35,6 +35,7 @@ const rotulos = {
   envio_manual_confirmado: "Envio manual confirmado",
   email_solicitado: "Envio de e-mail solicitado",
   email_aceito_pelo_ses: "E-mail aceito pelo serviço de envio",
+  email_aceito_pelo_provedor: "E-mail aceito pelo serviço de envio",
   resposta_registrada: "Resposta do cliente registrada pela equipe",
 };
 function valorEmCentavos(s) {
