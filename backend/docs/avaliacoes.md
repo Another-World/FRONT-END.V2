@@ -119,7 +119,7 @@ Esses testes usam bancos temporários e tokens de teste. Eles não validam a EC2
 
 Esta etapa ainda não foi executada. A ordem recomendada é:
 
-1. Confirmar que a release atual possui as migrations 001 a 008 e fazer o
+1. Confirmar que a release atual possui as migrations 001 a 009 e fazer o
    backup operacional já usado pelo projeto.
 2. Copiar apenas `010_avaliacoes.sql` para um caminho legível pelo PostgreSQL.
 3. Aplicar a migration com erro obrigatório:
