@@ -38,7 +38,7 @@ O processo antigo na porta 3000 não participa desta funcionalidade.
 
 ### Banco de dados
 
-A migration `009_avaliacoes.sql` cria:
+A migration `010_avaliacoes.sql` cria:
 
 - `aw.avaliacoes`, ligada por UUID a `aw.usuarios` e a
   `aw.solicitacoes_orcamento`;
@@ -48,7 +48,7 @@ A migration `009_avaliacoes.sql` cria:
 - controle de versão para duas telas não sobrescreverem a mesma decisão;
 - permissões mínimas para o papel `aw_api`, sem permissão de exclusão.
 
-A migration exige `008_emails` e não lê, altera ou remove
+A migration exige `009_consulta_usuarios` e não lê, altera ou remove
 `public.tb_avaliacoes`.
 
 ### API
@@ -121,18 +121,18 @@ Esta etapa ainda não foi executada. A ordem recomendada é:
 
 1. Confirmar que a release atual possui as migrations 001 a 008 e fazer o
    backup operacional já usado pelo projeto.
-2. Copiar apenas `009_avaliacoes.sql` para um caminho legível pelo PostgreSQL.
+2. Copiar apenas `010_avaliacoes.sql` para um caminho legível pelo PostgreSQL.
 3. Aplicar a migration com erro obrigatório:
 
    ```bash
-   sudo -u postgres psql -X -d sistema_postgres -v ON_ERROR_STOP=1 -f /caminho/009_avaliacoes.sql
+   sudo -u postgres psql -X -d sistema_postgres -v ON_ERROR_STOP=1 -f /caminho/010_avaliacoes.sql
    ```
 
 4. Confirmar o registro sem mostrar avaliações ou dados pessoais:
 
    ```bash
    sudo -u postgres psql -X -d sistema_postgres -P pager=off -c \
-     "SELECT versao FROM aw.schema_migrations WHERE versao = ''009_avaliacoes'';"
+     "SELECT versao FROM aw.schema_migrations WHERE versao = '010_avaliacoes';"
    ```
 
 5. Publicar e reiniciar a API da porta 3001. Conferir `/api/health` e
