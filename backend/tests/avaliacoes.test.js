@@ -124,7 +124,8 @@ before(async () => {
     "006_atendimento.sql",
     "007_orcamentos.sql",
     "008_emails.sql",
-    "009_avaliacoes.sql",
+    "009_consulta_usuarios.sql",
+    "010_avaliacoes.sql",
   ]) {
     await db.exec(await readFile(new URL(`../migrations/${arquivo}`, import.meta.url), "utf8"));
   }
@@ -174,7 +175,7 @@ afterEach(async () => {
 });
 after(async () => db?.close());
 
-test("009 preserva tabela legada e concede somente operações necessárias", async () => {
+test("010 preserva tabela legada e concede somente operações necessárias", async () => {
   const resultado = await admin(`SELECT
     to_regclass('public.tb_avaliacoes') IS NOT NULL AS legada,
     has_table_privilege('aw_api','aw.avaliacoes','DELETE') AS pode_excluir,

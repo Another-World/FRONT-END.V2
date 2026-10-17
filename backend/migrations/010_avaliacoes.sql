@@ -6,9 +6,9 @@ SET LOCAL statement_timeout = '60s';
 DO $$
 BEGIN
   IF NOT EXISTS (
-    SELECT 1 FROM aw.schema_migrations WHERE versao = '008_emails'
+    SELECT 1 FROM aw.schema_migrations WHERE versao = '009_consulta_usuarios'
   ) THEN
-    RAISE EXCEPTION 'Aplique 008_emails antes desta migracao.';
+    RAISE EXCEPTION 'Aplique 009_consulta_usuarios antes desta migracao.';
   END IF;
 END;
 $$;
@@ -125,5 +125,5 @@ GRANT INSERT (
   avaliacao_id, administrador_id, status_anterior, status_novo, motivo
 ) ON aw.avaliacoes_eventos TO aw_api;
 
-INSERT INTO aw.schema_migrations(versao) VALUES ('009_avaliacoes');
+INSERT INTO aw.schema_migrations(versao) VALUES ('010_avaliacoes');
 COMMIT;
