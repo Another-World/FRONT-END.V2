@@ -24,6 +24,12 @@ Não acrescenta portas, variáveis, credenciais nem mudanças no Supabase Auth.
 O PDFKit está fixado em 0.20.2 no lockfile. A fonte DejaVu Sans e sua licença
 acompanham a release, sem depender de fontes instaladas na EC2.
 
+O PDF inclui o logo oficial do site em uma cópia compacta na release do backend.
+O documento mostra proposta, solicitação e data de emissão, identifica o
+cliente e destaca investimento, prazo e validade. O cabeçalho e a numeração
+aparecem em todas as páginas. Esses dados são os valores persistidos na
+proposta; o layout não acrescenta promessas comerciais por conta própria.
+
 ## Fluxo
 
 1. Uma solicitação em `aceito` pode gerar um rascunho. O UUID de usuário e o
