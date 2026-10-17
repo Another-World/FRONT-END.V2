@@ -9,6 +9,8 @@ import { criarHandlersUsuarios } from "./usuarios.js";
 import { criarHandlerProntidao } from "./prontidao.js";
 import { criarAutorizacaoAdmin, criarHandlersAtendimento } from "./atendimento.js";
 import { criarHandlersAvaliacoes } from "./avaliacoes.js";
+import { criarHandlersAdminUsuarios } from "./adminUsuarios.js";
+import { criarHandlerDashboard } from "./dashboard.js";
 
 export function criarApp({ pool, autenticacao = {}, limiteEnvios = 10, limiteConsultas = 120,
   emailsEnabled = process.env.EMAILS_ENABLED === "true" }) {
@@ -100,6 +102,11 @@ export function criarApp({ pool, autenticacao = {}, limiteEnvios = 10, limiteCon
   app.get("/api/atendimento/avaliacoes/:id", avaliacoes.consultar);
   app.patch("/api/atendimento/avaliacoes/:id/status",
     express.json({ limit: "4kb" }), avaliacoes.moderar);
+
+  const usuariosAdmin = criarHandlersAdminUsuarios(pool);
+  app.get("/api/atendimento/dashboard", criarHandlerDashboard(pool));
+  app.get("/api/atendimento/usuarios", usuariosAdmin.listar);
+  app.get("/api/atendimento/usuarios/:id", usuariosAdmin.consultar);
 
   const orcamentos = criarHandlersOrcamentos(pool, { emailsEnabled });
   app.get("/api/atendimento/orcamentos", orcamentos.listar);

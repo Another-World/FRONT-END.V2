@@ -12,6 +12,8 @@ import AreaCliente from "./pages/AreaCliente";
 import Atendimento from "./pages/Atendimento";
 import Orcamentos from "./pages/Orcamentos";
 import Avaliacoes from "./pages/Avaliacoes";
+import Usuarios from "./pages/Usuarios";
+import Dashboard from "./pages/Dashboard";
 
 import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import TermosDeUso from "./pages/TermosDeUso";
@@ -72,7 +74,7 @@ export default function App() {
       <Route path="/atendimento" element={<Navigate to="/admin/solicitacoes" replace />} />
 
       <Route path="/admin" element={<RotaAdmin><AdminLayout /></RotaAdmin>}>
-        <Route index element={<AdminPagina />} />
+        <Route index element={<Dashboard />} />
         <Route path="solicitacoes" element={<Atendimento />} />
         <Route path="orcamentos" element={<Orcamentos />} />
         <Route path="usuarios" element={<AdminPagina />} />

@@ -18,6 +18,18 @@ ou após troca da senha da conta. O Gmail aplica limites diários de envio e
 pode bloquear atividades suspeitas: esta opção atende baixo volume; para
 volume comercial, planeje domínio próprio e provedor transacional.
 
+O Gmail apresenta o nome **Another World**, mas o endereço real continua
+`mateusisaque.aw@gmail.com`. Cada mensagem contém versões texto e HTML; o
+HTML usa o logo do projeto incorporado, sem imagens remotas ou rastreadores.
+O PDF anexo e a prévia protegida usam o mesmo documento com identidade visual.
+Mensagens pendentes continuam usando o assunto e o conteúdo já persistidos.
+Essas mudanças não garantem a caixa principal: para um endereço
+`@another-world...` no futuro, registrar um domínio controlado pela equipe,
+verificar o remetente no serviço de e-mail e publicar SPF, DKIM e DMARC
+conforme o provedor antes de alterar o endereço `From`. Nunca forjar um
+endereço comercial no SMTP da conta Gmail. Conferir `Authentication-Results`
+(SPF/DKIM/DMARC), reputação e feedback de destinatários em envios de teste.
+
 Os testes usam um transporte falso: não comprovam entrega real. `messageId` e
 `accepted` confirmam a aceitação pelo SMTP, não o recebimento na caixa de
 entrada. Conferir o envio de teste na pasta Enviados e no destinatário,
