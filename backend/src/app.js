@@ -8,6 +8,7 @@ import { criarHandlerListagemSolicitacoes } from "./listagemSolicitacoes.js";
 import { criarHandlersUsuarios } from "./usuarios.js";
 import { criarHandlerProntidao } from "./prontidao.js";
 import { criarAutorizacaoAdmin, criarHandlersAtendimento } from "./atendimento.js";
+import { criarHandlersAvaliacoes } from "./avaliacoes.js";
 import { criarHandlersAdminUsuarios } from "./adminUsuarios.js";
 import { criarHandlerDashboard } from "./dashboard.js";
 
@@ -76,6 +77,14 @@ export function criarApp({ pool, autenticacao = {}, limiteEnvios = 10, limiteCon
     criarHandlerSolicitacoes(pool),
   );
 
+  const avaliacoes = criarHandlersAvaliacoes(pool);
+  app.use("/api/avaliacoes", (_req, res, next) => {
+    res.set("Cache-Control", "no-store");
+    next();
+  }, limitePerfil, exigirAutenticacao);
+  app.get("/api/avaliacoes/solicitacoes/:id", avaliacoes.consultarPropria);
+  app.post("/api/avaliacoes", express.json({ limit: "8kb" }), avaliacoes.criar);
+
   const atendimento = criarHandlersAtendimento(pool, { emailsEnabled });
   app.use("/api/atendimento", (_req, res, next) => {
     res.set("Cache-Control", "no-store");
@@ -89,6 +98,10 @@ export function criarApp({ pool, autenticacao = {}, limiteEnvios = 10, limiteCon
   app.get("/api/atendimento/solicitacoes/:id", atendimento.consultar);
   app.patch("/api/atendimento/solicitacoes/:id/status",
     express.json({ limit: "1kb" }), atendimento.atualizarStatus);
+  app.get("/api/atendimento/avaliacoes", avaliacoes.listar);
+  app.get("/api/atendimento/avaliacoes/:id", avaliacoes.consultar);
+  app.patch("/api/atendimento/avaliacoes/:id/status",
+    express.json({ limit: "4kb" }), avaliacoes.moderar);
 
   const usuariosAdmin = criarHandlersAdminUsuarios(pool);
   app.get("/api/atendimento/dashboard", criarHandlerDashboard(pool));

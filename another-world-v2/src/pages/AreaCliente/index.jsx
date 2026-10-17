@@ -144,7 +144,8 @@ function AreaDaConta({ user, logout }) {
           )}
         </section>
 
-        <MinhasSolicitacoes usuarioId={user.id} habilitado={Boolean(perfil)} />
+        <MinhasSolicitacoes usuarioId={user.id} habilitado={Boolean(perfil)}
+          podeAvaliar={perfil?.papel === "cliente"} />
       </div>
     </div>
   );

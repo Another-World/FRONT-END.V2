@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import AreaCliente from "./pages/AreaCliente";
 import Atendimento from "./pages/Atendimento";
 import Orcamentos from "./pages/Orcamentos";
+import Avaliacoes from "./pages/Avaliacoes";
 import Usuarios from "./pages/Usuarios";
 import Dashboard from "./pages/Dashboard";
 
@@ -76,8 +77,8 @@ export default function App() {
         <Route index element={<Dashboard />} />
         <Route path="solicitacoes" element={<Atendimento />} />
         <Route path="orcamentos" element={<Orcamentos />} />
-        <Route path="usuarios" element={<Usuarios />} />
-        <Route path="avaliacoes" element={<AdminPagina />} />
+        <Route path="usuarios" element={<AdminPagina />} />
+        <Route path="avaliacoes" element={<Avaliacoes />} />
       </Route>
 
     </Routes>
