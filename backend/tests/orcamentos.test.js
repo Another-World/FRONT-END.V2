@@ -598,6 +598,12 @@ test("proposta enfileirada congela dados e só muda para enviada depois da aceit
   assert.equal(r.status, 200);
   assert.equal(r.body.orcamento.status, "aguardando_envio");
   assert.equal(r.body.orcamento.enviadaEm, null);
+  const mensagem = (await pool.query(
+    "SELECT assunto,conteudo FROM aw.comunicacoes WHERE orcamento_id=$1", [o.id],
+  )).rows[0];
+  assert.equal(mensagem.assunto, "Proposta comercial para Hardware");
+  assert.match(mensagem.conteudo, /serviço Hardware/);
+  assert.ok(!mensagem.conteudo.includes(o.solicitacaoId));
   assert.equal((await editar(r.body.orcamento)).status, 409);
   assert.equal((await acao(r.body.orcamento, "enviada")).status, 409);
   assert.equal((await criar({ solicitacaoId: o.solicitacaoId })).status, 409);
@@ -619,6 +625,24 @@ test("proposta enfileirada congela dados e só muda para enviada depois da aceit
   assert.equal(detalhe.email.status, "enviada");
   assert.equal(detalhe.email.tentativas, 1);
   assert.equal(detalhe.historico[0].tipo, "email_aceito_pelo_provedor");
+});
+
+test("assunto e corpo usam o serviço da solicitação mesmo com outra descrição comercial", async () => {
+  await ligarEmails();
+  const id = await pedido(B, { servicoSlug: "redes" });
+  await alterar(id, "aceito");
+  const o = (await criar({ solicitacaoId: id, body: { descricao: "Instalação personalizada" } })).body.orcamento;
+  const enviado = await request("POST", `${rota}/${o.id}/email`, {
+    token: await jwt(), body: { versao: 0, confirmado: true },
+  });
+  assert.equal(enviado.status, 200);
+  const mensagem = (await pool.query(
+    "SELECT assunto,conteudo FROM aw.comunicacoes WHERE orcamento_id=$1", [o.id],
+  )).rows[0];
+  assert.equal(mensagem.assunto, "Proposta comercial para Redes");
+  assert.match(mensagem.conteudo, /serviço Redes/);
+  assert.ok(!mensagem.assunto.includes(id));
+  assert.ok(!mensagem.conteudo.includes(id));
 });
 
 test("falha incerta não é reenviada e mantém a proposta aguardando", async () => {
