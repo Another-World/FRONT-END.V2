@@ -9,6 +9,7 @@ import { criarHandlersUsuarios } from "./usuarios.js";
 import { criarHandlerProntidao } from "./prontidao.js";
 import { criarAutorizacaoAdmin, criarHandlersAtendimento } from "./atendimento.js";
 import { criarHandlersAdminUsuarios } from "./adminUsuarios.js";
+import { criarHandlerDashboard } from "./dashboard.js";
 
 export function criarApp({ pool, autenticacao = {}, limiteEnvios = 10, limiteConsultas = 120,
   emailsEnabled = process.env.EMAILS_ENABLED === "true" }) {
@@ -90,6 +91,7 @@ export function criarApp({ pool, autenticacao = {}, limiteEnvios = 10, limiteCon
     express.json({ limit: "1kb" }), atendimento.atualizarStatus);
 
   const usuariosAdmin = criarHandlersAdminUsuarios(pool);
+  app.get("/api/atendimento/dashboard", criarHandlerDashboard(pool));
   app.get("/api/atendimento/usuarios", usuariosAdmin.listar);
   app.get("/api/atendimento/usuarios/:id", usuariosAdmin.consultar);
 
