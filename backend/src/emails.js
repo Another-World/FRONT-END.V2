@@ -9,8 +9,8 @@ export function textoDecisao({ nome, id, status }) {
   return `${saudacao(nome)}\n\n${decisao}\n\nProtocolo: ${id}\n\nEquipe Another World`;
 }
 
-export function textoProposta({ nome, id }) {
-  return `${saudacao(nome)}\n\nSegue em anexo a proposta comercial referente à solicitação ${id}. Confira valores, escopo, prazo e validade antes de responder a este e-mail.\n\nEquipe Another World`;
+export function textoProposta({ nome, servico }) {
+  return `${saudacao(nome)}\n\nSegue em anexo a proposta comercial para o serviço ${servico}. Confira valores, escopo, prazo e validade antes de responder a este e-mail.\n\nEquipe Another World`;
 }
 
 export async function registrarDecisao(client, pedido, status) {
@@ -27,14 +27,22 @@ export async function registrarDecisao(client, pedido, status) {
 }
 
 export async function registrarProposta(client, proposta) {
+  const resultado = await client.query(`
+    SELECT v.nome AS servico_nome
+    FROM aw.solicitacoes_orcamento s
+    LEFT JOIN aw.servicos v ON v.id = s.servico_id
+    WHERE s.id = $1
+  `, [proposta.solicitacao_id]);
+  const servico = resultado.rows[0]?.servico_nome
+    ?.replace(/[\u0000-\u001f\u007f]/g, " ").trim() || "Serviço solicitado";
   await client.query(`
     INSERT INTO aw.comunicacoes
       (solicitacao_id,orcamento_id,canal,tipo,destinatario,assunto,conteudo,evento_chave)
     VALUES ($1,$2,'email','proposta',$3,$4,$5,$6)
     ON CONFLICT (evento_chave) WHERE evento_chave IS NOT NULL DO NOTHING
   `, [proposta.solicitacao_id, proposta.id, proposta.cliente.email,
-    `Proposta comercial para solicitação ${proposta.solicitacao_id}`,
-    textoProposta({ nome: proposta.cliente.nome, id: proposta.solicitacao_id }),
+    `Proposta comercial para ${servico}`,
+    textoProposta({ nome: proposta.cliente.nome, servico }),
     `proposta:${proposta.id}`]);
 }
 
