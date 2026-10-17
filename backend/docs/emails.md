@@ -23,6 +23,11 @@ O Gmail apresenta o nome **Another World**, mas o endereço real continua
 HTML usa o logo do projeto incorporado, sem imagens remotas ou rastreadores.
 O PDF anexo e a prévia protegida usam o mesmo documento com identidade visual.
 Mensagens pendentes continuam usando o assunto e o conteúdo já persistidos.
+Nas novas propostas, o assunto e o texto usam o nome do serviço vinculado à
+solicitação em `aw.servicos` (por exemplo, Hardware ou Redes). O protocolo
+permanece na proposta em PDF e nos registros internos. Solicitações antigas sem
+serviço vinculado usam o título genérico "Serviço solicitado"; mensagens já
+enfileiradas ou enviadas não têm o assunto alterado retroativamente.
 Essas mudanças não garantem a caixa principal: para um endereço
 `@another-world...` no futuro, registrar um domínio controlado pela equipe,
 verificar o remetente no serviço de e-mail e publicar SPF, DKIM e DMARC
