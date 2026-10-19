@@ -108,10 +108,11 @@ function ListaServicos() {
 
           <div className="grid gap-5 md:grid-cols-3">
             {services.map((service) => {
-              const total = projects.filter(
-                (project) =>
-                  project.area === service.slug
-              ).length;
+              const serviceProjects = projects.filter(
+                (project) => project.area === service.slug
+              );
+              const total = serviceProjects.length;
+              const coverImage = serviceProjects[0]?.image;
 
               return (
                 <section
@@ -123,6 +124,16 @@ function ListaServicos() {
                     to={`/servicos?area=${service.slug}#projetos`}
                     className="group flex h-full flex-col rounded-[14px] border border-[#303138] bg-[#18191e] p-7 transition-colors hover:border-[#c9a4ed]/60 focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-[#c9a4ed] lg:p-7.5"
                   >
+                    {coverImage && (
+                      <div className="-mx-7 -mt-7 mb-7 aspect-video overflow-hidden rounded-t-[14px] bg-[#101114] lg:-mx-7.5 lg:-mt-7.5">
+                        <img
+                          src={coverImage}
+                          alt={`Capa do projeto ${serviceProjects[0].title}`}
+                          className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.02]"
+                        />
+                      </div>
+                    )}
+
                     <div className="mb-9 flex items-center justify-between">
                       <span className="text-[13px] tabular-nums text-[#c9a4ed]">
                         {service.number}
