@@ -79,6 +79,7 @@ function Arrow() {
     <svg
       width="20"
       height="20"
+
       viewBox="0 0 24 24"
       fill="none"
       aria-hidden="true"
@@ -341,10 +342,7 @@ export default function Home() {
               </h2>
             </div>
 
-            <p>
-              Você não precisa chegar com a solução pronta. Precisamos entender
-              o que você quer resolver.
-            </p>
+
           </div>
 
           <ol className={styles.stepGrid}>
