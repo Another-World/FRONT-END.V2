@@ -112,7 +112,10 @@ function ListaServicos() {
                 (project) => project.area === service.slug
               );
               const total = serviceProjects.length;
-              const coverImage = serviceProjects[0]?.image;
+              const coverImage = service.cover ?? serviceProjects[0]?.image;
+              const coverAlt = service.cover
+                ? `Imagem de apresentação do serviço ${service.title}`
+                : `Capa do projeto ${serviceProjects[0]?.title}`;
 
               return (
                 <section
@@ -128,7 +131,7 @@ function ListaServicos() {
                       <div className="-mx-7 -mt-7 mb-7 aspect-video overflow-hidden rounded-t-[14px] bg-[#101114] lg:-mx-7.5 lg:-mt-7.5">
                         <img
                           src={coverImage}
-                          alt={`Capa do projeto ${serviceProjects[0].title}`}
+                          alt={coverAlt}
                           className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.02]"
                         />
                       </div>
