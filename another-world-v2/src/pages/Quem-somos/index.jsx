@@ -18,7 +18,7 @@ const team = [
   },
   {
     name: "Clarice Brasileiro",
-    role: "Diretoria",
+    role: "Desenvolvedora Front-end",
     image: clariceImage,
   },
   {
@@ -28,7 +28,7 @@ const team = [
   },
   {
     name: "Gabriel Barbosa",
-    role: "Desenvolvedor Front-end",
+    role: "Desenvolvedor Back-end",
     image: gabrielImage,
   },
 ];
@@ -104,7 +104,7 @@ function Arrow() {
 
 export default function QuemSomos() {
   return (
-    <div className="relative isolate overflow-hidden bg-[#101114] font-sans text-[#f5f4f7]">
+    <div className="relative isolate overflow-hidden bg-[#101114] font-sans text-text-main">
       {/* Camadas do fundo espacial */}
       <div className="pointer-events-none absolute inset-0 -z-10 opacity-55" style={starsBackground} />
       <div className="pointer-events-none absolute inset-0 -z-10 opacity-70" style={nebulaBackground} />
