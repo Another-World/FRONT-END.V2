@@ -570,7 +570,7 @@ test("008 não amplia privilégios e mantém e-mails desligados até configuraç
 
 test("decisão ativa enfileira uma vez o destinatário do pedido, sem envio prematuro", async () => {
   await ligarEmails();
-  const id = await pedido(null, { email: "destino@example.test" });
+  const id = await pedido(null, { email: "destino@example.test", servicoSlug: "redes" });
   const a = await alterar(id, "aceito");
   assert.equal(a.status, 200);
   assert.equal((await alterar(id, "aceito", a.body.solicitacao.versao)).status, 200);
@@ -578,11 +578,27 @@ test("decisão ativa enfileira uma vez o destinatário do pedido, sem envio prem
   assert.equal(r.rows.length, 1);
   assert.equal(r.rows[0].status, "pendente");
   assert.equal(r.rows[0].destinatario, "destino@example.test");
-  assert.match(r.rows[0].conteudo, /aceita/);
+  assert.equal(r.rows[0].assunto, "Solicitação de Redes aceita");
+  assert.match(r.rows[0].conteudo, /solicitação para Redes foi aceita/);
+  assert.ok(!r.rows[0].assunto.includes(id));
+  assert.ok(!r.rows[0].conteudo.includes(id));
   const inv = await request("PATCH", `${caminho}/${id}/status`, {
     token: await jwt(B), body: { status: "negado", versao: a.body.solicitacao.versao, confirmado: true },
   });
   assert.equal(inv.status, 403);
+});
+
+test("decisão negativa identifica o serviço sem incluir o protocolo no e-mail", async () => {
+  await ligarEmails();
+  const id = await pedido(null, { servicoSlug: "hardware" });
+  assert.equal((await alterar(id, "negado")).status, 200);
+  const mensagem = (await pool.query(
+    "SELECT assunto,conteudo FROM aw.comunicacoes WHERE solicitacao_id=$1 AND tipo='decisao'", [id],
+  )).rows[0];
+  assert.equal(mensagem.assunto, "Solicitação de Hardware não aceita");
+  assert.match(mensagem.conteudo, /solicitação para Hardware não foi aceita/);
+  assert.ok(!mensagem.assunto.includes(id));
+  assert.ok(!mensagem.conteudo.includes(id));
 });
 
 test("proposta enfileirada congela dados e só muda para enviada depois da aceitação pelo provedor", async () => {

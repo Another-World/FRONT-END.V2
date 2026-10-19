@@ -28,6 +28,11 @@ solicitação em `aw.servicos` (por exemplo, Hardware ou Redes). O protocolo
 permanece na proposta em PDF e nos registros internos. Solicitações antigas sem
 serviço vinculado usam o título genérico "Serviço solicitado"; mensagens já
 enfileiradas ou enviadas não têm o assunto alterado retroativamente.
+Os novos avisos de aceite ou recusa também usam o serviço no assunto e no
+texto (por exemplo, "Solicitação de Redes aceita"), sem exibir o UUID no
+e-mail. O protocolo continua vinculado à comunicação no banco. O nome do
+remetente de novos e-mails é Another World; conversas antigas no Gmail podem
+exibir mensagens anteriores com o nome usado na época.
 Essas mudanças não garantem a caixa principal: para um endereço
 `@another-world...` no futuro, registrar um domínio controlado pela equipe,
 verificar o remetente no serviço de e-mail e publicar SPF, DKIM e DMARC

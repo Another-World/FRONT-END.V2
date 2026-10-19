@@ -2,39 +2,45 @@ import { gerarPropostaPdf } from "./propostaPdf.js";
 
 const saudacao = (nome) => `Olá, ${nome?.trim() || "cliente"}.`;
 
-export function textoDecisao({ nome, id, status }) {
+export function textoDecisao({ nome, servico, status }) {
   const decisao = status === "aceito"
-    ? "Sua solicitação foi aceita pela equipe. Entraremos em contato para os próximos passos."
-    : "Sua solicitação não foi aceita neste momento. Se precisar de esclarecimentos, responda a este e-mail.";
-  return `${saudacao(nome)}\n\n${decisao}\n\nProtocolo: ${id}\n\nEquipe Another World`;
+    ? `Sua solicitação para ${servico} foi aceita pela equipe. Entraremos em contato para os próximos passos.`
+    : `Sua solicitação para ${servico} não foi aceita neste momento. Se precisar de esclarecimentos, responda a este e-mail.`;
+  return `${saudacao(nome)}\n\n${decisao}\n\nEquipe Another World`;
 }
 
 export function textoProposta({ nome, servico }) {
   return `${saudacao(nome)}\n\nSegue em anexo a proposta comercial para o serviço ${servico}. Confira valores, escopo, prazo e validade antes de responder a este e-mail.\n\nEquipe Another World`;
 }
 
+async function nomeServico(client, solicitacaoId) {
+  const resultado = await client.query(`
+    SELECT v.nome AS servico_nome
+    FROM aw.solicitacoes_orcamento s
+    LEFT JOIN aw.servicos v ON v.id = s.servico_id
+    WHERE s.id = $1
+  `, [solicitacaoId]);
+  return resultado.rows[0]?.servico_nome
+    ?.replace(/[\u0000-\u001f\u007f]/g, " ").trim() || "Serviço solicitado";
+}
+
 export async function registrarDecisao(client, pedido, status) {
   if (!["aceito", "negado"].includes(status)) return;
+  const servico = await nomeServico(client, pedido.id);
+  const assunto = `Solicitação de ${servico} ${status === "aceito" ? "aceita" : "não aceita"}`;
   await client.query(`
     INSERT INTO aw.comunicacoes
       (solicitacao_id,canal,tipo,destinatario,assunto,conteudo,evento_chave)
     VALUES ($1,'email','decisao',$2,$3,$4,$5)
     ON CONFLICT (evento_chave) WHERE evento_chave IS NOT NULL DO NOTHING
   `, [pedido.id, pedido.email_contato,
-    `Atualização da solicitação ${pedido.id}`,
-    textoDecisao({ nome: pedido.nome_contato, id: pedido.id, status }),
+    assunto,
+    textoDecisao({ nome: pedido.nome_contato, servico, status }),
     `decisao:${pedido.id}:${pedido.versao_status}`]);
 }
 
 export async function registrarProposta(client, proposta) {
-  const resultado = await client.query(`
-    SELECT v.nome AS servico_nome
-    FROM aw.solicitacoes_orcamento s
-    LEFT JOIN aw.servicos v ON v.id = s.servico_id
-    WHERE s.id = $1
-  `, [proposta.solicitacao_id]);
-  const servico = resultado.rows[0]?.servico_nome
-    ?.replace(/[\u0000-\u001f\u007f]/g, " ").trim() || "Serviço solicitado";
+  const servico = await nomeServico(client, proposta.solicitacao_id);
   await client.query(`
     INSERT INTO aw.comunicacoes
       (solicitacao_id,orcamento_id,canal,tipo,destinatario,assunto,conteudo,evento_chave)
