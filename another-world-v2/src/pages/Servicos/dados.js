@@ -8,6 +8,7 @@
 import anotherWorldPdf from "./projetos/another-world-redes.pdf";
 import anotherWorldCapa from "./projetos/another-world-capa.jpg";
 import samtechCapa from "./projetos/samtech-capa.jpg";
+import hardwareCapa from "./imagens/hardware-capa.jpg";
 
 // "slug" é o nome usado no endereço: /servicos?area=redes
 export const services = [
@@ -15,6 +16,7 @@ export const services = [
     number: "01",
     slug: "hardware",
     title: "Hardware",
+    cover: hardwareCapa,
     description:
       "Montagem, manutenção e suporte para computadores, notebooks e outros equipamentos de tecnologia.",
   },
