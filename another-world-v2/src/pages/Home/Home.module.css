@@ -774,10 +774,10 @@
    ========================================================= */
 
 :global(html[data-theme="light"]) .home {
-  --background: #cab1e3;
-  --surface: #d5c3df;
-  --surface-inner: #c7b0d3;
-  --border: #a080bd;
+  --background: rgb(248 245 253 / 76%);
+  --surface: rgb(252 250 255 / 89%);
+  --surface-inner: rgb(242 236 250 / 91%);
+  --border: rgb(128 94 163 / 43%);
 
   --text: #24192d;
   --muted: #4f3c5b;
@@ -787,16 +787,16 @@
   --purple-hover: #7843ab;
   --lavender: #7843ab;
 
-  --paper: #c3add2;
+  --paper: rgb(239 232 248 / 82%);
   --ink: #24192d;
   --ink-muted: #4f3c5b;
 
   background:
     linear-gradient(
       180deg,
-      #cab1e3 0%,
-      #c7aed1 48%,
-      #c3add2 100%
+      rgb(248 245 253 / 70%) 0%,
+      rgb(241 235 250 / 68%) 48%,
+      rgb(246 241 252 / 74%) 100%
     );
 
   color: var(--text);
@@ -889,16 +889,16 @@
    ========================================================= */
 
 :global(html[data-theme="light"]) .home .serviceCard {
-  background: #d5c3df;
+  background: rgb(252 250 255 / 88%);
 
-  border-color: #a080bd;
+  border-color: rgb(128 94 163 / 43%);
 
   box-shadow:
-    0 8px 25px rgb(70 45 95 / 7%);
+    0 8px 25px rgb(70 45 95 / 10%);
 }
 
 :global(html[data-theme="light"]) .home .serviceCard:hover {
-  background: #d1bedb;
+  background: rgb(255 255 255 / 94%);
 
   border-color: #8554b3;
 }
@@ -924,7 +924,7 @@
    ========================================================= */
 
 :global(html[data-theme="light"]) .home .about {
-  background: #c3add2;
+  background: rgb(239 232 248 / 82%);
 
   color: #24192d;
 }
@@ -981,7 +981,7 @@
 :global(html[data-theme="light"]) .home .contactPanel {
   border-color: #a080bd;
 
-  background: #d5c3df;
+  background: rgb(252 250 255 / 88%);
 
   box-shadow:
     0 10px 30px rgb(70 45 95 / 8%);
