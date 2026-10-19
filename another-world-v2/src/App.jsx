@@ -20,7 +20,6 @@ import TermosDeUso from "./pages/TermosDeUso";
 
 import RotaProtegida from "./components/RotaProtegida";
 import RotaAdmin from "./components/RotaAdmin";
-import AdminPagina from "./pages/Admin";
 
 export default function App() {
   return (
@@ -77,7 +76,7 @@ export default function App() {
         <Route index element={<Dashboard />} />
         <Route path="solicitacoes" element={<Atendimento />} />
         <Route path="orcamentos" element={<Orcamentos />} />
-        <Route path="usuarios" element={<AdminPagina />} />
+        <Route path="usuarios" element={<Usuarios />} />
         <Route path="avaliacoes" element={<Avaliacoes />} />
       </Route>
 
