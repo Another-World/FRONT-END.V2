@@ -144,9 +144,16 @@ export default function Home() {
           ===================================================== */}
 
       <section
-        className={styles.hero}
+        className={`${styles.hero} ${styles.heroVideoBanner}`}
         aria-labelledby="home-title"
       >
+        <div className={styles.heroVideoLayer} aria-hidden="true">
+          <video autoPlay loop muted playsInline preload="metadata">
+            <source src="/media/home-liquid.mp4" type="video/mp4" />
+          </video>
+          <div className={styles.videoShade} />
+        </div>
+
         <div className={styles.container}>
           <p className={styles.badge}>
             ANOTHER WORLD

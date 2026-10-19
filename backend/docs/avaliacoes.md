@@ -141,7 +141,7 @@ Esta etapa ainda não foi executada. A ordem recomendada é:
    deve abranger as rotas atuais, por exemplo:
 
    ```nginx
-   location ~ ^/api/(health|ready|solicitacoes|perfil|avaliacoes|atendimento(/.*)?)/?$ {
+   location ~ ^/api/(health|ready|solicitacoes|perfil|avaliacoes(/.*)?|atendimento(/.*)?)/?$ {
        # Preservar CORS, HTTPS e proxy_pass para 127.0.0.1:3001 já existentes.
    }
    ```
