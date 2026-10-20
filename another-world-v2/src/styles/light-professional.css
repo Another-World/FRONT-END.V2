@@ -1,0 +1,303 @@
+/* Another World · Observatório
+   Esta folha só atua em data-theme="light". As regras escuras são mantidas.
+   Importada após index.css; os !important substituem os overrides legados. */
+
+html[data-theme="light"] {
+  color-scheme: light;
+  --aw-canvas: #d2cdda;
+  --aw-section: #cbc5d5;
+  --aw-surface: #e4dfeb;
+  --aw-surface-soft: #d9d2e2;
+  --aw-header: #ddd8e4;
+  --aw-footer: #c4bdcf;
+  --aw-ink: #292132;
+  --aw-muted: #4b4057;
+  --aw-soft: #4d4258;
+  --aw-accent: #583174;
+  --aw-accent-hover: #43235c;
+  --aw-border: #afa1bd;
+  --aw-control-border: #80708f;
+  --aw-shadow: 0 12px 32px rgb(47 30 65 / 7%);
+  --aw-space-image: url("/images/another-world-light-pages.webp");
+
+  --color-bg-dark: var(--aw-canvas);
+  --color-bg-section: var(--aw-surface-soft);
+  --color-bg-footer: var(--aw-footer);
+  --color-bg-card: var(--aw-surface);
+  --color-bg-card-inner: var(--aw-surface-soft);
+  --color-border: var(--aw-border);
+  --color-purple: var(--aw-accent);
+  --color-purple-dark: var(--aw-accent-hover);
+  --color-purple-light: #d2bbdf;
+  --color-purple-soft: #a38caf;
+  --color-text-main: var(--aw-ink);
+  --color-text-muted: var(--aw-muted);
+  --color-text-soft: var(--aw-soft);
+  --color-text-faint: var(--aw-soft);
+  background: var(--aw-canvas);
+}
+
+html[data-theme="light"] body {
+  background: var(--aw-canvas);
+  color: var(--aw-ink);
+}
+
+html[data-theme="light"] body::before {
+  display: none;
+}
+
+/* Evita brilho do cursor sobre textos e formulários, só no tema claro. */
+html[data-theme="light"] .awPublicLayout > div[aria-hidden="true"].fixed {
+  display: none;
+}
+
+/* Materiais compartilhados: planos foscos, bordas e texto com contraste. */
+html[data-theme="light"] [class~="bg-[#101114]"] {
+  background-color: var(--aw-canvas) !important;
+}
+
+html[data-theme="light"] [class~="bg-[#18191e]"],
+html[data-theme="light"] [class~="bg-[#211c27]"] {
+  background-color: var(--aw-surface) !important;
+}
+
+html[data-theme="light"] [class~="bg-[#151319]"],
+html[data-theme="light"] [class~="bg-[#222027]"] {
+  background-color: var(--aw-surface-soft) !important;
+}
+
+html[data-theme="light"] [class~="bg-[#303138]"] {
+  background-color: var(--aw-border) !important;
+}
+
+html[data-theme="light"] :is([class~="border-[#303138]"], [class~="border-[#45404e]"], [class~="border-[#49404e]"], [class~="border-[#55515f]"]) {
+  border-color: var(--aw-border) !important;
+}
+
+html[data-theme="light"] :is([class~="text-[#f5f4f7]"], main [class~="text-white"], footer [class~="text-white"]) {
+  color: var(--aw-ink) !important;
+}
+
+html[data-theme="light"] :is([class~="text-[#b2b0bc]"], [class~="text-[#dedbe4]"], [class~="text-[#d9cce7]"]) {
+  color: var(--aw-muted) !important;
+}
+
+html[data-theme="light"] :is([class~="text-purple"], [class~="text-[#c9a4ed]"]) {
+  color: var(--aw-accent) !important;
+}
+
+html[data-theme="light"] :is([class~="border-purple"], [class~="border-[#c9a4ed]"]) {
+  border-color: var(--aw-accent) !important;
+}
+
+html[data-theme="light"] :is([class~="bg-purple"], [class~="bg-[#7735bd]"], [class~="bg-[#c9a4ed]"]) {
+  background-color: var(--aw-accent) !important;
+}
+
+/* Texto branco apenas nos controles preenchidos; não nos rótulos do formulário. */
+html[data-theme="light"] :is(a, button)[class~="bg-purple"],
+html[data-theme="light"] :is(a, button)[class~="bg-[#7735bd]"],
+html[data-theme="light"] :is(a, button)[class~="bg-[#c9a4ed]"] {
+  color: #fff !important;
+  border-color: var(--aw-accent) !important;
+}
+
+html[data-theme="light"] :is(a, button)[class~="bg-purple"]:hover {
+  background-color: var(--aw-accent-hover) !important;
+  color: #fff !important;
+}
+
+html[data-theme="light"] [class~="hover:bg-[#222027]"]:hover {
+  background-color: var(--aw-surface-soft) !important;
+}
+
+html[data-theme="light"] [class~="hover:text-white"]:not([class~="bg-purple"]):hover {
+  color: var(--aw-accent-hover) !important;
+}
+
+html[data-theme="light"] :is(a, button):focus-visible,
+html[data-theme="light"] label:has(input.sr-only:focus-visible) {
+  outline: 3px solid var(--aw-accent);
+  outline-offset: 4px;
+}
+
+/* Um mesmo céu de espaço e estrelas em Quem Somos, Serviços e Contato.
+   O véu mineral limita a luminosidade e garante uma base legível. */
+html[data-theme="light"] .awPublicLayout .awInnerPage {
+  background-color: var(--aw-canvas) !important;
+  background-image:
+    linear-gradient(180deg, rgb(215 209 226 / 86%), rgb(206 199 219 / 89%) 55%, rgb(202 194 215 / 91%)),
+    var(--aw-space-image) !important;
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  animation: none;
+}
+
+html[data-theme="light"] .awInnerSpaceLayer {
+  display: none !important;
+}
+
+html[data-theme="light"] .awInnerPage :is(article, section, aside, div)[class~="bg-[#18191e]"],
+html[data-theme="light"] .awInnerPage :is(div, aside)[class~="rounded-2xl"][class~="bg-bg-section"] {
+  background-color: var(--aw-surface) !important;
+  border-color: var(--aw-border) !important;
+  box-shadow: var(--aw-shadow);
+}
+
+/* Cabeçalho: mesmo desenho, agora em material claro e com logo legível. */
+html[data-theme="light"] .awPublicLayout > header {
+  background: rgb(221 216 228 / 97%) !important;
+  border-color: var(--aw-border) !important;
+  box-shadow: 0 6px 22px rgb(40 25 55 / 6%);
+}
+
+html[data-theme="light"] .awPublicLayout > header :is([class~="text-white"], .text-text-main) {
+  color: var(--aw-ink) !important;
+}
+
+html[data-theme="light"] .awPublicLayout > :is(header, footer) img[alt="Logo Another World"] {
+  filter: none;
+  opacity: 1;
+}
+
+html[data-theme="light"] .awPublicLayout > header nav > div.rounded-full {
+  background: #e7e1ed !important;
+  border-color: #b3a6c1 !important;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 30%);
+}
+
+html[data-theme="light"] .awPublicLayout > header nav a {
+  color: var(--aw-muted) !important;
+}
+
+html[data-theme="light"] .awPublicLayout > header nav a:hover {
+  background-color: #d8cbe3;
+  color: var(--aw-accent-hover) !important;
+}
+
+html[data-theme="light"] .awPublicLayout > header nav a[class~="bg-[#7843ab]"] {
+  background: var(--aw-accent) !important;
+  color: #fff !important;
+  box-shadow: 0 3px 9px rgb(54 28 75 / 16%);
+}
+
+html[data-theme="light"] .awPublicLayout > header :is(.loginHeaderButton, .userHeaderButton, .userHeaderButtonMobile) {
+  background: var(--aw-accent) !important;
+  border-color: var(--aw-accent) !important;
+  color: #fff !important;
+  box-shadow: 0 3px 9px rgb(54 28 75 / 12%);
+}
+
+html[data-theme="light"] .awPublicLayout > header :is(.loginHeaderButton, .userHeaderButton):hover {
+  background: var(--aw-accent-hover) !important;
+  color: #fff !important;
+}
+
+html[data-theme="light"] .awPublicLayout > header button[aria-label="Abrir menu"] [class~="bg-white"] {
+  background-color: var(--aw-ink);
+}
+
+html[data-theme="light"] .awPublicLayout > header label:has(input[aria-label="Ativar modo escuro"]) {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--aw-control-border);
+  border-radius: 50%;
+  background: var(--aw-surface);
+  color: var(--aw-accent);
+}
+
+/* Rodapé no mesmo conjunto de materiais, sem o bloco roxo saturado. */
+html[data-theme="light"] .awPublicLayout > footer {
+  background: linear-gradient(160deg, #cec7d8, var(--aw-footer)) !important;
+  border-color: #a99bb8 !important;
+}
+
+html[data-theme="light"] .awPublicLayout > footer p {
+  color: var(--aw-muted);
+}
+
+html[data-theme="light"] .awPublicLayout > footer nav a {
+  color: var(--aw-muted) !important;
+}
+
+html[data-theme="light"] .awPublicLayout > footer nav a:hover {
+  color: var(--aw-accent-hover) !important;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+html[data-theme="light"] .awPublicLayout > footer a[class~="bg-purple"] {
+  color: #fff !important;
+}
+
+/* Campos, mensagens e estados de interação. */
+html[data-theme="light"] :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]), textarea, select) {
+  background-color: #eee9f2 !important;
+  border-color: var(--aw-control-border) !important;
+  color: var(--aw-ink) !important;
+}
+
+html[data-theme="light"] :is(input, textarea)::placeholder {
+  color: var(--aw-soft) !important;
+  opacity: 1;
+}
+
+html[data-theme="light"] :is(input, textarea, select):focus-visible {
+  border-color: var(--aw-accent) !important;
+  outline: 2px solid var(--aw-accent);
+  outline-offset: 2px;
+  box-shadow: none !important;
+}
+
+html[data-theme="light"] input:is([type="checkbox"], [type="radio"]) {
+  accent-color: var(--aw-accent);
+}
+
+html[data-theme="light"] [class~="text-green-400"] {
+  color: #225c3e !important;
+}
+
+html[data-theme="light"] [class~="text-red-400"] {
+  color: #9d203d !important;
+}
+
+html[data-theme="light"] .helpButton,
+html[data-theme="light"] .helpButton:hover {
+  background: var(--aw-accent) !important;
+  color: #fff !important;
+  border-color: var(--aw-accent) !important;
+  box-shadow: 0 6px 20px rgb(54 28 75 / 18%);
+}
+
+html[data-theme="light"] ::selection {
+  background: var(--aw-accent);
+  color: #fff;
+}
+
+html[data-theme="light"] ::-webkit-scrollbar-track { background: var(--aw-canvas); }
+html[data-theme="light"] ::-webkit-scrollbar-thumb { background: #9784a8; }
+html[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: var(--aw-accent); }
+
+@media (max-width: 1180px) {
+  /* Evita a sobreposição da navegação central com marca e login em notebooks. */
+  html[data-theme="light"] .awPublicLayout > header > div:first-child > div.absolute,
+  html[data-theme="light"] .awPublicLayout > header > div:first-child > div.hidden {
+    display: none !important;
+  }
+  html[data-theme="light"] .awPublicLayout > header button[aria-label="Abrir menu"] { display: flex; }
+  html[data-theme="light"] .awPublicLayout > header > div.border-t { display: block; }
+}
+
+@media (max-width: 640px) {
+  html[data-theme="light"] .awPublicLayout > header > div:first-child { padding-inline: 16px; }
+  html[data-theme="light"] .awPublicLayout > header > div:first-child > a { gap: 4px; }
+  html[data-theme="light"] .awPublicLayout > header img[alt="Logo Another World"] { width: 64px; height: 64px; }
+  html[data-theme="light"] .awPublicLayout > header > div:first-child > a > span { font-size: 13px; letter-spacing: 0.05em; }
+  html[data-theme="light"] .awPublicLayout .awInnerPage {
+    background-attachment: scroll;
+    background-size: auto, auto 950px;
+    background-repeat: no-repeat, repeat-y;
+  }
+}

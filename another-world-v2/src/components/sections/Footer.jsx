@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-import logo from "../../assets/logo.png";
+import BrandLogo from "../ui/BrandLogo";
 
 export default function Footer() {
   return (
@@ -16,8 +16,7 @@ export default function Footer() {
               to="/"
               className="flex w-fit items-center gap-3"
             >
-              <img
-                src={logo}
+              <BrandLogo
                 alt="Logo Another World"
                 className="h-30 w-30 object-contain"
               />

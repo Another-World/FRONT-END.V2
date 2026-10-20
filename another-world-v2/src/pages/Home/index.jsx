@@ -4,6 +4,7 @@ import Button from "../../components/ui/Button";
 import Parceiros from "../../components/sections/Parceiros";
 
 import styles from "./Home.module.css";
+import LightHeroVideo from "./LightHeroVideo";
 
 /* =========================================================
    SERVIÇOS
@@ -153,6 +154,8 @@ export default function Home() {
           </video>
           <div className={styles.videoShade} />
         </div>
+
+        <LightHeroVideo />
 
         <div className={styles.container}>
           <p className={styles.badge}>

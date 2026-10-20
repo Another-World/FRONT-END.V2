@@ -24,7 +24,7 @@ export default function Servicos() {
   );
 
   return (
-    <div className="relative isolate overflow-hidden bg-[#101114] font-sans text-[#f5f4f7]">
+    <div className="awInnerPage relative isolate overflow-hidden bg-[#101114] font-sans text-[#f5f4f7]">
       <SpaceBackground />
 
       {selectedService ? (
