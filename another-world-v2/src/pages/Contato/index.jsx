@@ -674,7 +674,7 @@ export default function Contato() {
                 </p>
 
                 <p className="mt-2 break-all text-sm text-white">
-                  contato@anotherworld.com
+                  mateusisaque.aw@gmail.com
                 </p>
               </div>
 

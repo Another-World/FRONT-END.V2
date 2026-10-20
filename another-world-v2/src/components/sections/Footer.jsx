@@ -170,7 +170,7 @@ export default function Footer() {
               </span>
 
               <span className="break-all text-sm text-text-muted">
-                contato@anotherworld.com
+                mateusisaque.aw@gmail.com
               </span>
 
               <Link
