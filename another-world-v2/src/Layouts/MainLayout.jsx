@@ -8,7 +8,7 @@ import BotaoAjuda from "../components/ui/BotaoAjuda";
 
 export default function MainLayout() {
   return (
-    <div>
+    <div className="awPublicLayout">
       <ScrollToTop />
 
       <MouseGlow />

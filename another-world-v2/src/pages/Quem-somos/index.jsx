@@ -104,10 +104,10 @@ function Arrow() {
 
 export default function QuemSomos() {
   return (
-    <div className="relative isolate overflow-hidden bg-[#101114] font-sans text-text-main">
+    <div className="awInnerPage relative isolate overflow-hidden bg-[#101114] font-sans text-text-main">
       {/* Camadas do fundo espacial */}
-      <div className="pointer-events-none absolute inset-0 -z-10 opacity-55" style={starsBackground} />
-      <div className="pointer-events-none absolute inset-0 -z-10 opacity-70" style={nebulaBackground} />
+      <div className="awInnerSpaceLayer pointer-events-none absolute inset-0 -z-10 opacity-55" style={starsBackground} />
+      <div className="awInnerSpaceLayer pointer-events-none absolute inset-0 -z-10 opacity-70" style={nebulaBackground} />
 
       {/* TOPO: título centralizado, como o hero da Home */}
       <section className="pt-16 text-center md:pt-26" aria-labelledby="quem-somos-title">

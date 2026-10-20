@@ -6,7 +6,7 @@ import { useAuth } from "../../context/AuthContext";
 import { authErrorMessage } from "../../services/auth";
 import { consultarPerfil, EVENTO_PERFIL_ATUALIZADO } from "../../services/perfil";
 
-import logo from "../../assets/logo.png";
+import BrandLogo from "../ui/BrandLogo";
 
 import GooeyNav from "../ui/GooeyNav";
 
@@ -116,8 +116,7 @@ export default function Header() {
           onClick={() => setMenuOpen(false)}
           className="flex items-center gap-3"
         >
-          <img
-            src={logo}
+          <BrandLogo
             alt="Logo Another World"
             className="h-25 w-25 object-contain"
           />

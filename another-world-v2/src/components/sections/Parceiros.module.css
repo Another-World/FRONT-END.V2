@@ -232,60 +232,48 @@
    ========================================================= */
 
 :global(html[data-theme="light"]) .section {
-  --border: #d8cde2;
-  --text: #211a27;
-  --background: #f7f5fa;
-  --lavender: #7c3aed;
-  --muted: #62586d;
-  --purple: #7c3aed;
-
+  --border: var(--aw-border);
+  --text: var(--aw-ink);
+  --background: var(--aw-canvas);
+  --lavender: var(--aw-accent);
+  --muted: var(--aw-muted);
+  --purple: var(--aw-accent);
   border-top-color: var(--border);
   color: var(--text);
   background: var(--background);
 }
 
 :global(html[data-theme="light"]) .sponsorsSection {
-  background:
-    radial-gradient(
-      ellipse at 50% 0%,
-      rgb(124 58 237 / 7%),
-      transparent 60%
-    ),
-    #eeeaf4;
+  background: var(--aw-section);
 }
 
 :global(html[data-theme="light"]) .eyebrow {
-  color: #7c3aed;
+  color: var(--aw-accent);
 }
 
-:global(html[data-theme="light"]) .description {
-  color: #62586d;
+:global(html[data-theme="light"]) .description,
+:global(html[data-theme="light"]) .placeholder,
+:global(html[data-theme="light"]) .placeholderLabel {
+  color: var(--aw-muted);
 }
 
 :global(html[data-theme="light"]) .logoCard {
-  border-color: #d8cde2;
-  background: rgb(255 255 255 / 72%);
+  border-color: var(--aw-border);
+  background: var(--aw-surface);
+  box-shadow: 0 5px 18px rgb(47 30 65 / 5%);
 }
 
 :global(html[data-theme="light"]) .logoLink:hover {
-  border-color: #7c3aed;
-  background: rgb(124 58 237 / 8%);
+  border-color: var(--aw-accent);
+  background: #e9e2f0;
 }
 
 :global(html[data-theme="light"]) .logoLink:focus-visible {
-  outline-color: #7c3aed;
-}
-
-:global(html[data-theme="light"]) .placeholder {
-  color: #51475a;
-}
-
-:global(html[data-theme="light"]) .placeholderLabel {
-  color: #7a7084;
+  outline-color: var(--aw-accent);
 }
 
 :global(html[data-theme="light"]) .placeholder strong {
-  color: #211a27;
+  color: var(--aw-ink);
 }
 
 

@@ -206,7 +206,7 @@ export default function Contato() {
     "w-full rounded-xl border border-border bg-bg-section px-4 py-3 text-sm text-white outline-none transition focus:border-purple placeholder:text-text-muted";
 
   return (
-    <main className="min-h-screen bg-bg-dark">
+    <main className="awInnerPage min-h-screen bg-bg-dark">
       {/* Cabeçalho da página */}
       <section className="mx-auto max-w-300 px-6 pb-12 pt-20">
         <p className="mb-3 text-sm font-medium uppercase tracking-[0.2em] text-purple">

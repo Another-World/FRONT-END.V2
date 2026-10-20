@@ -735,3 +735,35 @@ html[data-theme="light"]
     animation-iteration-count: 1 !important;
   }
 }
+/* O espaço lilás acompanha as páginas internas sem alterar o Hero da Home. */
+html[data-theme="light"] .awInnerPage {
+  background-color: #c7b4d5 !important;
+  background-image:
+    linear-gradient(
+      180deg,
+      rgb(207 190 222 / 64%) 0%,
+      rgb(197 178 214 / 70%) 52%,
+      rgb(188 168 207 / 72%) 100%
+    ),
+    url("/images/another-world-light-pages.webp") !important;
+  background-position: center, center;
+  background-size: cover, cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  animation: lightSpacePan 48s ease-in-out infinite alternate;
+}
+
+html[data-theme="light"] .awInnerSpaceLayer {
+  display: none !important;
+}
+
+@keyframes lightSpacePan {
+  from { background-position: center, 48% 48%; }
+  to { background-position: center, 52% 52%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="light"] .awInnerPage {
+    animation: none;
+  }
+}
