@@ -62,8 +62,8 @@ const nebulaBackground = {
 export function SpaceBackground() {
   return (
     <>
-      <div className="pointer-events-none absolute inset-0 -z-10 opacity-55" style={starsBackground} />
-      <div className="pointer-events-none absolute inset-0 -z-10 opacity-70" style={nebulaBackground} />
+      <div className="awInnerSpaceLayer pointer-events-none absolute inset-0 -z-10 opacity-55" style={starsBackground} />
+      <div className="awInnerSpaceLayer pointer-events-none absolute inset-0 -z-10 opacity-70" style={nebulaBackground} />
     </>
   );
 }

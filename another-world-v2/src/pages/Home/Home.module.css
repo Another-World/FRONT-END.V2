@@ -821,343 +821,184 @@
    ========================================================= */
 
 :global(html[data-theme="light"]) .home {
-  --background: #cab1e3;
-  --surface: #d5c3df;
-  --surface-inner: #c7b0d3;
-  --border: #a080bd;
-
-  --text: #24192d;
-  --muted: #4f3c5b;
-  --soft: #614d6d;
-
-  --purple: #8554b3;
-  --purple-hover: #7843ab;
-  --lavender: #7843ab;
-
-  --paper: #c3add2;
-  --ink: #24192d;
-  --ink-muted: #4f3c5b;
-
-  background:
-    linear-gradient(
-      180deg,
-      #cab1e3 0%,
-      #c7aed1 48%,
-      #c3add2 100%
-    );
-
+  --background: var(--aw-canvas);
+  --surface: var(--aw-surface);
+  --surface-inner: var(--aw-surface-soft);
+  --border: var(--aw-border);
+  --text: var(--aw-ink);
+  --muted: var(--aw-muted);
+  --soft: var(--aw-soft);
+  --purple: var(--aw-accent);
+  --purple-hover: var(--aw-accent-hover);
+  --lavender: var(--aw-accent);
+  --paper: var(--aw-section);
+  --ink: var(--aw-ink);
+  --ink-muted: var(--aw-muted);
+  background: var(--background);
   color: var(--text);
 }
 
-/* =========================================================
-   HERO — MODO CLARO
-   ========================================================= */
-
-:global(html[data-theme="light"]) .home .hero {
-  background:
-    radial-gradient(
-      ellipse at 50% 0%,
-      rgb(133 84 179 / 14%),
-      transparent 68%
-    );
+/* A imagem de impacto fica contida no Hero e sua moldura. */
+:global(html[data-theme="light"]) .home::before,
+:global(html[data-theme="light"]) .home::after {
+  display: none;
 }
 
-:global(html[data-theme="light"]) .home .badge {
-  border-color: #a080bd;
-
-  background: rgb(255 255 255 / 12%);
-
-  color: #4f3c5b;
-}
-
-:global(html[data-theme="light"]) .home .badge span {
-  color: #7843ab;
-}
-
-:global(html[data-theme="light"]) .home .hero h1 span {
-  color: #7843ab;
-}
-
-:global(html[data-theme="light"]) .home .heroDescription {
-  color: #4f3c5b;
-}
-
+/* Vídeo e paleta exclusivos do Hero claro; a moldura mantém suas medidas. */
 :global(html[data-theme="light"]) .home .heroVideoBanner {
-  color: #ffffff;
+  background: #bcb1cd;
+  color: #292132;
+  border-color: #a99abb;
+  box-shadow: 0 16px 40px rgb(44 26 64 / 12%);
+}
+
+:global(html[data-theme="light"]) .home .heroVideoLayer {
+  background: #bcb1cd url("/images/home-space-light-poster.webp") center / cover no-repeat;
+}
+
+:global(html[data-theme="light"]) .home .heroVideoLayer video {
+  display: none;
+}
+
+:global(html[data-theme="light"]) .home .heroVideoLayer video[data-light-video] {
+  display: block;
+  filter: grayscale(0.35) brightness(1.5) contrast(0.6);
+}
+
+:global(html[data-theme="light"]) .home .videoShade {
+  background: linear-gradient(180deg, rgb(213 205 226 / 65%), rgb(219 212 230 / 70%) 55%, rgb(202 194 216 / 80%));
 }
 
 :global(html[data-theme="light"]) .home .heroVideoBanner .badge {
-  border-color: rgb(255 255 255 / 32%);
-  background: rgb(16 8 23 / 28%);
-  color: #eee7f5;
+  color: #392747;
+  background: rgb(228 221 237 / 85%);
+  border-color: #9985ad;
 }
 
 :global(html[data-theme="light"]) .home .heroVideoBanner .badge span,
 :global(html[data-theme="light"]) .home .heroVideoBanner h1 span {
-  color: #dcbcff;
+  color: #4c2865;
 }
 
 :global(html[data-theme="light"]) .home .heroVideoBanner .heroDescription,
 :global(html[data-theme="light"]) .home .heroVideoBanner .heroFooter {
-  color: #e2d9e9;
+  color: #292132;
 }
 
-:global(html[data-theme="light"]) .home .heroVideoBanner .heroFooter {
-  border-color: rgb(255 255 255 / 24%);
+:global(html[data-theme="light"]) .home .heroFooter {
+  border-color: rgb(86 62 110 / 30%);
 }
-
-:global(html[data-theme="light"]) .home .heroVideoBanner .buttonSecondary {
-  border-color: rgb(255 255 255 / 42%);
-  background: rgb(16 8 23 / 18%);
-  color: #ffffff;
-}
-
-/* =========================================================
-   BOTÕES — MODO CLARO
-   ========================================================= */
 
 :global(html[data-theme="light"]) .home .buttonPrimary {
-  background: #7843ab;
-  color: #ffffff;
+  background: var(--aw-accent) !important;
+  color: #fff !important;
+  border-color: var(--aw-accent) !important;
 }
 
 :global(html[data-theme="light"]) .home .buttonPrimary:hover {
-  background: #693996;
-  color: #ffffff;
+  background: var(--aw-accent-hover) !important;
 }
 
 :global(html[data-theme="light"]) .home .buttonSecondary {
-  border-color: #a080bd;
-
-  background: rgb(255 255 255 / 8%);
-
-  color: #24192d;
+  background: transparent !important;
+  color: var(--aw-accent) !important;
+  border-color: var(--aw-control-border) !important;
 }
 
 :global(html[data-theme="light"]) .home .buttonSecondary:hover {
-  border-color: #8554b3;
-
-  background: rgb(133 84 179 / 12%);
-
-  color: #24192d;
+  background: #c9bdd6 !important;
+  color: var(--aw-accent-hover) !important;
 }
 
-/* =========================================================
-   HERO FOOTER — MODO CLARO
-   ========================================================= */
-
-:global(html[data-theme="light"]) .home .heroFooter {
-  border-color: #a080bd;
-
-  color: #4f3c5b;
+:global(html[data-theme="light"]) .home .heroVideoBanner .buttonPrimary {
+  background: #583174 !important;
+  border-color: #583174 !important;
+  color: #fff !important;
+  box-shadow: 0 5px 18px rgb(55 28 77 / 16%);
 }
 
-/* =========================================================
-   TÍTULOS — MODO CLARO
-   ========================================================= */
+:global(html[data-theme="light"]) .home .heroVideoBanner .buttonPrimary:hover {
+  background: #43235c !important;
+}
+
+:global(html[data-theme="light"]) .home .heroVideoBanner .buttonSecondary {
+  color: #43235c !important;
+  background: rgb(228 221 237 / 88%) !important;
+  border-color: #80708f !important;
+}
+
+:global(html[data-theme="light"]) .home .heroVideoBanner .buttonSecondary:hover {
+  background: #eee6f5 !important;
+  border-color: #583174 !important;
+}
+
+:global(html[data-theme="light"]) .home .heroVideoBanner a:focus-visible {
+  outline-color: #583174;
+}
 
 :global(html[data-theme="light"]) .home .eyebrow,
-:global(html[data-theme="light"]) .home .moreLink {
-  color: #7843ab;
+:global(html[data-theme="light"]) .home .moreLink,
+:global(html[data-theme="light"]) .home .cardNumber,
+:global(html[data-theme="light"]) .home .stepNumber,
+:global(html[data-theme="light"]) .home .asideLabel {
+  color: var(--aw-accent);
 }
 
-/* =========================================================
-   SERVIÇOS — MODO CLARO
-   ========================================================= */
-
 :global(html[data-theme="light"]) .home .serviceCard {
-  background: #d5c3df;
-
-  border-color: #a080bd;
-
-  box-shadow:
-    0 8px 25px rgb(70 45 95 / 7%);
+  background: var(--aw-surface);
+  border-color: var(--aw-border);
+  box-shadow: var(--aw-shadow);
 }
 
 :global(html[data-theme="light"]) .home .serviceCard:hover {
-  background: #d1bedb;
-
-  border-color: #8554b3;
+  background: #e9e2f0;
+  border-color: var(--aw-accent);
 }
 
-:global(html[data-theme="light"]) .home .serviceCard > p {
-  color: #4f3c5b;
+:global(html[data-theme="light"]) .home .serviceCard li,
+:global(html[data-theme="light"]) .home .serviceCard > p,
+:global(html[data-theme="light"]) .home .principles p,
+:global(html[data-theme="light"]) .home .step p,
+:global(html[data-theme="light"]) .home .processHeading > p {
+  color: var(--aw-muted);
 }
 
-:global(html[data-theme="light"]) .home .serviceCard li {
-  color: #51405c;
+:global(html[data-theme="light"]) .home .serviceCard ul,
+:global(html[data-theme="light"]) .home .principles,
+:global(html[data-theme="light"]) .home .step {
+  border-color: var(--aw-border);
 }
-
-:global(html[data-theme="light"]) .home .serviceCard ul {
-  border-top-color: #a080bd;
-}
-
-:global(html[data-theme="light"]) .home .cardNumber {
-  color: #7843ab;
-}
-
-/* =========================================================
-   QUEM SOMOS — MODO CLARO
-   ========================================================= */
 
 :global(html[data-theme="light"]) .home .about {
-  background: #c3add2;
-
-  color: #24192d;
+  background: var(--aw-section);
+  color: var(--aw-ink);
 }
 
-:global(html[data-theme="light"]) .home .about .eyebrow,
-:global(html[data-theme="light"]) .home .about .moreLink {
-  color: #7843ab;
-}
-
-:global(html[data-theme="light"]) .home .aboutIntro h2 span {
-  color: #4f3c5b;
-}
-
+:global(html[data-theme="light"]) .home .aboutIntro h2 span,
 :global(html[data-theme="light"]) .home .aboutContent > p {
-  color: #4f3c5b;
+  color: var(--aw-muted);
 }
 
 :global(html[data-theme="light"]) .home .aboutContent .aboutLead {
-  color: #24192d;
+  color: var(--aw-ink);
 }
-
-:global(html[data-theme="light"]) .home .principles {
-  border-top-color: #a080bd;
-}
-
-:global(html[data-theme="light"]) .home .principles p {
-  color: #4f3c5b;
-}
-
-/* =========================================================
-   PROCESSO — MODO CLARO
-   ========================================================= */
-
-:global(html[data-theme="light"]) .home .step {
-  border-top-color: #a080bd;
-}
-
-:global(html[data-theme="light"]) .home .stepNumber {
-  color: #7843ab;
-}
-
-:global(html[data-theme="light"]) .home .step p {
-  color: #4f3c5b;
-}
-
-:global(html[data-theme="light"]) .home .processHeading > p {
-  color: #4f3c5b;
-}
-
-/* =========================================================
-   CONTATO — MODO CLARO
-   ========================================================= */
 
 :global(html[data-theme="light"]) .home .contactPanel {
-  border-color: #a080bd;
-
-  background: #d5c3df;
-
-  box-shadow:
-    0 10px 30px rgb(70 45 95 / 8%);
-}
-
-:global(html[data-theme="light"]) .home .contactContent > p:not(.eyebrow) {
-  color: #4f3c5b;
+  background: var(--aw-surface);
+  border-color: var(--aw-border);
+  box-shadow: var(--aw-shadow);
 }
 
 :global(html[data-theme="light"]) .home .contactAside {
-  border-left-color: #a080bd;
+  border-color: var(--aw-border);
 }
 
-:global(html[data-theme="light"]) .home .contactAside p {
-  color: #51405c;
-}
-
+:global(html[data-theme="light"]) .home .contactContent > p:not(.eyebrow),
+:global(html[data-theme="light"]) .home .contactAside p,
 :global(html[data-theme="light"]) .home .contactAside > span:last-child {
-  color: #614d6d;
+  color: var(--aw-muted);
 }
 
-:global(html[data-theme="light"]) .home .asideLabel {
-  color: #7843ab;
-}
-
-/* =========================================================
-   FUNDO ESPACIAL — MODO CLARO
-   ========================================================= */
-
-:global(html[data-theme="light"]) .home::before {
-  opacity: 0.10;
-
-  filter: none;
-
-  background-image:
-    radial-gradient(
-      1px 1px at 24px 38px,
-      rgb(120 67 171 / 45%) 95%,
-      transparent
-    ),
-    radial-gradient(
-      1px 1px at 116px 154px,
-      rgb(120 67 171 / 32%) 95%,
-      transparent
-    ),
-    radial-gradient(
-      1.5px 1.5px at 78px 92px,
-      rgb(133 84 179 / 42%) 95%,
-      transparent
-    ),
-    radial-gradient(
-      1px 1px at 192px 67px,
-      rgb(120 67 171 / 28%) 95%,
-      transparent
-    ),
-    radial-gradient(
-      2px 2px at 245px 218px,
-      rgb(120 67 171 / 38%) 65%,
-      transparent
-    );
-}
-
-:global(html[data-theme="light"]) .home::after {
-  opacity: 0.30;
-
-  background-image:
-    radial-gradient(
-      ellipse 65% 580px at 50% 0%,
-      rgb(133 84 179 / 10%),
-      transparent 75%
-    ),
-    radial-gradient(
-      ellipse 45% 700px at 100% 38%,
-      rgb(120 67 171 / 6%),
-      transparent 75%
-    ),
-    radial-gradient(
-      ellipse 55% 600px at 0% 85%,
-      rgb(133 84 179 / 7%),
-      transparent 75%
-    ),
-    radial-gradient(
-      1.5px 1.5px at 63px 113px,
-      rgb(120 67 171 / 30%) 80%,
-      transparent
-    ),
-    radial-gradient(
-      1px 1px at 211px 237px,
-      rgb(120 67 171 / 25%) 80%,
-      transparent
-    );
-
-  background-size:
-    100% 100%,
-    100% 100%,
-    100% 100%,
-    457px 389px,
-    593px 541px;
-}
 
 /* =========================================================
    TABLETS
@@ -1339,4 +1180,10 @@
   to {
     opacity: 0.85;
   }
+}
+
+:global(html[data-theme="light"]) .home .hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
 }
