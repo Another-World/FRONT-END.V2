@@ -15,13 +15,16 @@ const valido = (o) =>
   o &&
   UUID.test(o.id ?? "") &&
   UUID.test(o.solicitacaoId ?? "") &&
-  CODIGO_SOLICITACAO.test(o.solicitacaoCodigo ?? "") &&
   STATUS_ORCAMENTO[o.status] &&
   Number.isInteger(o.versao) &&
   o.versao >= 0 &&
   Number.isInteger(o.valorCentavos) &&
   o.valorCentavos > 0 &&
   typeof o.descricao === "string";
+const validoNaLista = (o) =>
+  valido(o) &&
+  (o.solicitacaoCodigo == null ||
+    CODIGO_SOLICITACAO.test(o.solicitacaoCodigo));
 async function requisitar(
   uid,
   path = "",
@@ -93,7 +96,7 @@ export async function listarOrcamentos(
   if (
     !Array.isArray(d?.orcamentos) ||
     d.orcamentos.length > 20 ||
-    d.orcamentos.some((o) => !valido(o)) ||
+    d.orcamentos.some((o) => !validoNaLista(o)) ||
     !(d.proximoCursor === null || typeof d.proximoCursor === "string")
   )
     throw new Error("A API não confirmou a lista de orçamentos.");
