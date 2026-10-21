@@ -232,8 +232,8 @@ export function criarHandlersOrcamentos(pool, { emailsEnabled = false } = {}) {
         const p = [],
           w = [];
         for (const [valor, coluna] of [
-          [q.status, "status"],
-          [q.solicitacaoId, "solicitacao_id"],
+          [q.status, "o.status"],
+          [q.solicitacaoId, "o.solicitacao_id"],
         ])
           if (valor) {
             p.push(valor);
@@ -242,14 +242,18 @@ export function criarHandlersOrcamentos(pool, { emailsEnabled = false } = {}) {
         if (cursor) {
           p.push(cursor.criadaEm, cursor.id);
           w.push(
-            `(criada_em,id)<($${p.length - 1}::timestamptz,$${p.length}::uuid)`,
+            `(o.criada_em,o.id)<($${p.length - 1}::timestamptz,$${p.length}::uuid)`,
           );
         }
         p.push(q.limite + 1);
         const r = await c.query(
-          `SELECT id,solicitacao_id,status,versao,descricao,valor_centavos,criada_em,
-          to_char(criada_em AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS cursor_data
-          FROM aw.orcamentos ${w.length ? "WHERE " + w.join(" AND ") : ""} ORDER BY criada_em DESC,id DESC LIMIT $${p.length}`,
+          `SELECT o.id,o.solicitacao_id,s.codigo AS solicitacao_codigo,o.status,o.versao,
+          o.descricao,o.valor_centavos,o.criada_em,
+          to_char(o.criada_em AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS cursor_data
+          FROM aw.orcamentos o
+          JOIN aw.solicitacoes_orcamento s ON s.id=o.solicitacao_id
+          ${w.length ? "WHERE " + w.join(" AND ") : ""}
+          ORDER BY o.criada_em DESC,o.id DESC LIMIT $${p.length}`,
           p,
         );
         const rows = r.rows.slice(0, q.limite),
@@ -258,6 +262,7 @@ export function criarHandlersOrcamentos(pool, { emailsEnabled = false } = {}) {
           orcamentos: rows.map((o) => ({
             id: o.id,
             solicitacaoId: o.solicitacao_id,
+            solicitacaoCodigo: o.solicitacao_codigo,
             status: o.status,
             versao: o.versao,
             descricao: o.descricao,

@@ -615,7 +615,7 @@ export default function Contato() {
                 {success && (
                   <div role="status" className="rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-400">
                     Solicitação recebida. Nossa equipe retornará pelo canal escolhido.
-                    <span className="mt-2 block break-all text-xs">Protocolo: {success.id}</span>
+                    <span className="mt-2 block break-all text-xs">Solicitação: {success.codigo}</span>
                   </div>
                 )}
 

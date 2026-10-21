@@ -519,6 +519,7 @@ test("listagem pagina por microssegundos e UUID, combina filtros e recusa filtro
       { token: await jwt() },
     );
     assert.equal(r.status, 200);
+    assert.match(r.body.orcamentos[0].solicitacaoCodigo, /^(OS|RED|WEB|MAN|OUT|SOL)-\d{4}-\d{4,}$/);
     ids.push(...r.body.orcamentos.map((o) => o.id));
     cursor = r.body.proximoCursor;
   } while (cursor);
