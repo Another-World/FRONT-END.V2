@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { decodificarCursor } from "./listagemSolicitacoes.js";
-import { gerarPropostaPdf } from "./propostaPdf.js";
+import { dadosPropostaPdf, gerarPropostaPdf } from "./propostaPdf.js";
 import { registrarProposta } from "./emails.js";
 
 const texto = (max) =>
@@ -490,11 +490,11 @@ export function criarHandlersOrcamentos(pool, { emailsEnabled = false } = {}) {
         req,
         res,
         async (c) => {
-          const r = await c.query("SELECT * FROM aw.orcamentos WHERE id=$1", [
+          const r = await c.query("SELECT *, to_char(validade,'YYYY-MM-DD') AS validade_pdf FROM aw.orcamentos WHERE id=$1", [
             req.params.id,
           ]);
           if (!r.rows[0]) throw new Falha(404, "Orçamento não encontrado.");
-          return detalhe(r.rows[0]);
+          return dadosPropostaPdf(r.rows[0]);
         },
         true,
       );

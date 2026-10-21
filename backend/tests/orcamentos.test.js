@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { once } from "node:events";
 import { PGlite } from "@electric-sql/pglite";
+import { PDFDocument } from "pdfkit";
 import { createLocalJWKSet, exportJWK, generateKeyPair, SignJWT } from "jose";
 import { criarApp } from "../src/app.js";
 import { criarProcessadorEmails } from "../src/emails.js";
@@ -663,6 +664,38 @@ test("assunto e corpo usam o serviço da solicitação mesmo com outra descriç�
   assert.match(mensagem.conteudo, /serviço Redes/);
   assert.ok(!mensagem.assunto.includes(id));
   assert.ok(!mensagem.conteudo.includes(id));
+});
+
+test("prévia protegida e anexo enviado preservam conteúdo e validade completos", async () => {
+  await ligarEmails();
+  const o = (await criar()).body.orcamento;
+  const original = PDFDocument.prototype.text;
+  const textos = [];
+  PDFDocument.prototype.text = function(texto, ...args) {
+    textos.push(texto);
+    return original.call(this, texto, ...args);
+  };
+  try {
+    const previa = await request("GET", `${rota}/${o.id}/pdf`, { token: await jwt() });
+    assert.equal(previa.status, 200);
+    const textoPrevia = textos.splice(0);
+    assert.ok(textoPrevia.includes("31/12/2099"));
+    assert.equal((await request("POST", `${rota}/${o.id}/email`, {
+      token: await jwt(), body: { versao: o.versao, confirmado: true },
+    })).status, 200);
+    const enviados = [];
+    const processador = criarProcessadorEmails(pool, async mensagem => {
+      enviados.push(mensagem);
+      return "smtp-simulado";
+    });
+    assert.equal(await processador.processarUm(), true);
+    assert.equal(await processador.processarUm(), true);
+    assert.equal(await processador.processarUm(), false);
+    assert.equal(enviados.filter(v => v.anexo).length, 1);
+    assert.deepEqual(textos, textoPrevia);
+  } finally {
+    PDFDocument.prototype.text = original;
+  }
 });
 
 test("falha incerta não é reenviada e mantém a proposta aguardando", async () => {
