@@ -1,4 +1,4 @@
-import { gerarPropostaPdf } from "./propostaPdf.js";
+import { dadosPropostaPdf, gerarPropostaPdf } from "./propostaPdf.js";
 
 const saudacao = (nome) => `Olá, ${nome?.trim() || "cliente"}.`;
 
@@ -86,17 +86,11 @@ export function criarProcessadorEmails(pool, enviar) {
       let anexo;
       if (mensagem.tipo === "proposta") {
         const r = await pool.query(`
-          SELECT * FROM aw.orcamentos WHERE id=$1 AND status='aguardando_envio'
+          SELECT *, to_char(validade,'YYYY-MM-DD') AS validade_pdf
+          FROM aw.orcamentos WHERE id=$1 AND status='aguardando_envio'
         `, [mensagem.orcamento_id]);
         if (!r.rows[0]) throw new Error("proposta_indisponivel");
-        const o = r.rows[0];
-        anexo = await gerarPropostaPdf({
-          id: o.id, solicitacaoId: o.solicitacao_id, cliente: o.cliente,
-          descricao: o.descricao, escopo: o.escopo, valorCentavos: o.valor_centavos,
-          prazo: o.prazo, condicoes: o.condicoes,
-          validade: o.validade ? String(o.validade).slice(0,10) : null,
-          versao: o.versao, criadaEm: o.criada_em,
-        });
+        anexo = await gerarPropostaPdf(dadosPropostaPdf(r.rows[0]));
       }
       identificador = await enviar({
         destinatario: mensagem.destinatario,
