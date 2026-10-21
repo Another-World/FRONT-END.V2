@@ -435,7 +435,9 @@ function Painel({ uid }) {
                     <p className="text-sm text-text-muted">
                       {STATUS_ORCAMENTO[i.status]} · {moeda(i.valorCentavos)}
                     </p>
-                    <p className="break-all text-xs text-text-muted">{i.id}</p>
+                    <p className="text-xs text-text-muted">
+                      Solicitação: {i.solicitacaoCodigo}
+                    </p>
                   </button>
                 </li>
               ))}

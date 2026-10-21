@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import { criarSolicitacao, SERVICOS_ORCAMENTO } from "../../services/solicitacoes";
 
 const initialForm = {
   nome: "",
@@ -10,15 +12,25 @@ const initialForm = {
   bairro: "",
   cidade: "",
   uf: "",
+  numero: "",
+  complemento: "",
+  servicoSlug: "",
+  pessoaJuridica: false,
+  cnpj: "",
+  canalPreferido: "email",
+  whatsappAutorizado: false,
   mensagem: "",
 };
 
 export default function Contato() {
+  const { user } = useAuth();
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
   const [cepLoading, setCepLoading] = useState(false);
   const [cepMessage, setCepMessage] = useState("");
-  const [success, setSuccess] = useState(false);
+  const [resultado, setResultado] = useState(null);
+  const [envioError, setEnvioError] = useState("");
+  const [enviando, setEnviando] = useState(false);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -128,6 +140,14 @@ export default function Contato() {
       newErrors.telefone = "Informe seu telefone.";
     }
 
+    if (!form.servicoSlug) {
+      newErrors.servicoSlug = "Selecione o serviço de interesse.";
+    }
+
+    if (form.pessoaJuridica && form.cnpj.replace(/\D/g, "").length !== 14) {
+      newErrors.cnpj = "Informe um CNPJ válido.";
+    }
+
     if (!form.cep.trim()) {
       newErrors.cep = "Informe seu CEP.";
     } else if (form.cep.replace(/\D/g, "").length !== 8) {
@@ -138,26 +158,38 @@ export default function Contato() {
       newErrors.mensagem = "Digite uma mensagem.";
     }
 
+    if (form.canalPreferido === "whatsapp" && !form.whatsappAutorizado) {
+      newErrors.canalPreferido = "Autorize o contato por WhatsApp para continuar.";
+    }
+
     setErrors(newErrors);
 
     return Object.keys(newErrors).length === 0;
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
 
-    setSuccess(false);
+    setResultado(null);
+    setEnvioError("");
 
     if (!validateForm()) {
       return;
     }
 
-    console.log("Dados enviados:", form);
-
-    setSuccess(true);
-
-    setForm(initialForm);
-    setCepMessage("");
+    setEnviando(true);
+    try {
+      const solicitacao = await criarSolicitacao({
+        ...form,
+      }, user?.id ?? null);
+      setResultado(solicitacao);
+      setForm(initialForm);
+      setCepMessage("");
+    } catch (error) {
+      setEnvioError(error.message || "Não foi possível enviar sua solicitação.");
+    } finally {
+      setEnviando(false);
+    }
   }
 
   const inputClass =
@@ -336,6 +368,7 @@ export default function Contato() {
                     </p>
                   )}
                 </div>
+
               </div>
 
               {/* Endereço preenchido pelo CEP */}
@@ -417,7 +450,53 @@ export default function Contato() {
                     className={inputClass}
                   />
                 </div>
+
+                <div>
+                  <label htmlFor="numero" className="mb-2 block text-sm font-medium text-white">
+                    Número
+                  </label>
+                  <input id="numero" name="numero" type="text" value={form.numero}
+                    onChange={handleChange} placeholder="Número ou S/N" className={inputClass} />
+                </div>
+
+                <div>
+                  <label htmlFor="complemento" className="mb-2 block text-sm font-medium text-white">
+                    Complemento
+                  </label>
+                  <input id="complemento" name="complemento" type="text" value={form.complemento}
+                    onChange={handleChange} placeholder="Sala, bloco, apartamento..." className={inputClass} />
+                </div>
               </div>
+
+              <div>
+                <label htmlFor="servicoSlug" className="mb-2 block text-sm font-medium text-white">
+                  Serviço de interesse *
+                </label>
+                <select id="servicoSlug" name="servicoSlug" value={form.servicoSlug}
+                  onChange={handleChange} className={inputClass}>
+                  <option value="">Selecione uma opção</option>
+                  {SERVICOS_ORCAMENTO.map((servico) => (
+                    <option key={servico.slug} value={servico.slug}>{servico.nome}</option>
+                  ))}
+                </select>
+                {errors.servicoSlug && <p className="mt-1.5 text-xs text-red-400">{errors.servicoSlug}</p>}
+              </div>
+
+              <label className="block rounded-xl border border-border px-4 py-4 text-sm text-text-muted">
+                <span className="flex items-start gap-3">
+                  <input type="checkbox" checked={form.pessoaJuridica}
+                    onChange={(event) => setForm((anterior) => ({ ...anterior, pessoaJuridica: event.target.checked, cnpj: event.target.checked ? anterior.cnpj : "" }))} />
+                  <span><strong className="text-white">Sou uma empresa / Pessoa Jurídica</strong><br />
+                    Marque esta opção se a solicitação for feita em nome de uma empresa.</span>
+                </span>
+              </label>
+
+              {form.pessoaJuridica && <div>
+                <label htmlFor="cnpj" className="mb-2 block text-sm font-medium text-white">CNPJ *</label>
+                <input id="cnpj" name="cnpj" type="text" value={form.cnpj} onChange={handleChange}
+                  placeholder="00.000.000/0000-00" className={inputClass} />
+                {errors.cnpj && <p className="mt-1.5 text-xs text-red-400">{errors.cnpj}</p>}
+              </div>}
 
               {/* Mensagem */}
               <div>
@@ -445,19 +524,39 @@ export default function Contato() {
                 )}
               </div>
 
+              <div>
+                <label htmlFor="canalPreferido" className="mb-2 block text-sm font-medium text-white">
+                  Como prefere receber nosso retorno?
+                </label>
+                <select id="canalPreferido" name="canalPreferido" value={form.canalPreferido}
+                  onChange={handleChange} className={inputClass}>
+                  <option value="email">E-mail</option>
+                  <option value="whatsapp">WhatsApp</option>
+                </select>
+                {form.canalPreferido === "whatsapp" && <label className="mt-3 flex items-start gap-2 text-sm text-text-muted">
+                  <input type="checkbox" checked={form.whatsappAutorizado}
+                    onChange={(event) => setForm((anterior) => ({ ...anterior, whatsappAutorizado: event.target.checked }))} />
+                  Autorizo o contato por WhatsApp neste número.
+                </label>}
+                {errors.canalPreferido && <p className="mt-1.5 text-xs text-red-400">{errors.canalPreferido}</p>}
+              </div>
+
               {/* Sucesso */}
-              {success && (
+              {resultado && (
                 <div className="rounded-xl border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-400">
-                  Mensagem enviada com sucesso!
+                  <p>Solicitação recebida. Nossa equipe retornará pelo canal escolhido.</p>
+                  <p className="mt-2 font-medium">Solicitação: {resultado.codigo}</p>
                 </div>
               )}
+              {envioError && <p role="alert" className="text-sm text-red-400">{envioError}</p>}
 
               {/* Botão */}
               <button
                 type="submit"
+                disabled={enviando}
                 className="w-full rounded-full bg-purple px-6 py-3.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
               >
-                Enviar mensagem
+                {enviando ? "Enviando..." : "Enviar mensagem"}
               </button>
 
             </form>

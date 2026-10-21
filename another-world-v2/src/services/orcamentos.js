@@ -3,6 +3,7 @@ const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "")
   .trim()
   .replace(/\/+$/, "");
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const CODIGO_SOLICITACAO = /^(OS|RED|WEB|MAN|OUT|SOL)-\d{4}-\d{4,}$/;
 export const STATUS_ORCAMENTO = {
   rascunho: "Rascunho",
   aguardando_envio: "Aguardando confirmação do e-mail",
@@ -14,6 +15,7 @@ const valido = (o) =>
   o &&
   UUID.test(o.id ?? "") &&
   UUID.test(o.solicitacaoId ?? "") &&
+  CODIGO_SOLICITACAO.test(o.solicitacaoCodigo ?? "") &&
   STATUS_ORCAMENTO[o.status] &&
   Number.isInteger(o.versao) &&
   o.versao >= 0 &&
