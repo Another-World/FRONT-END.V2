@@ -44,7 +44,8 @@ before(async () => {
     GRANT SELECT (id, slug, ativo) ON aw.servicos TO aw_api;
     GRANT INSERT (solicitacao_id, tipo) ON aw.solicitacoes_eventos TO aw_api;`);
   for (const arquivo of ["003_protecao_solicitacoes.sql", "004_usuarios.sql", "005_solicitacoes_conta.sql",
-    "006_atendimento.sql", "007_orcamentos.sql", "008_emails.sql", "009_consulta_usuarios.sql"]) {
+    "006_atendimento.sql", "007_orcamentos.sql", "008_emails.sql", "009_consulta_usuarios.sql",
+    "010_avaliacoes.sql", "011_codigos_solicitacoes.sql"]) {
     await db.exec(await readFile(new URL(`../migrations/${arquivo}`, import.meta.url), "utf8"));
   }
   const servico = (await db.query("SELECT id FROM aw.servicos LIMIT 1")).rows[0].id;

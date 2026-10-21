@@ -121,6 +121,9 @@ before(async () => {
     "006_atendimento.sql",
     "007_orcamentos.sql",
     "008_emails.sql",
+    "009_consulta_usuarios.sql",
+    "010_avaliacoes.sql",
+    "011_codigos_solicitacoes.sql",
   ]) {
     await db.exec(
       await readFile(new URL(`../migrations/${f}`, import.meta.url), "utf8"),

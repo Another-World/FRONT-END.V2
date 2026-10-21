@@ -7,6 +7,7 @@ class FalhaHttp extends Error {
 function resumirSolicitacao(row) {
   return {
     id: row.id,
+    codigo: row.codigo,
     status: row.status,
     nomeContato: row.nome_contato,
     servico: row.servico_nome ?? "Serviço",
@@ -45,7 +46,7 @@ export function criarHandlerDashboard(pool) {
           WHERE status IN ('rascunho', 'aguardando_envio', 'enviada')
         `);
       const recentes = await client.query(`
-          SELECT s.id, s.status, s.nome_contato, s.criada_em, v.nome AS servico_nome
+          SELECT s.id, s.codigo, s.status, s.nome_contato, s.criada_em, v.nome AS servico_nome
           FROM aw.solicitacoes_orcamento s
           LEFT JOIN aw.servicos v ON v.id = s.servico_id
           ORDER BY s.criada_em DESC, s.id DESC

@@ -91,7 +91,7 @@ export default function MinhasSolicitacoes({ usuarioId, habilitado, podeAvaliar 
               <h3 className="font-semibold text-text-main">{item.servico.nome}</h3>
               <span className={`rounded-full border px-3 py-1 text-xs ${status.classe}`}>{status.label}</span>
             </div>
-            <p className="break-all text-xs text-text-muted">Protocolo: {item.id}</p>
+            <p className="text-xs text-text-muted">Solicitação: {item.codigo}</p>
             <p className="mt-2 text-xs text-text-muted">Enviado em {formatarData(item.criadaEm)}</p>
             <p className="mt-1 text-xs text-text-muted">Atualizado em {formatarData(item.atualizadaEm)}</p>
             {item.status === STATUS.CONCLUIDA && podeAvaliar

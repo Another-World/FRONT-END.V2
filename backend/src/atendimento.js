@@ -33,17 +33,17 @@ export function criarAutorizacaoAdmin(pool) {
 
 function resumo(row) {
   return {
-    id: row.id, status: row.status, versao: row.versao_status,
+    id: row.id, codigo: row.codigo, status: row.status, versao: row.versao_status,
     nomeContato: row.nome_contato,
     servico: { slug: row.servico_slug, nome: row.servico_nome ?? "Serviço" },
     criadaEm: row.criada_em, atualizadaEm: row.atualizada_em,
   };
 }
-const colunasResumo = `s.id, s.status, s.versao_status, s.nome_contato, s.criada_em, s.atualizada_em,
+const colunasResumo = `s.id, s.codigo, s.status, s.versao_status, s.nome_contato, s.criada_em, s.atualizada_em,
   v.slug AS servico_slug, v.nome AS servico_nome`;
 
 function estado(row) {
-  return { id: row.id, status: row.status, versao: row.versao_status,
+  return { id: row.id, codigo: row.codigo, status: row.status, versao: row.versao_status,
     atualizadaEm: row.atualizada_em, acoesDisponiveis: acoesDisponiveis(row.status) };
 }
 
@@ -99,7 +99,7 @@ export function criarHandlersAtendimento(pool, { emailsEnabled = false } = {}) {
           parametros.push(consulta.busca);
           // Busca literal: %, _ e aspas não viram padrões nem comandos SQL.
           condicoes.push(`(strpos(lower(s.nome_contato), lower($${parametros.length})) > 0
-            OR strpos(s.id::text, lower($${parametros.length})) > 0)`);
+            OR strpos(lower(s.codigo), lower($${parametros.length})) > 0)`);
         }
         if (cursor) {
           parametros.push(cursor.criadaEm, cursor.id);
@@ -125,7 +125,7 @@ export function criarHandlersAtendimento(pool, { emailsEnabled = false } = {}) {
 
     async consultar(req, res) {
       const id = z.uuid().safeParse(req.params.id);
-      if (!id.success || Object.keys(req.query).length) return res.status(400).json({ erro: "Protocolo inválido." });
+      if (!id.success || Object.keys(req.query).length) return res.status(400).json({ erro: "Identificador da solicitação inválido." });
       return executar(req, res, async client => {
         const r = await client.query(`
           SELECT ${colunasResumo}, s.email_contato, s.telefone_contato, s.pessoa_juridica,
@@ -163,11 +163,11 @@ export function criarHandlersAtendimento(pool, { emailsEnabled = false } = {}) {
       const id = z.uuid().safeParse(req.params.id);
       const entrada = alteracaoSchema.safeParse(req.body);
       if (!id.success || !entrada.success || Object.keys(req.query).length) {
-        return res.status(400).json({ erro: "Informe um protocolo, status e versão válidos. Só o status pode ser alterado." });
+        return res.status(400).json({ erro: "Informe uma solicitação, status e versão válidos. Só o status pode ser alterado." });
       }
       return executar(req, res, async client => {
         const anterior = await client.query(`
-          SELECT id, status, versao_status, atualizada_em, nome_contato, email_contato FROM aw.solicitacoes_orcamento
+          SELECT id, codigo, status, versao_status, atualizada_em, nome_contato, email_contato FROM aw.solicitacoes_orcamento
           WHERE id = $1 FOR UPDATE
         `, [id.data]);
         const row = anterior.rows[0];
@@ -187,7 +187,7 @@ export function criarHandlersAtendimento(pool, { emailsEnabled = false } = {}) {
         }
         const atualizado = await client.query(`
           UPDATE aw.solicitacoes_orcamento SET status = $2
-          WHERE id = $1 AND versao_status = $3 RETURNING id, status, versao_status, atualizada_em
+          WHERE id = $1 AND versao_status = $3 RETURNING id, codigo, status, versao_status, atualizada_em
         `, [id.data, entrada.data.status, entrada.data.versao]);
         await client.query(`
           INSERT INTO aw.solicitacoes_eventos (solicitacao_id, tipo, detalhes)

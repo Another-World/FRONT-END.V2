@@ -309,7 +309,7 @@ function Detalhe({ id, usuarioId, onModerada }) {
       <div><dt className="text-xs uppercase tracking-wide text-[#9e8baa]">Nota</dt>
         <dd className="mt-1"><Estrelas nota={item.nota} /> <span className="text-sm text-white">({item.nota}/5)</span></dd></div>
       <div><dt className="text-xs uppercase tracking-wide text-[#9e8baa]">Solicitação</dt>
-        <dd className="mt-1 break-all text-xs text-white">{item.solicitacaoId}</dd></div>
+        <dd className="mt-1 text-xs text-white">{item.solicitacaoCodigo}</dd></div>
     </dl>
 
     <div className="mt-6 space-y-5 border-t border-[#43265b] pt-5">

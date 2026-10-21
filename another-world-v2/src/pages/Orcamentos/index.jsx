@@ -482,7 +482,7 @@ function Painel({ uid }) {
                     className="flex flex-wrap gap-2"
                   >
                     <input
-                      aria-label="Buscar solicitação aceita por nome ou protocolo"
+                      aria-label="Buscar solicitação aceita por nome ou código"
                       disabled={ocupado || carregando}
                       className={campo}
                       type="search"
@@ -509,11 +509,11 @@ function Painel({ uid }) {
                       <option value="">Selecione uma solicitação</option>
                       {inicial &&
                         !pedidos.solicitacoes.some((s) => s.id === inicial) && (
-                          <option value={inicial}>{inicial}</option>
+                          <option value={inicial}>Solicitação selecionada</option>
                         )}
                       {pedidos.solicitacoes.map((s) => (
                         <option key={s.id} value={s.id}>
-                          {s.nomeContato} · {s.servico.nome} · {s.id}
+                          {s.nomeContato} · {s.servico.nome} · {s.codigo}
                         </option>
                       ))}
                     </select>
@@ -542,8 +542,8 @@ function Painel({ uid }) {
                   <p className="break-words text-sm">
                     Cliente: {o.cliente.nome} · {o.cliente.email}
                   </p>
-                  <p className="break-all text-xs">
-                    Solicitação: {o.solicitacaoId}
+                  <p className="text-xs">
+                    Solicitação: {pedidos.solicitacoes.find((s) => s.id === o.solicitacaoId)?.codigo ?? "Solicitação vinculada"}
                   </p>
                 </>
               )}

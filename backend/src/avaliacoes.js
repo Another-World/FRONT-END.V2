@@ -41,6 +41,7 @@ function resumo(row) {
   return {
     id: row.id,
     solicitacaoId: row.solicitacao_id,
+    solicitacaoCodigo: row.solicitacao_codigo,
     nota: row.nota,
     status: row.status,
     versao: row.versao,
@@ -114,7 +115,8 @@ export function criarHandlersAvaliacoes(pool) {
 
   const colunas = `a.id,a.solicitacao_id,a.usuario_id,a.nota,a.observacoes,a.sugestoes,
     a.status,a.versao,a.criada_em,a.atualizada_em,u.nome AS usuario_nome,
-    u.email AS usuario_email,v.slug AS servico_slug,v.nome AS servico_nome`;
+    u.email AS usuario_email,s.codigo AS solicitacao_codigo,
+    v.slug AS servico_slug,v.nome AS servico_nome`;
 
   return {
     async consultarPropria(req, res) {

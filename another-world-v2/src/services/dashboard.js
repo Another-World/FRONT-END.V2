@@ -3,13 +3,14 @@ import { STATUS_INFO } from "./solicitacoes";
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "").trim().replace(/\/+$/, "");
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const CODIGO_SOLICITACAO = /^(OS|RED|WEB|MAN|OUT|SOL)-\d{4}-\d{4,}$/;
 
 function indicadorValido(valor) {
   return Number.isInteger(valor) && valor >= 0;
 }
 
 function solicitacaoValida(item) {
-  return UUID.test(item?.id ?? "") && STATUS_INFO[item.status]
+  return UUID.test(item?.id ?? "") && CODIGO_SOLICITACAO.test(item?.codigo ?? "") && STATUS_INFO[item.status]
     && typeof item.nomeContato === "string" && item.nomeContato.trim().length > 0
     && typeof item.servico === "string" && item.servico.trim().length > 0
     && Number.isFinite(Date.parse(item.criadaEm));
