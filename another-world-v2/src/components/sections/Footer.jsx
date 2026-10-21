@@ -107,7 +107,7 @@ export default function Footer() {
             <nav className="flex flex-col gap-3">
 
               <Link
-                to="/servicos"
+                to="/servicos#hardware"
                 className="
                   text-sm
                   text-text-muted
@@ -119,7 +119,7 @@ export default function Footer() {
               </Link>
 
               <Link
-                to="/servicos"
+                to="/servicos#redes"
                 className="
                   text-sm
                   text-text-muted
@@ -131,7 +131,7 @@ export default function Footer() {
               </Link>
 
               <Link
-                to="/servicos"
+                to="/servicos#desenvolvimento-web"
                 className="
                   text-sm
                   text-text-muted
