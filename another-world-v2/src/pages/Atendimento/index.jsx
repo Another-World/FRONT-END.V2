@@ -125,7 +125,7 @@ function Painel({ usuarioId, bloquear }) {
       <form onSubmit={event => { event.preventDefault(); atualizar(consulta.status, buscaRascunho.trim()); }}>
         <fieldset disabled={salvando || carregando} className="flex flex-wrap items-end gap-3 disabled:opacity-70">
           <div>
-            <label htmlFor="busca-solicitacoes" className="mb-2 block text-sm text-text-muted">Nome ou protocolo</label>
+            <label htmlFor="busca-solicitacoes" className="mb-2 block text-sm text-text-muted">Nome ou código</label>
             <input id="busca-solicitacoes" type="search" className={campo} minLength={2} maxLength={120}
               placeholder="Digite pelo menos 2 caracteres" value={buscaRascunho}
               onChange={event => setBuscaRascunho(event.target.value)} />
@@ -160,7 +160,7 @@ function Painel({ usuarioId, bloquear }) {
               className={`w-full rounded-xl border p-4 text-left transition disabled:opacity-60 ${selecionado === item.id ? "border-purple bg-purple/10" : "border-border bg-bg-dark/30 hover:border-purple"}`}>
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><span className="font-semibold text-text-main">{item.servico.nome}</span><Selo status={item.status} /></div>
               <p className="text-sm text-text-main">{item.nomeContato}</p>
-              <p className="mt-2 break-all text-xs text-text-muted">Protocolo: {item.id}</p>
+              <p className="mt-2 text-xs text-text-muted">Solicitação: {item.codigo}</p>
               <p className="mt-1 text-xs text-text-muted">{data(item.criadaEm)}</p>
             </button>
           </li>)}
@@ -245,7 +245,7 @@ function Detalhe({ id, usuarioId, bloquear, onAtualizado, onSalvando, consultaEm
     {aviso && <p role="status" className="mb-4 text-sm text-emerald-300">{aviso}</p>}
     {item && !carregando && <>
       <div className="mb-5 flex flex-wrap gap-3"><h3 className="font-semibold text-text-main">{item.servico.nome}</h3><Selo status={item.status} /></div>
-      <p className="mb-5 break-all text-xs text-text-muted">Protocolo: {item.id}</p>
+      <p className="mb-5 text-xs text-text-muted">Solicitação: {item.codigo}</p>
       <dl className="grid gap-4 sm:grid-cols-2">
         <Dado titulo="Contato" valor={item.nomeContato} />
         <Dado titulo="E-mail" valor={item.contato.email} />

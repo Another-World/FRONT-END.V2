@@ -60,6 +60,7 @@ function opcional(valor) {
 const TENTATIVA_KEY = "aw_contato_tentativa";
 let tentativaEmMemoria = null;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const CODIGO_SOLICITACAO = /^(OS|RED|WEB|MAN|OUT|SOL)-\d{4}-\d{4,}$/;
 
 async function obterChaveEnvio(corpo, usuarioId) {
   if (!globalThis.crypto?.randomUUID || !globalThis.crypto?.subtle) {
@@ -143,7 +144,7 @@ export async function criarSolicitacao(dados, usuarioId = null) {
   } catch {
     // Não apaga a chave: o servidor pode ter gravado antes da conexão cair.
     throw new Error(
-      "Não foi possível confirmar o envio. Tente novamente com os mesmos dados para recuperar o protocolo.",
+      "Não foi possível confirmar o envio. Tente novamente com os mesmos dados para recuperar sua solicitação.",
     );
   } finally {
     clearTimeout(timeout);
@@ -156,7 +157,7 @@ export async function criarSolicitacao(dados, usuarioId = null) {
     error.campos = Array.isArray(resultado?.campos) ? resultado.campos : [];
     throw error;
   }
-  if (!resultado?.id || resultado.status !== STATUS.EM_ANALISE) {
+  if (!resultado?.id || !CODIGO_SOLICITACAO.test(resultado.codigo ?? "") || resultado.status !== STATUS.EM_ANALISE) {
     throw new Error("O servidor não confirmou o envio. Tente novamente com os mesmos dados.");
   }
   await obterSessaoApi(usuarioId);
@@ -185,6 +186,7 @@ export async function listarSolicitacoes(usuarioId, { cursor, signal } = {}) {
   if (!Array.isArray(resultado?.solicitacoes) || resultado.solicitacoes.length > 20
     || !(resultado.proximoCursor === null || typeof resultado.proximoCursor === "string")
     || resultado.solicitacoes.some(item => !UUID.test(item?.id ?? "")
+      || !CODIGO_SOLICITACAO.test(item?.codigo ?? "")
       || !STATUS_INFO[item.status] || typeof item.servico?.nome !== "string"
       || !Number.isFinite(Date.parse(item.criadaEm)))) {
     throw new Error("A API não confirmou a lista de solicitações.");

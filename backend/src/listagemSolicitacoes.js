@@ -41,7 +41,7 @@ export function criarHandlerListagemSolicitacoes(pool) {
       ? [usuarioId, cursor.criadaEm, cursor.id, consulta.limite + 1]
       : [usuarioId, consulta.limite + 1];
     const pagina = await pool.query(`
-      SELECT s.id, s.status, s.criada_em, s.atualizada_em,
+      SELECT s.id, s.codigo, s.status, s.criada_em, s.atualizada_em,
         to_char(s.criada_em AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS cursor_criada_em,
         v.slug AS servico_slug, v.nome AS servico_nome
       FROM aw.solicitacoes_orcamento s
@@ -61,6 +61,7 @@ export function criarHandlerListagemSolicitacoes(pool) {
     return res.json({
       solicitacoes: registros.map(row => ({
         id: row.id,
+        codigo: row.codigo,
         status: row.status,
         servico: { slug: row.servico_slug, nome: row.servico_nome ?? "Serviço" },
         criadaEm: row.criada_em,

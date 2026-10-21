@@ -4,6 +4,7 @@ const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "")
   .trim()
   .replace(/\/+$/, "");
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const CODIGO_SOLICITACAO = /^(OS|RED|WEB|MAN|OUT|SOL)-\d{4}-\d{4,}$/;
 
 export const STATUS_AVALIACAO = {
   pendente: "Pendente",
@@ -14,6 +15,7 @@ export const STATUS_AVALIACAO = {
 const resumoValido = (item) => item
   && UUID.test(item.id ?? "")
   && UUID.test(item.solicitacaoId ?? "")
+  && CODIGO_SOLICITACAO.test(item.solicitacaoCodigo ?? "")
   && Number.isInteger(item.nota) && item.nota >= 1 && item.nota <= 5
   && STATUS_AVALIACAO[item.status]
   && Number.isInteger(item.versao) && item.versao >= 0

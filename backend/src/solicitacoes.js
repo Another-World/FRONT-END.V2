@@ -26,7 +26,12 @@ const schema = z.strictObject({
 
 function respostaOriginal(registro) {
   // Reenvio devolve a confirmação original, sem revelar os dados pessoais.
-  return { id: registro.id, criadaEm: registro.criada_em, status: "em_analise" };
+  return {
+    id: registro.id,
+    codigo: registro.codigo,
+    criadaEm: registro.criada_em,
+    status: "em_analise",
+  };
 }
 
 // Receber o pool como argumento facilita testar a rota sem iniciar o servidor.
@@ -99,7 +104,7 @@ export function criarHandlerSolicitacoes(pool) {
       }
 
       const consultarTentativa = () => client.query(
-        `SELECT id, criada_em, idempotencia_hash, usuario_id
+        `SELECT id, codigo, criada_em, idempotencia_hash, usuario_id
          FROM aw.solicitacoes_orcamento WHERE idempotencia_chave = $1`,
         [chave.data],
       );
@@ -137,7 +142,7 @@ export function criarHandlerSolicitacoes(pool) {
           $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
           $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
         ) ON CONFLICT (idempotencia_chave) DO NOTHING
-        RETURNING id, criada_em`,
+        RETURNING id, codigo, criada_em`,
         [
           servico.rows[0].id, dados.nome, dados.email, dados.telefone,
           dados.pessoaJuridica, dados.cnpj, dados.empresa,

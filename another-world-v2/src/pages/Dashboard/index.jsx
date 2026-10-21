@@ -74,7 +74,7 @@ export default function Dashboard() {
                   <div className="min-w-0">
                     <p className="truncate font-medium text-text-main">{item.nomeContato}</p>
                     <p className="mt-1 text-sm text-text-muted">{item.servico}</p>
-                    <p className="mt-1 break-all text-xs text-text-muted">Protocolo: {item.id}</p>
+                    <p className="mt-1 text-xs text-text-muted">Solicitação: {item.codigo}</p>
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-2">
                     <Selo status={item.status} />

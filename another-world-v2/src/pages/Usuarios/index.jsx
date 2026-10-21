@@ -148,7 +148,7 @@ function Detalhe({ id, usuarioId, bloquear }) {
       <ul className="space-y-3">{dados.solicitacoes.map(s => <li key={s.id} className="rounded-lg border border-border p-3 text-sm">
         <p>{s.servico} · {s.status.replaceAll("_", " ")}</p>
         <p className="text-text-muted">{data(s.criadaEm)}</p>
-        <Link to={`/admin/solicitacoes?pedido=${encodeURIComponent(s.id)}`} className="break-all text-purple underline">Ver solicitação {s.id}</Link>
+        <Link to={`/admin/solicitacoes?pedido=${encodeURIComponent(s.id)}`} className="text-purple underline">Ver solicitação {s.codigo}</Link>
       </li>)}</ul>
       {dados.proximoCursor && <button type="button" className={`${botao} mt-4`} disabled={carregando} onClick={mais}>Carregar mais solicitações</button>}
     </>}

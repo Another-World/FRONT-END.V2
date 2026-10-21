@@ -3,7 +3,8 @@ import { STATUS_INFO } from "./solicitacoes";
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "").trim().replace(/\/+$/, "");
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const valido = item => item && UUID.test(item.id ?? "") && STATUS_INFO[item.status]
+const CODIGO_SOLICITACAO = /^(OS|RED|WEB|MAN|OUT|SOL)-\d{4}-\d{4,}$/;
+const valido = item => item && UUID.test(item.id ?? "") && CODIGO_SOLICITACAO.test(item.codigo ?? "") && STATUS_INFO[item.status]
   && Number.isInteger(item.versao) && item.versao >= 0
   && Number.isFinite(Date.parse(item.atualizadaEm));
 const acoesValidas = item => Array.isArray(item?.acoesDisponiveis) && item.acoesDisponiveis.length <= 5

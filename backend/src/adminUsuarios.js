@@ -113,14 +113,14 @@ export function criarHandlersAdminUsuarios(pool) {
         }
         parametros.push(filtro.limite + 1);
         const pedidos = await client.query(`
-          SELECT s.id, s.status, s.criada_em, v.nome AS servico_nome,
+          SELECT s.id, s.codigo, s.status, s.criada_em, v.nome AS servico_nome,
             to_char(s.criada_em AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS cursor_criada_em
           FROM aw.solicitacoes_orcamento s LEFT JOIN aw.servicos v ON v.id = s.servico_id
           WHERE ${condicoes.join(" AND ")}
           ORDER BY s.criada_em DESC, s.id DESC LIMIT $${parametros.length}
         `, parametros);
         const p = pagina(pedidos.rows, filtro.limite, row => ({
-          id: row.id, status: row.status, criadaEm: row.criada_em,
+          id: row.id, codigo: row.codigo, status: row.status, criadaEm: row.criada_em,
           servico: row.servico_nome ?? "Serviço",
         }));
         return { usuario: { ...resumo(usuario.rows[0]), telefone: usuario.rows[0].telefone,

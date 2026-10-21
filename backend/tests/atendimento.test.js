@@ -68,7 +68,11 @@ before(async () => {
     GRANT SELECT (id, criada_em) ON aw.solicitacoes_orcamento TO aw_api;
     GRANT SELECT (id, slug, ativo) ON aw.servicos TO aw_api;
     GRANT INSERT (solicitacao_id, tipo) ON aw.solicitacoes_eventos TO aw_api;`);
-  for (const f of ["003_protecao_solicitacoes.sql", "004_usuarios.sql", "005_solicitacoes_conta.sql", "006_atendimento.sql"]) {
+  for (const f of [
+    "003_protecao_solicitacoes.sql", "004_usuarios.sql", "005_solicitacoes_conta.sql", "006_atendimento.sql",
+    "007_orcamentos.sql", "008_emails.sql", "009_consulta_usuarios.sql", "010_avaliacoes.sql",
+    "011_codigos_solicitacoes.sql",
+  ]) {
     await db.exec(await readFile(new URL(`../migrations/${f}`, import.meta.url), "utf8"));
   }
   const keys = await generateKeyPair("ES256");
@@ -283,11 +287,12 @@ test("busca por nome combina status e paginação sem perder microssegundos", as
   } while(cursor);
   assert.deepEqual(vistos,[ids[1],ids[0]]);
 });
-test("busca aceita protocolo e trata curingas e SQL como texto literal", async () => {
+test("busca aceita código da solicitação e trata curingas e SQL como texto literal", async () => {
   const especial=await pedido(B,{nome:"Contato 50%_Especial"});
+  const codigo=(await admin("SELECT codigo FROM aw.solicitacoes_orcamento WHERE id=$1",[especial])).rows[0].codigo;
   await pedido(null,{nome:"Contato Comum"});
   const token=await jwt();
-  for (const busca of [especial.toUpperCase(),"%_", "50%_especial"]) {
+  for (const busca of [codigo.toLowerCase(),"%_", "50%_especial"]) {
     const r=await request("GET",`${caminho}?busca=${encodeURIComponent(busca)}`,{token});
     assert.equal(r.status,200);
     assert.deepEqual(r.body.solicitacoes.map(x=>x.id),[especial]);

@@ -2,6 +2,7 @@ import { obterSessaoApi } from "./sessaoApi";
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "").trim().replace(/\/+$/, "");
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const CODIGO_SOLICITACAO = /^(OS|RED|WEB|MAN|OUT|SOL)-\d{4}-\d{4,}$/;
 
 async function requisitar(usuarioId, path, signal) {
   const sessao = await obterSessaoApi(usuarioId, true);
@@ -51,6 +52,7 @@ export async function consultarUsuarioAdmin(usuarioId, id, { cursor, signal } = 
   if (!usuarioValido(dados?.usuario) || dados.usuario.id !== id
     || !Array.isArray(dados.solicitacoes) || dados.solicitacoes.length > 20
     || dados.solicitacoes.some(s => !UUID.test(s?.id ?? "")
+      || !CODIGO_SOLICITACAO.test(s?.codigo ?? "")
       || typeof s.status !== "string" || !Number.isFinite(Date.parse(s.criadaEm)))
     || !cursorValido(dados.proximoCursor))
     throw new Error("A API retornou dados inválidos para este usuário.");

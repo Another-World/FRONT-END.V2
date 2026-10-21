@@ -89,7 +89,11 @@ before(async () => {
     GRANT SELECT (id, slug, ativo) ON aw.servicos TO aw_api;
     GRANT INSERT (solicitacao_id, tipo) ON aw.solicitacoes_eventos TO aw_api;
   `);
-  for (const arquivo of ["003_protecao_solicitacoes.sql", "004_usuarios.sql", "005_solicitacoes_conta.sql"]) {
+  for (const arquivo of [
+    "003_protecao_solicitacoes.sql", "004_usuarios.sql", "005_solicitacoes_conta.sql",
+    "006_atendimento.sql", "007_orcamentos.sql", "008_emails.sql", "009_consulta_usuarios.sql",
+    "010_avaliacoes.sql", "011_codigos_solicitacoes.sql",
+  ]) {
     await db.exec(await readFile(new URL(`../migrations/${arquivo}`, import.meta.url), "utf8"));
   }
   const keys = await generateKeyPair("ES256");
@@ -109,7 +113,7 @@ before(async () => {
 });
 beforeEach(async () => {
   await db.exec(`RESET ROLE;
-    TRUNCATE aw.solicitacoes_eventos, aw.solicitacoes_orcamento, aw.usuarios CASCADE;
+    TRUNCATE aw.solicitacoes_eventos, aw.solicitacoes_orcamento, aw.solicitacoes_numeracao, aw.usuarios CASCADE;
     GRANT INSERT (solicitacao_id, tipo) ON aw.solicitacoes_eventos TO aw_api;
     SET ROLE aw_api;`);
   server = criarApp({ pool, autenticacao: { supabaseUrl, resolverChaves } }).listen(0, "127.0.0.1");
@@ -119,14 +123,14 @@ beforeEach(async () => {
 afterEach(async () => { await new Promise(resolve => server.close(resolve)); });
 after(async () => { await db?.close(); });
 
-test("005 concede só as leituras necessárias, mantém contato e exclusão protegidos", async () => {
+test("as migrations concedem as leituras necessárias e mantêm exclusão protegida", async () => {
   const r = await pool.query(`SELECT
     has_column_privilege('aw_api', 'aw.solicitacoes_orcamento', 'status', 'SELECT') AS status,
     has_column_privilege('aw_api', 'aw.servicos', 'nome', 'SELECT') AS nome,
     has_column_privilege('aw_api', 'aw.solicitacoes_orcamento', 'email_contato', 'SELECT') AS contato,
     has_table_privilege('aw_api', 'aw.solicitacoes_orcamento', 'DELETE') AS excluir,
     has_column_privilege('aw_api', 'aw.usuarios', 'papel', 'UPDATE') AS papel`);
-  assert.deepEqual(r.rows[0], { status: true, nome: true, contato: false, excluir: false, papel: false });
+  assert.deepEqual(r.rows[0], { status: true, nome: true, contato: true, excluir: false, papel: false });
 });
 
 test("prontidão consulta PostgreSQL com o papel aw_api e sem exigir login", async () => {
@@ -179,10 +183,24 @@ test("pedido autenticado cria perfil e usa UUID do JWT mesmo com outro e-mail de
   assert.equal(lista.status, 200);
   assert.equal(lista.headers.get("cache-control"), "no-store");
   assert.deepEqual(lista.body.solicitacoes.map(x => x.id), [r.body.id]);
-  assert.deepEqual(Object.keys(lista.body.solicitacoes[0]).sort(), ["atualizadaEm", "criadaEm", "id", "servico", "status"]);
+  assert.deepEqual(Object.keys(lista.body.solicitacoes[0]).sort(), ["atualizadaEm", "codigo", "criadaEm", "id", "servico", "status"]);
+  assert.match(lista.body.solicitacoes[0].codigo, /^OS-\d{4}-0001$/);
   await perfil(B);
   const outraLista = await requisitar("GET", "/api/solicitacoes", { jwt: await token(B) });
   assert.deepEqual(outraLista.body.solicitacoes, []);
+});
+
+test("gera códigos por serviço e mantém a sequência de cada área", async () => {
+  const hardware1 = await enviar();
+  const hardware2 = await enviar({ body: { ...dados, mensagem: "Segundo pedido" } });
+  const redes = await enviar({ body: { ...dados, servicoSlug: "redes", mensagem: "Pedido de redes" } });
+  const web = await enviar({ body: { ...dados, servicoSlug: "desenvolvimento-web", mensagem: "Pedido web" } });
+
+  const ano = new Date().getFullYear();
+  assert.equal(hardware1.body.codigo, `OS-${ano}-0001`);
+  assert.equal(hardware2.body.codigo, `OS-${ano}-0002`);
+  assert.equal(redes.body.codigo, `RED-${ano}-0001`);
+  assert.equal(web.body.codigo, `WEB-${ano}-0001`);
 });
 
 test("reenvio da mesma conta retorna protocolo; outra conta/visitante não o recupera", async () => {
