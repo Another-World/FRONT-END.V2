@@ -436,7 +436,9 @@ function Painel({ uid }) {
                       {STATUS_ORCAMENTO[i.status]} · {moeda(i.valorCentavos)}
                     </p>
                     <p className="text-xs text-text-muted">
-                      Solicitação: {i.solicitacaoCodigo}
+                      {i.solicitacaoCodigo
+                        ? `Solicitação: ${i.solicitacaoCodigo}`
+                        : "Código da solicitação indisponível"}
                     </p>
                   </button>
                 </li>
